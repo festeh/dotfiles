@@ -1,19 +1,19 @@
-#URxvt*scrollBar: false
+URxvt*scrollBar: false
 
-#URxvt*borderLess: false
-#URxvt*externalBorder: 0
-#URxvt*internalBorder: 2
+URxvt*borderLess: false
+URxvt*externalBorder: 0
+URxvt*internalBorder: 2
 
-#URxvt*saveLines: 6000
+URxvt*saveLines: 6000
 
-#URxvt*perl-ext-common: default,tabbedex
-#URxvt.keysym.Control-Shift-N: perl:tabbedex:new_tab
-#URxvt.keysym.Control-Shift-W: perl:tabbedex:kill_tab
-#URxvt.keysym.Control-Shift-K: perl:tabbedex:next_tab
-#URxvt.keysym.Control-Shift-J: perl:tabbedex:prev_tab
-#URxvt*tabbedex.tabbar-fg: 15
-#URxvt*tabbedex.tabbar-bg: 236
-#URxvt*tabbedex.tab-fg: 110
-#URxvt*tabbedex.tab-bg: 236
-#URxvt*tabbedex.transparent: true
-#URxvt*tabbedex.new-button: false
+URxvt*perl-ext-common: default,tabbedex
+URxvt.keysym.Control-Shift-N: perl:tabbedex:new_tab
+URxvt.keysym.Control-Shift-W: perl:tabbedex:kill_tab
+URxvt.keysym.Control-Shift-K: perl:tabbedex:next_tab
+URxvt.keysym.Control-Shift-J: perl:tabbedex:prev_tab
+URxvt*tabbedex.tabbar-fg: 15
+URxvt*tabbedex.tabbar-bg: 236
+URxvt*tabbedex.tab-fg: 110
+URxvt*tabbedex.tab-bg: 236
+URxvt*tabbedex.transparent: true
+URxvt*tabbedex.new-button: false

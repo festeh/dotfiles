@@ -233,5 +233,6 @@ exec urxvtc -name htop_scratchpad -e htop
 #
 bar {
         status_command i3status --config ~/.config/i3/status.conf
+        position top
         # tray_output none
 }
