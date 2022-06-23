@@ -4,6 +4,8 @@
 # Should you change your keyboard layout some time, delete
 # this file and re-run i3-config-wizard(1).
 #
+exec --no-startup-id setxkbmap -layout us,ru -option 'grp:alt_shift_toggle'
+exec echo lul
 
 # i3 config file (v4)
 #
@@ -45,7 +47,7 @@ bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOU
 floating_modifier $mod
 
 # start a terminal
-bindsym $mod+Return exec urxvtc
+bindsym $mod+Return exec i3-sensible-terminal
 
 # kill focused window
 bindsym $mod+Shift+q kill
@@ -202,7 +204,7 @@ mode "$mode_system" {
 bindsym $mod+BackSpace mode "$mode_system"
 
 # Nice wallpaper
-exec --no-startup-id feh --no-fehbg --bg-fill .config/i3/feh/beautiful-city-lights-skyline-vhw38j6xeunneyon.jpg
+# exec --no-startup-id feh --no-fehbg --bg-fill .config/i3/feh/beautiful-city-lights-skyline-vhw38j6xeunneyon.jpg
 
 # floating defaults
 for_window [window_role="task_dialog"] floating enable
@@ -211,11 +213,14 @@ for_window [window_role="pop-up"] floating enable
 # design
 hide_edge_borders both 
 for_window [class="URxvt*"] border pixel 1
+for_window [class="google-chrome"] border none
+for_window [class="Google-chrome"] border none
+
 
 # Terminal scratchpad
 for_window [instance="urxvt_scratchpad"] move to scratchpad, border none
 bindsym $mod+Shift+t [instance="urxvt_scratchpad"] scratchpad show
-exec urxvtc -name urxvt_scratchpad
+exec gnome-terminal -name urxvt_scratchpad
 
 # htop scratchpad
 for_window [instance="htop_scratchpad"] move to scratchpad, border none
@@ -223,6 +228,9 @@ bindsym $mod+Shift+p [instance="htop_scratchpad"] scratchpad show
 exec urxvtc -name htop_scratchpad -e htop
 # Start i3bar to display a workspace bar (plus the system information i3status
 # finds out, if available)
+#
+#
+#
 bar {
         status_command i3status --config ~/.config/i3/status.conf
         # tray_output none

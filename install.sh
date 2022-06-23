@@ -8,6 +8,7 @@ ln -s "$HOME/dotfiles/X11" "$HOME/.config/X11"
 
 rm -rf "$HOME/.config/i3"
 ln -s "$HOME/dotfiles/i3" $HOME/.config/i3
+$HOME/dotfiles/i3/install_i3_bar.sh
 
 mkdir -p $HOME/.config/zsh
 ln -sf "$HOME/dotfiles/zsh/.zshenv" "$HOME"
