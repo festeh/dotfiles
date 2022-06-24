@@ -1,0 +1,5 @@
+alias ll='ls -lah'
+alias ga='git add'
+alias gc='git commiit'
+alias gp='git push'
+
