@@ -16,10 +16,11 @@ source /usr/share/autojump/autojump.zsh
 #antigen bundle zsh-users/zsh-autosuggestions
 #antigen bundle autojump
 #antigen apply
-
-bindkey -v '^?' backward-delete-char
-bindkey -v '^[l' forward-word
-bindkey -v "^[[1;3C" forward-word
+bindkey -v
+bindkey  "^?" backward-delete-char
+bindkey  "^[L" forward-word
+bindkey  "^[[1;3C" forward-word
+bindkey "^R" history-incremental-search-backward
 
 setopt hist_ignore_dups
 unsetopt hist_ignore_space
