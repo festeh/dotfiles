@@ -10,19 +10,43 @@ autoload -U compinit; compinit
 _comp_options+=(globdots)
 source ~/dotfiles/zsh/external/completion.zsh
 
-source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+if [ -f "/etc/arch-release" ]; then
+  source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+else
+    source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+fi
 source /usr/share/autojump/autojump.zsh
-#source ~/dotfiles/antigen.zsh
-#antigen bundle zsh-users/zsh-autosuggestions
-#antigen bundle autojump
-#antigen apply
+
 bindkey -v
 bindkey  "^?" backward-delete-char
 bindkey  "^[L" forward-word
 bindkey  "^[[1;3C" forward-word
 bindkey "^R" history-incremental-search-backward
 
+export KEYTIMEOUT=1
+
 setopt hist_ignore_dups
 unsetopt hist_ignore_space
 
-PROMPT='%(?.%F{green}√.%F{red}?%?)%f %B%F{255}%1~%f%b %# '
+fpath=($ZDOTDIR/external $fpath)
+autoload -Uz prompt_purification_setup; prompt_purification_setup
+autoload -Uz cursor_mode && cursor_mode
+
+zmodload zsh/complist
+bindkey -M menuselect 'h' vi-backward-char
+bindkey -M menuselect 'k' vi-up-line-or-history
+bindkey -M menuselect 'l' vi-forward-char
+bindkey -M menuselect 'j' vi-down-line-or-history
+
+autoload -Uz edit-command-line
+zle -N edit-command-line
+bindkey -M vicmd v edit-command-line
+
+source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+source $DOTFILES/zsh/scripts.sh
+
+if [ $(command -v "fzf") ]; then
+    source /usr/share/fzf/completion.zsh
+    source /usr/share/fzf/key-bindings.zsh
+fi
