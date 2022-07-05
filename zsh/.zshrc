@@ -42,11 +42,17 @@ autoload -Uz edit-command-line
 zle -N edit-command-line
 bindkey -M vicmd v edit-command-line
 
-source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+if [ -f "/etc/arch/release" ]; then
+    source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+else 
+    source /usr/share/zsh-syntax-highlighting
+fi
 
 source $DOTFILES/zsh/scripts.sh
 
 if [ $(command -v "fzf") ]; then
     source /usr/share/fzf/completion.zsh
     source /usr/share/fzf/key-bindings.zsh
+else
+    echo "WARN: fzf is not found"
 fi

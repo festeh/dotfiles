@@ -1,5 +1,3 @@
-theme = "solarized-dark"
-icons = "awesome"
 
 [[block]]
 block = "battery"
