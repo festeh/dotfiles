@@ -5,6 +5,8 @@ noremap <Down> <Nop>
 noremap <Left> <Nop>
 noremap <Right> <Nop>
 
+nnoremap <C-j> <C-d>
+
 set noswapfile
 
 set undofile
