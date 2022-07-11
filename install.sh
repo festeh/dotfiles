@@ -20,3 +20,19 @@ ln -sf "$DOTFILES/zsh/aliases" "$XDG_CONFIG_HOME/zsh/aliases"
 
 rm -rf "$XDG_CONFIG_HOME/zsh/external"
 ln -sf "$DOTFILES/zsh/external" "$XDG_CONFIG_HOME/zsh"
+
+# Install plugin manager for nvim
+[ ! -f "$DOTFILES/nvim/autoload/plug.vim" ] \
+    &&  curl -fLo "$DOTFILES/nvim/autoload/plug.vim" --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
+mkdir -p "$XDG_CONFIG_HOME/nvim/autoload"
+ln -sf "$DOTFILES/nvim/autoload/plug.vim" "$XDG_CONFIG_HOME/nvim/autoload/plug.vim"
+
+# Install (or update) nvim plugins
+nvim --noplugin +PlugUpdate +qa
+
+# Install clipboard manager
+[ ! -d "$XDG_CONFIG_HOME/zsh/plugins/zsh-system-clipboard" ] \
+    && mkdir -p "$XDG_CONFIG_HOME/zsh/plugins" \
+    && git clone https://github.com/kutsan/zsh-system-clipboard $XDG_CONFIG_HOME/zsh/plugins/zsh-system-clipboard
