@@ -1,3 +1,8 @@
+call plug#begin("$XDG_CONFIG_HOME/nvim/plugged")
+    Plug 'chrisbra/csv.vim'
+call plug#end()
+
+"use system clipboard in vim
 set clipboard+=unnamedplus
 
 noremap <Up> <Nop>
@@ -25,4 +30,12 @@ set shiftwidth=4
 set incsearch
 set hlsearch
 
+set smartcase "ignorecase, but smart
+
 colo zellner
+
+augroup filetype_csv
+    autocmd!
+    autocmd BufRead,BufWritePost *.csv :%ArrangeColumn!
+    autocmd BufWritePre *.csv :%UnArrangeColumn
+augroup END

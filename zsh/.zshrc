@@ -60,3 +60,6 @@ else
 fi
 
 setxkbmap -option caps:escape
+
+# Source zsh-system-clipboard
+source "$XDG_CONFIG_HOME/zsh/plugins/zsh-system-clipboard/zsh-system-clipboard.zsh"
