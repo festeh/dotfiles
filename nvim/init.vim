@@ -11,6 +11,8 @@ noremap <Left> <Nop>
 noremap <Right> <Nop>
 
 nnoremap <C-j> <C-d>
+"clear search highlights with <C-l>
+nnoremap <silent> <C-l> :nohlsearch<CR><C-l>
 
 set noswapfile
 
@@ -33,6 +35,9 @@ set hlsearch
 set smartcase "ignorecase, but smart
 
 colo zellner
+
+set wildmenu
+set wildmode=full
 
 augroup filetype_csv
     autocmd!
