@@ -44,7 +44,7 @@ autoload -Uz edit-command-line
 zle -N edit-command-line
 bindkey -M vicmd v edit-command-line
 
-if [ -f "/etc/arch/release" ]; then
+if [ -f "/etc/arch-release" ]; then
     source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 else 
     source /usr/share/zsh-syntax-highlighting
