@@ -24,7 +24,8 @@ bindkey "^R" history-incremental-search-backward
 
 export KEYTIMEOUT=1
 
-setopt hist_ignore_dups
+setopt hist_ignore_all_dups
+setopt hist_find_no_dups
 unsetopt hist_ignore_space
 setopt    appendhistory     #Append history to the history file (no overwriting)
 setopt    sharehistory      #Share history across terminals
