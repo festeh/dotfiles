@@ -1,5 +1,7 @@
 call plug#begin("$XDG_CONFIG_HOME/nvim/plugged")
     Plug 'chrisbra/csv.vim'
+    Plug 'tpope/vim-unimpaired'
+    Plug 'junegunn/fzf'
 call plug#end()
 
 "use system clipboard in vim
@@ -13,6 +15,8 @@ noremap <Right> <Nop>
 nnoremap <C-j> <C-d>
 "clear search highlights with <C-l>
 nnoremap <silent> <C-l> :nohlsearch<CR><C-l>
+"invoke fuzzy file finder with <C-p>"
+nnoremap <C-p> :<C-u>FZF<CR>
 
 set noswapfile
 
@@ -34,10 +38,12 @@ set hlsearch
 
 set smartcase "ignorecase, but smart
 
-colo zellner
-
 set wildmenu
 set wildmode=full
+
+set mouse=a
+
+colo zellner
 
 augroup filetype_csv
     autocmd!
