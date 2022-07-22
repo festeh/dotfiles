@@ -2,6 +2,7 @@ call plug#begin("$XDG_CONFIG_HOME/nvim/plugged")
     Plug 'chrisbra/csv.vim'
     Plug 'tpope/vim-unimpaired'
     Plug 'junegunn/fzf'
+    Plug 'tpope/vim-dispatch'
 call plug#end()
 
 "use system clipboard in vim
