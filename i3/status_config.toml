@@ -13,5 +13,5 @@ block = "sound"
 [[block]]
 block = "time"
 interval = 5
-format = "%R [%a %m %b]"
+format = "%R [%a %d %b]"
 
