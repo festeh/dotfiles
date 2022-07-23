@@ -39,3 +39,8 @@ nvim --noplugin +PlugUpdate +qa
 
 mkdir -p "$XDG_CONFIG_HOME/tmux"
 ln -sf "$DOTFILES/tmux/tmux.conf" "$XDG_CONFIG_HOME/tmux/tmux.conf"
+
+# tmux plugins
+[ ! -d "$XDG_CONFIG_HOME/tmux/plugins" ] \
+    && mkdir "$XDG_CONFIG_HOME/tmux/plugins" \
+    && git clone https://github.com/tmux-plugins/tpm "$XDG_CONFIG_HOME/tmux/plugins/tpm" 
