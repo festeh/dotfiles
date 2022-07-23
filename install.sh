@@ -36,3 +36,6 @@ nvim --noplugin +PlugUpdate +qa
 [ ! -d "$XDG_CONFIG_HOME/zsh/plugins/zsh-system-clipboard" ] \
     && mkdir -p "$XDG_CONFIG_HOME/zsh/plugins" \
     && git clone https://github.com/kutsan/zsh-system-clipboard $XDG_CONFIG_HOME/zsh/plugins/zsh-system-clipboard
+
+mkdir -p "$XDG_CONFIG_HOME/tmux"
+ln -sf "$DOTFILES/tmux/tmux.conf" "$XDG_CONFIG_HOME/tmux/tmux.conf"

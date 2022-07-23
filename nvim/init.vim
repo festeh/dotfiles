@@ -51,3 +51,5 @@ augroup filetype_csv
     autocmd BufRead,BufWritePost *.csv :%ArrangeColumn!
     autocmd BufWritePre *.csv :%UnArrangeColumn
 augroup END
+
+
