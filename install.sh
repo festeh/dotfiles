@@ -1,7 +1,9 @@
 #!/bin/bash
 
 mkdir -p "$XDG_CONFIG_HOME/nvim"
+mkdir -p "$XDG_CONFIG_HOME/nvim/lua"
 ln -sf "$DOTFILES/nvim/init.vim" "$XDG_CONFIG_HOME/nvim/init.vim"
+ln -sf "$DOTFILES/nvim/lua/lspinit.lua" "$XDG_CONFIG_HOME/nvim/lua/lspinit.lua"
 
 rm -rf "$XDG_CONFIG_HOME/X11"
 ln -s "$DOTFILES/X11" "$XDG_CONFIG_HOME/X11"

@@ -3,6 +3,12 @@ call plug#begin("$XDG_CONFIG_HOME/nvim/plugged")
     Plug 'tpope/vim-unimpaired'
     Plug 'junegunn/fzf'
     Plug 'tpope/vim-dispatch'
+    Plug 'itchyny/lightline.vim'
+    Plug 'neovim/nvim-lspconfig'
+    Plug 'ms-jpq/coq_nvim', {'branch': 'coq'}
+    Plug 'ms-jpq/coq.artifacts', {'branch': 'artifacts'}
+    Plug 'ms-jpq/coq.thirdparty', {'branch': '3p'}
+    Plug 'ms-jpq/chadtree', {'branch': 'chad', 'do': 'python3 -m chadtree deps'}
 call plug#end()
 
 "use system clipboard in vim
@@ -18,6 +24,8 @@ nnoremap <C-j> <C-d>
 nnoremap <silent> <C-l> :nohlsearch<CR><C-l>
 "invoke fuzzy file finder with <C-p>"
 nnoremap <C-p> :<C-u>FZF<CR>
+"reload config 
+nnoremap <Leader>r :source $MYVIMRC<CR>
 
 set noswapfile
 
@@ -39,12 +47,16 @@ set hlsearch
 
 set smartcase "ignorecase, but smart
 
+set noshowmode "no need to show -- INSERT --, we have this in status
+
 set wildmenu
 set wildmode=full
 
 set mouse=a
 
+
 colo zellner
+set background=dark
 
 augroup filetype_csv
     autocmd!
@@ -52,4 +64,14 @@ augroup filetype_csv
     autocmd BufWritePre *.csv :%UnArrangeColumn
 augroup END
 
+let g:lightline = {
+      \ 'colorscheme': 'one',
+      \ }
 
+lua << EOF
+local ok, res = pcall(require, 'lspinit')
+print(ok)
+if not ok then
+    print(res)
+    end
+EOF
