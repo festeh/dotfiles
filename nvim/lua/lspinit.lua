@@ -1,7 +1,9 @@
 local lsp = require "lspconfig"
-vim.g.coq_settings = {["auto_start"] = true}
 local coq = require "coq"
-local settings = {
+local util = require "lspconfig/util"
+
+
+local lua_settings = {
     Lua = {
       runtime = {
         -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
@@ -18,4 +20,21 @@ local settings = {
 }
 }
 
-lsp.sumneko_lua.setup(coq.lsp_ensure_capabilities({settings=settings}))
+lsp.sumneko_lua.setup(coq.lsp_ensure_capabilities({settings=lua_settings}))
+
+lsp.gopls.setup(coq.lsp_ensure_capabilities({
+    filetypes = {"go", "gomod"},
+    root_dir = util.root_pattern("go.work", "go.mod", ".git"),
+    settings = {
+          gopls = {
+            analyses = {
+              unusedparams = true,
+            },
+            staticcheck = true,
+          },
+        },
+}))
+
+vim.api.nvim_set_keymap("n", "<leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>", { noremap = true })
+
+vim.cmd("COQnow")

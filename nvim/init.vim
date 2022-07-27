@@ -3,12 +3,16 @@ call plug#begin("$XDG_CONFIG_HOME/nvim/plugged")
     Plug 'tpope/vim-unimpaired'
     Plug 'junegunn/fzf'
     Plug 'tpope/vim-dispatch'
+    Plug 'tpope/vim-fugitive'
+    Plug 'tpope/vim-commentary'
+    Plug 'tpope/vim-surround'
     Plug 'itchyny/lightline.vim'
     Plug 'neovim/nvim-lspconfig'
     Plug 'ms-jpq/coq_nvim', {'branch': 'coq'}
     Plug 'ms-jpq/coq.artifacts', {'branch': 'artifacts'}
     Plug 'ms-jpq/coq.thirdparty', {'branch': '3p'}
     Plug 'ms-jpq/chadtree', {'branch': 'chad', 'do': 'python3 -m chadtree deps'}
+    Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
 call plug#end()
 
 "use system clipboard in vim
@@ -45,12 +49,14 @@ set shiftwidth=4
 set incsearch
 set hlsearch
 
-set smartcase "ignorecase, but smart
+set ignorecase
+"set smartcase "ignorecase, but smart
 
 set noshowmode "no need to show -- INSERT --, we have this in status
 
 set wildmenu
 set wildmode=full
+set wildignorecase
 
 set mouse=a
 
