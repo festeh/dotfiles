@@ -48,8 +48,8 @@ bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT
 bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle && $refresh_i3status
 bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle && $refresh_i3status
 
-bindsym XF86MonBrightnessDown exec --no-startup-id brightnessctl s 5%- && $refresh_i3status
-bindsym XF86MonBrightnessUp exec --no-startup-id brightnessctl s +5% && $refresh_i3status
+bindsym XF86MonBrightnessDown exec --no-startup-id brightnessctl s 1%- && $refresh_i3status
+bindsym XF86MonBrightnessUp exec --no-startup-id brightnessctl s +1% && $refresh_i3status
 
 # Use Mouse+$mod to drag floating windows to their wanted position
 floating_modifier $mod
@@ -231,7 +231,7 @@ for_window [class="Google-chrome"] border none
 # Terminal scratchpad
 for_window [instance="urxvt_scratchpad"] move to scratchpad, border none
 bindsym $mod+Shift+t [instance="urxvt_scratchpad"] scratchpad show
-exec gnome-terminal -name urxvt_scratchpad
+exec_always gnome-terminal -name urxvt_scratchpad
 
 # htop scratchpad
 for_window [instance="htop_scratchpad"] move to scratchpad, border none

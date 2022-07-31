@@ -1,9 +1,13 @@
 #!/bin/bash
 
 mkdir -p "$XDG_CONFIG_HOME/nvim"
-mkdir -p "$XDG_CONFIG_HOME/nvim/lua"
+mkdir -p "$XDG_CONFIG_HOME/nvim/lua/"
+rm -rf "$XDG_CONFIG_HOME/nvim/lua/plugins"
+
 ln -sf "$DOTFILES/nvim/init.vim" "$XDG_CONFIG_HOME/nvim/init.vim"
-ln -sf "$DOTFILES/nvim/lua/lspinit.lua" "$XDG_CONFIG_HOME/nvim/lua/lspinit.lua"
+ln -sf "$DOTFILES/nvim/lua/options.lua" "$XDG_CONFIG_HOME/nvim/lua/options.lua"
+ln -sf "$DOTFILES/nvim/lua/utils.lua" "$XDG_CONFIG_HOME/nvim/lua/utils.lua"
+ln -sf "$DOTFILES/nvim/lua/plugins" "$XDG_CONFIG_HOME/nvim/lua"
 
 rm -rf "$XDG_CONFIG_HOME/X11"
 ln -s "$DOTFILES/X11" "$XDG_CONFIG_HOME/X11"
