@@ -4,6 +4,7 @@ call plug#begin("$XDG_CONFIG_HOME/nvim/plugged")
     Plug 'tpope/vim-unimpaired'
     Plug 'junegunn/fzf'
     Plug 'tpope/vim-dispatch'
+    Plug 'mbbill/undotree'
     Plug 'tpope/vim-fugitive'
     Plug 'tpope/vim-commentary'
     Plug 'tpope/vim-surround'
@@ -18,11 +19,6 @@ call plug#begin("$XDG_CONFIG_HOME/nvim/plugged")
     Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
 call plug#end()
 
-set noswapfile
-set undofile
-set undodir=$HOME/.config/nvim/undo
-
-set number
 
 "use system clipboard in vim
 set clipboard+=unnamedplus
@@ -40,34 +36,8 @@ nnoremap <C-p> :<C-u>FZF<CR>
 "reload config 
 nnoremap <Leader>r :lua ReloadConfig()<CR> \| :source $MYVIMRC<CR>
 
-set undolevels=10000
-set undolevels=10000
-
-set autoindent 
-set expandtab
-set tabstop=4
-set softtabstop=4 
-set shiftwidth=4
-
-set incsearch
-set hlsearch
-
-set ignorecase
-"set smartcase "ignorecase, but smart
-
-set noshowmode "no need to show -- INSERT --, we have this in status
-
-set wildmenu
-set wildmode=full
-set wildignorecase
-
-set mouse=a
-
-
-" colo zellner
 colorscheme darcula
-set termguicolors
-set background=dark
+
 
 augroup filetype_csv
     autocmd!
