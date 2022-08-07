@@ -7,6 +7,7 @@ rm -rf "$XDG_CONFIG_HOME/nvim/lua/plugins"
 ln -sf "$DOTFILES/nvim/init.vim" "$XDG_CONFIG_HOME/nvim/init.vim"
 ln -sf "$DOTFILES/nvim/lua/options.lua" "$XDG_CONFIG_HOME/nvim/lua/options.lua"
 ln -sf "$DOTFILES/nvim/lua/utils.lua" "$XDG_CONFIG_HOME/nvim/lua/utils.lua"
+ln -sf "$DOTFILES/nvim/lua/keymap.lua" "$XDG_CONFIG_HOME/nvim/lua/keymap.lua"
 ln -sf "$DOTFILES/nvim/lua/plugins" "$XDG_CONFIG_HOME/nvim/lua"
 
 rm -rf "$XDG_CONFIG_HOME/X11"

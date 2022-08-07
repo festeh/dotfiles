@@ -1,4 +1,4 @@
-call plug#begin("$XDG_CONFIG_HOME/nvim/plugged")
+ call plug#begin("$XDG_CONFIG_HOME/nvim/plugged")
     Plug 'doums/darcula'
     Plug 'chrisbra/csv.vim'
     Plug 'tpope/vim-unimpaired'
@@ -20,10 +20,21 @@ call plug#begin("$XDG_CONFIG_HOME/nvim/plugged")
 call plug#end()
 
 
-noremap <Up> <Nop>
-noremap <Down> <Nop>
-noremap <Left> <Nop>
-noremap <Right> <Nop>
+lua << EOF
+modules = {
+    'keymap', 
+    'options', 
+    'utils',
+    'plugins.quick-scope',
+    'plugins.lspinit',
+    }
+for i, mod in pairs(modules) do 
+    local ok, res = pcall(require, mod)
+    if not ok then
+        print(res)
+    end
+end
+EOF
 
 nnoremap <C-j> <C-d>
 "clear search highlights with <C-l>
@@ -51,12 +62,3 @@ let g:sneak#use_ic_scs = 1
 nnoremap <A-1> :CHADopen<CR>
 inoremap <A-1> <ESC>:CHADopen<CR>
 
-lua << EOF
-local ok, res = pcall(require, 'plugins.lspinit')
-local ok, res = pcall(require, 'plugins.quick-scope')
-local ok, res = pcall(require, 'options')
-local ok, res = pcall(require, 'utils')
-if not ok then
-    print(res)
-    end
-EOF

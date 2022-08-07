@@ -1,34 +1,40 @@
 -- TODO: add wildmenu wildopt settings
-vim.opt.autoindent = true
-vim.opt.backup = false
-vim.opt.clipboard:append "unnamedplus"
-vim.opt.expandtab = true
-vim.opt.hlsearch = true
-vim.opt.ignorecase = true
-vim.opt.incsearch = true
-vim.opt.mouse = "a"
-vim.opt.number = true
-vim.opt.shiftwidth = 4
-vim.opt.showmode = false
-vim.opt.smartcase = true
-vim.opt.softtabstop = 4
-vim.opt.swapfile = false
-vim.opt.tabstop = 4
-vim.opt.termguicolors = true
-vim.opt.undodir = os.getenv("HOME") .. "/.config/nvim/undo"
-vim.opt.undofile = true
-vim.opt.undolevels = 10000
-vim.opt.cmdheight = 1 -- one line for ex command
-vim.opt.completeopt = {"menuone", "noselect"} -- autocomplete settings
-vim.opt.conceallevel = 2 -- TODO: find out why it should be 0 
-vim.opt.fileencoding = "utf-8"
-vim.opt.pumheight = 10 -- TODO: doesn't relly work, COQ overwrites this setting
-vim.opt.splitbelow = true -- always split below
-vim.opt.splitright = true -- always split right
-vim.opt.timeoutlen = 1000 -- time to wait end of composition(<Leader-r> for example) (ms)
-vim.opt.updatetime = 300 -- faster completion
-vim.opt.cursorline = true
-vim.opt.signcolumn = "auto" -- set to "yes" when need to debug
-vim.opt.scrolloff = 8 -- position cursor so there's n lines above and below
-vim.opt.sidescrolloff = 8 -- position cursor so there's n lines above and below
-vim.opt.wrap = false
+local options = {
+    autoindent = true,
+    backup = false,
+    clipboard = "unnamedplus",
+    cmdheight = 1, -- one line for ex command
+    completeopt = {"menuone", "noselect"}, -- autocomplete settings
+    conceallevel = 2, -- TODO: find out why it should be 0 
+    cursorline = true,
+    expandtab = true,
+    fileencoding = "utf-8",
+    hlsearch = true,
+    ignorecase = true,
+    incsearch = true,
+    mouse = "a",
+    number = true,
+    pumheight = 10, -- TODO: doesn't relly work, COQ overwrites this setting
+    scrolloff = 8, -- position cursor so there's n lines above and below
+    shiftwidth = 4,
+    showmode = false,
+    sidescrolloff = 8, -- position cursor so there's n lines above and below
+    signcolumn = "auto", -- set to "yes" when need to debug
+    smartcase = true,
+    softtabstop = 4,
+    splitbelow = true, -- always split below
+    splitright = true, -- always split right
+    swapfile = false,
+    tabstop = 4,
+    termguicolors = true,
+    timeoutlen = 1000, -- time to wait end of composition(<Leader-r> for example) (ms)
+    undodir = os.getenv("HOME") .. "/.config/nvim/undo",
+    undofile = true,
+    undolevels = 10000,
+    updatetime = 300, -- faster completion
+    wrap = false,
+}
+
+for k, v in pairs(options) do
+  vim.opt[k] = v
+end
