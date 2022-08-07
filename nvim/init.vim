@@ -36,7 +36,6 @@ for i, mod in pairs(modules) do
 end
 EOF
 
-nnoremap <C-j> <C-d>
 "clear search highlights with <C-l>
 nnoremap <silent> <C-l> :nohlsearch<CR><C-l>
 "invoke fuzzy file finder with <C-p>"
@@ -52,6 +51,7 @@ augroup filetype_csv
     autocmd BufRead,BufWritePost *.csv :%ArrangeColumn!
     autocmd BufWritePre *.csv :%UnArrangeColumn
 augroup END
+
 " TODO: refactor into plugin settings
 let g:lightline = {
       \ 'colorscheme': 'one',
