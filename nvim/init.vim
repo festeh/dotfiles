@@ -20,9 +20,6 @@ call plug#begin("$XDG_CONFIG_HOME/nvim/plugged")
 call plug#end()
 
 
-"use system clipboard in vim
-set clipboard+=unnamedplus
-
 noremap <Up> <Nop>
 noremap <Down> <Nop>
 noremap <Left> <Nop>
