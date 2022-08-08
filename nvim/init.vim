@@ -17,6 +17,7 @@
     Plug 'ms-jpq/coq.thirdparty', {'branch': '3p'}
     Plug 'ms-jpq/chadtree', {'branch': 'chad', 'do': 'python3 -m chadtree deps'}
     Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
+    Plug 'nvim-treesitter/nvim-treesitter'
 call plug#end()
 
 
