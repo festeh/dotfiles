@@ -17,7 +17,7 @@
     Plug 'ms-jpq/coq.thirdparty', {'branch': '3p'}
     Plug 'ms-jpq/chadtree', {'branch': 'chad', 'do': 'python3 -m chadtree deps'}
     Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
-    Plug 'nvim-treesitter/nvim-treesitter'
+    Plug 'nvim-treesitter/nvim-treesitter', { 'do' : ':TSUpdate'}
 call plug#end()
 
 
@@ -28,6 +28,7 @@ modules = {
     'utils',
     'plugins.quick-scope',
     'plugins.lspinit',
+    'plugins.treesitter',
     }
 for i, mod in pairs(modules) do 
     local ok, res = pcall(require, mod)

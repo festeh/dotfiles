@@ -2,7 +2,8 @@ function _G.ReloadConfig()
 -- Add modules here
 local modules = {
   "options",
-  "keymap"
+  "keymap",
+  "plugins.treesitter"
 }
   for k, v in pairs(modules) do
       package.loaded[v] = nil
