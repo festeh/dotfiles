@@ -6,12 +6,13 @@
     Plug 'tpope/vim-dispatch'
     Plug 'mbbill/undotree'
     Plug 'tpope/vim-fugitive'
-    Plug 'tpope/vim-commentary'
     Plug 'tpope/vim-surround'
     Plug 'itchyny/lightline.vim'
     Plug 'neovim/nvim-lspconfig'
     Plug 'unblevable/quick-scope'
     Plug 'justinmk/vim-sneak'
+    Plug 'airblade/vim-gitgutter'
+    Plug 'numToStr/Comment.nvim'
     Plug 'ms-jpq/coq_nvim', {'branch': 'coq'}
     Plug 'ms-jpq/coq.artifacts', {'branch': 'artifacts'}
     Plug 'ms-jpq/coq.thirdparty', {'branch': '3p'}
@@ -29,6 +30,7 @@ modules = {
     'plugins.quick-scope',
     'plugins.lspinit',
     'plugins.treesitter',
+    'plugins.comment',
     }
 for i, mod in pairs(modules) do 
     local ok, res = pcall(require, mod)
