@@ -9,6 +9,7 @@
     Plug 'tpope/vim-surround'
     Plug 'itchyny/lightline.vim'
     Plug 'neovim/nvim-lspconfig'
+    Plug 'williamboman/nvim-lsp-installer'
     Plug 'unblevable/quick-scope'
     Plug 'justinmk/vim-sneak'
     Plug 'airblade/vim-gitgutter'
