@@ -1,6 +1,7 @@
 -- TODO: add wildmenu wildopt settings
 local options = {
     autoindent = true,
+    autowrite = true, -- save file on buf change and make
     backup = false,
     clipboard = "unnamedplus",
     cmdheight = 1, -- one line for ex command

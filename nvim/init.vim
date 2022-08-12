@@ -12,7 +12,7 @@
     Plug 'williamboman/nvim-lsp-installer'
     Plug 'unblevable/quick-scope'
     Plug 'justinmk/vim-sneak'
-    Plug 'airblade/vim-gitgutter'
+    Plug 'lewis6991/gitsigns.nvim'
     Plug 'numToStr/Comment.nvim'
     Plug 'ms-jpq/coq_nvim', {'branch': 'coq'}
     Plug 'ms-jpq/coq.artifacts', {'branch': 'artifacts'}
@@ -28,6 +28,7 @@ modules = {
     'keymap', 
     'options', 
     'utils',
+    'plugins.gitsigns',
     'plugins.quick-scope',
     'plugins.lspinit',
     'plugins.treesitter',

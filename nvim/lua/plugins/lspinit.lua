@@ -2,6 +2,10 @@ local lsp = require "lspconfig"
 local coq = require "coq"
 local util = require "lspconfig/util"
 
+require("coq_3p") {
+    {src = "nvimlua", short_name = "nLUA", conf_only = false},
+}
+
 
 local lua_settings = {
     Lua = {
