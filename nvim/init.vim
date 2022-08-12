@@ -7,7 +7,6 @@
     Plug 'junegunn/fzf'
     Plug 'tpope/vim-dispatch'
     Plug 'mbbill/undotree'
-    Plug 'tpope/vim-fugitive'
     Plug 'tpope/vim-surround'
     Plug 'itchyny/lightline.vim'
     Plug 'neovim/nvim-lspconfig'
@@ -16,6 +15,9 @@
     Plug 'justinmk/vim-sneak'
     Plug 'lewis6991/gitsigns.nvim'
     Plug 'numToStr/Comment.nvim'
+    Plug 'nvim-lua/plenary.nvim'
+    Plug 'sindrets/diffview.nvim'
+    Plug 'TimUntersberger/neogit'
     Plug 'ms-jpq/coq_nvim', {'branch': 'coq'}
     Plug 'ms-jpq/coq.artifacts', {'branch': 'artifacts'}
     Plug 'ms-jpq/coq.thirdparty', {'branch': '3p'}
@@ -35,6 +37,8 @@ modules = {
     'plugins.lspinit',
     'plugins.treesitter',
     'plugins.comment',
+    'plugins.diffview',
+    'plugins.neogit',
     }
 for i, mod in pairs(modules) do 
     local ok, res = pcall(require, mod)
