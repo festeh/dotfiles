@@ -55,6 +55,9 @@ keymap("n", "<C-s>", ":update<CR>", opts)
 keymap("i" , "<C-s>", "<C-o>:update<CR>", opts)
 keymap("v" , "<C-s>", "<C-c>:update<CR>", opts)
 
+-- Git popup
+keymap("n", "<C-k>", ":Git<CR>", opts)
+
 
 
 

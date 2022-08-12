@@ -7,12 +7,13 @@
     Plug 'junegunn/fzf'
     Plug 'tpope/vim-dispatch'
     Plug 'mbbill/undotree'
+    Plug 'folke/which-key.nvim'
+    Plug 'simnalamburt/vim-mundo'
     Plug 'tpope/vim-surround'
     Plug 'itchyny/lightline.vim'
     Plug 'neovim/nvim-lspconfig'
     Plug 'williamboman/nvim-lsp-installer'
     Plug 'unblevable/quick-scope'
-    Plug 'justinmk/vim-sneak'
     Plug 'lewis6991/gitsigns.nvim'
     Plug 'numToStr/Comment.nvim'
     Plug 'nvim-lua/plenary.nvim'
@@ -39,6 +40,7 @@ modules = {
     'plugins.comment',
     'plugins.diffview',
     'plugins.neogit',
+    'plugins.whichkey',
     }
 for i, mod in pairs(modules) do 
     local ok, res = pcall(require, mod)
