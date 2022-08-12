@@ -66,10 +66,17 @@ neogit.setup {
   }
 }
 
+
+-- vim.cmd [[
+-- autocmd FileType NeogitStatus lcd %:p:h
+-- ]]
+
 vim.api.nvim_create_user_command(
         "Git",
         function()
-            require("neogit").open({cwd = vim.fn.expand("%:p:h")})
+            local cwd = vim.fn.expand('%:p:h')
+            require("neogit").open()
+            vim.cmd(":lcd" .. cwd)
         end,
         {nargs = 0}
     )
