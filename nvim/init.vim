@@ -1,5 +1,7 @@
  call plug#begin("$XDG_CONFIG_HOME/nvim/plugged")
     Plug 'doums/darcula'
+    Plug 'sainnhe/everforest'
+    Plug 'projekt0n/github-nvim-theme'
     Plug 'chrisbra/csv.vim'
     Plug 'tpope/vim-unimpaired'
     Plug 'junegunn/fzf'
@@ -49,7 +51,17 @@ nnoremap <C-p> :<C-u>FZF<CR>
 "reload config 
 nnoremap <Leader>r :lua ReloadConfig()<CR> \| :source $MYVIMRC<CR>
 
-colorscheme darcula
+" set background=dark
+" let g:everforest_background = 'hard'
+" let g:everforest_better_performance = 1
+" colorscheme everforest
+" colorscheme darcula
+
+" set background="light"
+" colorscheme github_dimmed
+
+set background=dark
+colorscheme darcula 
 
 
 augroup filetype_csv
@@ -60,7 +72,7 @@ augroup END
 
 " TODO: refactor into plugin settings
 let g:lightline = {
-      \ 'colorscheme': 'one',
+      \ 'colorscheme': 'everforest',
       \ }
 let g:sneak#label = 1
 let g:sneak#use_ic_scs = 1
