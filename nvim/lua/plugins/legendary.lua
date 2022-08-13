@@ -25,7 +25,26 @@ require('legendary').setup({
     most_recent_item_at_top = true,
     -- Initial keymaps to bind
     keymaps = {
+        -- LSP Generics
         { '<leader>fm', vim.lsp.buf.formatting_sync, description = 'Format buffer with LSP' },
+        { '<leader>lr', vim.lsp.buf.rename, description = 'Rename variable with LSP' },
+        { '<leader>la', vim.lsp.buf.code_action, description = 'Code action with LSP' },
+        { '<leader>ld', vim.diagnostic.open_float, description = 'Line diagnostics with LSP' },
+        { '<leader>l]', vim.diagnostic.goto_next, description = 'Jump next diagnostics with LSP' },
+        { '<leader>l[', vim.diagnostic.goto_prev, description = 'Jump prev diagnostics with LSP' },
+        { '<leader>lk', vim.lsp.buf.hover, description = 'Show help' },
+        { 'gd', vim.lsp.buf.definition, description = "Definition" },
+        { 'gD', vim.lsp.buf.declaration, description = "Declaration" },
+        { 'gs', vim.lsp.buf.signature_help, description = "Signature Help" },
+        { 'gi', vim.lsp.buf.implementation, description = "Goto Implementation" },
+        { 'gt', vim.lsp.buf.type_definition, description = "Goto Type Definition" },
+        -- Telescope
+        { '<leader>td', ":Telescope diagnostics<CR>", description = 'Line diagnostics with Telescope' },
+        { '<leader>tg', ":Telescope live_grep<CR>", description = 'Grep with rg and Telescope' },
+        { '<leader>tc', ":Telescope commands<CR>", description = 'Search command with Telescope' },
+        { '<leader>tr', ":Telescope lsp_references<CR>", description = 'List of references for symbol with Telescope' },
+        { '<leader>ts', ":Telescope lsp_document_symbols<CR>", description = 'List document symbols with Telelscope' },
+        { '<leader>tw', ":Telescope lsp_workspace_symbols<CR>", description = 'List workspace symbols with Telelscope' },
     },
     -- Initial commands to bind
     commands = {

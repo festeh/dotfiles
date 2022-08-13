@@ -1,6 +1,8 @@
  call plug#begin("$XDG_CONFIG_HOME/nvim/plugged")
     Plug 'doums/darcula'
     Plug 'sainnhe/everforest'
+    Plug 'kyazdani42/nvim-web-devicons'
+    Plug 'ggandor/lightspeed.nvim'
     Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.0' }
     Plug 'mrjones2014/legendary.nvim'
     Plug 'projekt0n/github-nvim-theme'
@@ -22,6 +24,7 @@
     Plug 'nvim-lua/plenary.nvim'
     Plug 'sindrets/diffview.nvim'
     Plug 'TimUntersberger/neogit'
+    Plug 'phaazon/hop.nvim'
     Plug 'ms-jpq/coq_nvim', {'branch': 'coq'}
     Plug 'ms-jpq/coq.artifacts', {'branch': 'artifacts'}
     Plug 'ms-jpq/coq.thirdparty', {'branch': '3p'}
@@ -46,7 +49,8 @@ modules = {
     'plugins.neogit',
     'plugins.telescope',
     'plugins.legendary',
-    'plugins.whichkey'
+    'plugins.whichkey',
+    'plugins.hop',
     }
 for i, mod in pairs(modules) do 
     local ok, res = pcall(require, mod)

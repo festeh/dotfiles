@@ -58,6 +58,4 @@ keymap("v" , "<C-s>", "<C-c>:update<CR>", opts)
 -- Git popup
 keymap("n", "<C-k>", ":Git<CR>", opts)
 
-
-
-
+vim.keymap.set({"n", "v"}, "K", vim.lsp.buf.hover, opts)

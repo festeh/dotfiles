@@ -10,6 +10,7 @@ local options = {
     cursorline = true,
     expandtab = true,
     fileencoding = "utf-8",
+    laststatus = 3,
     hlsearch = true,
     ignorecase = true,
     incsearch = true,

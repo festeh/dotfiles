@@ -23,6 +23,6 @@ wk.register({
         c = { "<cmd>qall!<CR>", "Close all" },
         t = { "<Cmd>tabclose<Cr>", "Close tab" },
     },
-        g = { "<Cmd>Git<CR>", "Open git"  },
+        z = { "<Cmd>Git<CR>", "Open git"  },
     ["?"] = { "<Cmd>WhichKey <Leader><CR>", "Open Whichkey"}
 }, opts)
