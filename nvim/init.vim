@@ -1,12 +1,15 @@
  call plug#begin("$XDG_CONFIG_HOME/nvim/plugged")
     Plug 'doums/darcula'
     Plug 'sainnhe/everforest'
+    Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.0' }
+    Plug 'mrjones2014/legendary.nvim'
     Plug 'projekt0n/github-nvim-theme'
     Plug 'chrisbra/csv.vim'
     Plug 'tpope/vim-unimpaired'
     Plug 'junegunn/fzf'
     Plug 'tpope/vim-dispatch'
     Plug 'mbbill/undotree'
+    Plug 'stevearc/dressing.nvim'
     Plug 'folke/which-key.nvim'
     Plug 'simnalamburt/vim-mundo'
     Plug 'tpope/vim-surround'
@@ -38,9 +41,12 @@ modules = {
     'plugins.lspinit',
     'plugins.treesitter',
     'plugins.comment',
+    'plugins.dressing',
     'plugins.diffview',
     'plugins.neogit',
-    'plugins.whichkey',
+    'plugins.telescope',
+    'plugins.legendary',
+    'plugins.whichkey'
     }
 for i, mod in pairs(modules) do 
     local ok, res = pcall(require, mod)
