@@ -6,6 +6,8 @@ local modules = {
   "plugins.treesitter",
   "plugins.gitsigns",
   "plugins.whichkey",
+  "plugins.lspinit",
+
 }
   for k, v in pairs(modules) do
       package.loaded[v] = nil

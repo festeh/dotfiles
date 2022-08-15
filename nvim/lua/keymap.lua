@@ -51,9 +51,9 @@ Total_map("<Up>", "<Nop>")
 Total_map("<Down>", "<Nop>")
 
 -- Save on Ctrl+s
-keymap("n", "<C-s>", ":update<CR>", opts)
-keymap("i" , "<C-s>", "<C-o>:update<CR>", opts)
-keymap("v" , "<C-s>", "<C-c>:update<CR>", opts)
+keymap("n", "<C-s>", ":update<CR><ESC>", opts)
+keymap("i" , "<C-s>", "<C-o>:update<CR><ESC>", opts)
+keymap("v" , "<C-s>", "<C-c>:update<CR><ESC>", opts)
 
 -- Git popup
 keymap("n", "<C-k>", ":Git<CR>", opts)

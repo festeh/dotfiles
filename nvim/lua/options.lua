@@ -33,7 +33,7 @@ local options = {
     undodir = os.getenv("HOME") .. "/.config/nvim/undo",
     undofile = true,
     undolevels = 10000,
-    updatetime = 300, -- faster completion
+    updatetime = 100, -- faster completion
     wrap = false,
 }
 

@@ -32,7 +32,11 @@ require('legendary').setup({
         { '<leader>ld', vim.diagnostic.open_float, description = 'Line diagnostics with LSP' },
         { '<leader>l]', vim.diagnostic.goto_next, description = 'Jump next diagnostics with LSP' },
         { '<leader>l[', vim.diagnostic.goto_prev, description = 'Jump prev diagnostics with LSP' },
-        { '<leader>lk', vim.lsp.buf.hover, description = 'Show help' },
+        { '<leader>lk', vim.lsp.buf.hover, description = 'Show help with LSP' },
+        --        TODO: this is not supported for some LSP
+        { '<leader>li', vim.lsp.buf.implementation, description = 'Show symbol implemetations with LSP' },
+        { '<leader>lp', vim.lsp.buf.signature_help, description = 'Show method signature with LSP' },
+        { '<leader>lwl', "<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>", description = 'Show workspace list for LSP' },
         { 'gd', vim.lsp.buf.definition, description = "Definition" },
         { 'gD', vim.lsp.buf.declaration, description = "Declaration" },
         { 'gs', vim.lsp.buf.signature_help, description = "Signature Help" },

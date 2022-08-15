@@ -11,4 +11,4 @@ require'Comment'.setup(
 )
 
 local opt = { expr = true, remap = true, replace_keycodes = false }
-vim.keymap.set('n', '<A-/>', "v:count == 0 ? '<Plug>(comment_toggle_current_linewise)' : '<Plug>(comment_toggle_linewise_count)'", opt)
+vim.keymap.set('n', '<A-/>', "v:count == 0 ? '<Plug>(comment_toggle_linewise_current)' : '<Plug>(comment_toggle_linewise_count)'", opt)
