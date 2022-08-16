@@ -17,7 +17,7 @@
     Plug 'tpope/vim-surround'
     Plug 'itchyny/lightline.vim'
     Plug 'neovim/nvim-lspconfig'
-    Plug 'williamboman/nvim-lsp-installer'
+    Plug 'williamboman/mason.nvim'
     Plug 'unblevable/quick-scope'
     Plug 'lewis6991/gitsigns.nvim'
     Plug 'numToStr/Comment.nvim'
@@ -86,6 +86,7 @@ modules = {
     'options', 
     'utils',
     'plugins.gitsigns',
+    'plugins.mason',
     'plugins.quick-scope',
     'plugins.lspinit',
     'plugins.treesitter',
