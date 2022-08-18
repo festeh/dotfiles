@@ -1,6 +1,7 @@
  call plug#begin("$XDG_CONFIG_HOME/nvim/plugged")
     Plug 'doums/darcula'
-    Plug 'sainnhe/everforest'
+    Plug 'windwp/nvim-autopairs'
+    Plug 'vim-test/vim-test'
     Plug 'kyazdani42/nvim-web-devicons'
     Plug 'ggandor/lightspeed.nvim'
     Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.0' }
@@ -15,7 +16,7 @@
     Plug 'folke/which-key.nvim'
     Plug 'simnalamburt/vim-mundo'
     Plug 'tpope/vim-surround'
-    Plug 'itchyny/lightline.vim'
+    Plug 'nvim-lualine/lualine.nvim'
     Plug 'neovim/nvim-lspconfig'
     Plug 'williamboman/mason.nvim'
     Plug 'unblevable/quick-scope'
@@ -98,6 +99,9 @@ modules = {
     'plugins.legendary',
     'plugins.whichkey',
     'plugins.hop',
+    'plugins.lualine',
+    'plugins.autopairs',
+    'plugins.tests'
     }
 for i, mod in pairs(modules) do 
     local ok, res = pcall(require, mod)
@@ -133,12 +137,6 @@ augroup filetype_csv
     autocmd BufWritePre *.csv :%UnArrangeColumn
 augroup END
 
-" TODO: refactor plz into plugin settings
-let g:lightline = {
-      \ 'colorscheme': 'everforest',
-      \ }
-let g:sneak#label = 1
-let g:sneak#use_ic_scs = 1
 
 nnoremap <A-1> :CHADopen<CR>
 inoremap <A-1> <ESC>:CHADopen<CR>

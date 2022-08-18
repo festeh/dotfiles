@@ -49,6 +49,10 @@ require('legendary').setup({
         { '<leader>tr', ":Telescope lsp_references<CR>", description = 'List of references for symbol with Telescope' },
         { '<leader>ts', ":Telescope lsp_document_symbols<CR>", description = 'List document symbols with Telelscope' },
         { '<leader>tw', ":Telescope lsp_workspace_symbols<CR>", description = 'List workspace symbols with Telelscope' },
+        { '<C-f>', ":Telescope current_buffer_fuzzy_find<CR>", description = 'List workspace symbols with Telelscope' },
+        -- Tests
+        { '<leader>t', ":TestNearest<CR>", description = "Test nearest"},
+        { '<leader>T', ":TestFile<CR>", description = "Test file"},
     },
     -- Initial commands to bind
     commands = {
