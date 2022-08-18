@@ -27,6 +27,7 @@
     Plug 'TimUntersberger/neogit'
     Plug 'phaazon/hop.nvim'
     Plug 'hrsh7th/vim-searchx'
+    Plug 'jose-elias-alvarez/null-ls.nvim'
     Plug 'ms-jpq/coq_nvim', {'branch': 'coq'}
     Plug 'ms-jpq/coq.artifacts', {'branch': 'artifacts'}
     Plug 'ms-jpq/coq.thirdparty', {'branch': '3p'}
@@ -101,7 +102,8 @@ modules = {
     'plugins.hop',
     'plugins.lualine',
     'plugins.autopairs',
-    'plugins.tests'
+    'plugins.tests',
+    'plugins.null-ls',
     }
 for i, mod in pairs(modules) do 
     local ok, res = pcall(require, mod)

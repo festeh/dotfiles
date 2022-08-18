@@ -8,6 +8,7 @@ require("coq_3p") {
 
 ---@diagnostic disable-next-line: unused-local
 local on_attach = function(client, bufnr)
+    vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
     if client.resolved_capabilities.document_highlight then
         local hl = vim.api.nvim_set_hl
         local opts = { ctermbg = 240, bg = '#585858' }
@@ -63,6 +64,24 @@ lsp.gopls.setup(coq.lsp_ensure_capabilities({
         },
     },
 }))
+
+lsp.jsonls.setup(coq.lsp_ensure_capabilities({
+    on_attach = on_attach,
+    settings = {
+        json = {
+            schemas = {
+                {
+                    description = "Chrome webextension manifest",
+                    fileMatch = { "manifest.json" },
+                    url = "https://json.schemastore.org/chrome-manifest.json",
+                },
+            },
+            validate = { enable = true },
+        },
+    },
+}))
+
+require 'lspconfig'.tsserver.setup {}
 
 vim.api.nvim_set_keymap("n", "<leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>", { noremap = true })
 
