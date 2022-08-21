@@ -81,7 +81,9 @@ lsp.jsonls.setup(coq.lsp_ensure_capabilities({
     },
 }))
 
-require 'lspconfig'.tsserver.setup {}
+lsp.tsserver.setup {}
+
+lsp.cssls.setup{}
 
 vim.api.nvim_set_keymap("n", "<leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>", { noremap = true })
 
