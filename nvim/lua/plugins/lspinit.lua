@@ -9,7 +9,7 @@ require("coq_3p") {
 ---@diagnostic disable-next-line: unused-local
 local on_attach = function(client, bufnr)
     vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
-    if client.resolved_capabilities.document_highlight then
+    if client.server_capabilities.document_highlight then
         local hl = vim.api.nvim_set_hl
         local opts = { ctermbg = 240, bg = '#585858' }
         hl(0, 'LspReferenceRead', opts)
@@ -83,7 +83,23 @@ lsp.jsonls.setup(coq.lsp_ensure_capabilities({
 
 lsp.tsserver.setup {}
 
-lsp.cssls.setup{}
+lsp.cssls.setup {}
+
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+capabilities.textDocument.completion.completionItem.snippetSupport = true
+lsp.emmet_ls.setup(coq.lsp_ensure_capabilities({
+    on_attach = on_attach,
+    capabilities = capabilities,
+    filetypes = { 'html', 'typescriptreact', 'javascriptreact', 'css', 'sass', 'scss', 'less' },
+    init_options = {
+        html = {
+            options = {
+                -- For possible options, see: https://github.com/emmetio/emmet/blob/master/src/config.ts#L79-L267
+                ["bem.enabled"] = true,
+            },
+        },
+    }
+}))
 
 vim.api.nvim_set_keymap("n", "<leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>", { noremap = true })
 

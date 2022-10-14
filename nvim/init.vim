@@ -28,6 +28,7 @@
     Plug 'phaazon/hop.nvim'
     Plug 'hrsh7th/vim-searchx'
     Plug 'jose-elias-alvarez/null-ls.nvim'
+    Plug 'NvChad/nvim-colorizer.lua'
     Plug 'ms-jpq/coq_nvim', {'branch': 'coq'}
     Plug 'ms-jpq/coq.artifacts', {'branch': 'artifacts'}
     Plug 'ms-jpq/coq.thirdparty', {'branch': '3p'}
@@ -84,6 +85,7 @@ endfunction
 
 lua << EOF
 modules = {
+    'augroup',
     'keymap', 
     'options', 
     'utils',
@@ -104,6 +106,7 @@ modules = {
     'plugins.autopairs',
     'plugins.tests',
     'plugins.null-ls',
+    'plugins.colorizer',
     }
 for i, mod in pairs(modules) do 
     local ok, res = pcall(require, mod)
