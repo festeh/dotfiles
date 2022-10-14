@@ -101,6 +101,8 @@ lsp.emmet_ls.setup(coq.lsp_ensure_capabilities({
     }
 }))
 
+require'lspconfig'.sourcekit.setup{}
+
 vim.api.nvim_set_keymap("n", "<leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>", { noremap = true })
 
 

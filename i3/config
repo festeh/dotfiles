@@ -51,6 +51,9 @@ bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOU
 bindsym XF86MonBrightnessDown exec --no-startup-id brightnessctl s 1%- && $refresh_i3status
 bindsym XF86MonBrightnessUp exec --no-startup-id brightnessctl s +1% && $refresh_i3status
 
+bindsym Print exec --no-startup-id maim "/home/$USER/Pictures/$(date).png"
+bindsym Shift+Print exec --no-startup-id maim --select "/home/$USER/Pictures/$(date).png"
+
 # Use Mouse+$mod to drag floating windows to their wanted position
 floating_modifier $mod
 
