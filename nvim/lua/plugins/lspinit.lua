@@ -6,6 +6,16 @@ require("coq_3p") {
     { src = "nvimlua", short_name = "nLUA", conf_only = false },
 }
 
+local lsp_formatting = function(bufnr)
+    vim.lsp.buf.format({
+        filter = function(client)
+            -- apply whatever logic you want (in this example, we'll only use null-ls)
+            return client.name == "null-ls"
+        end,
+        bufnr = bufnr,
+    })
+end
+
 ---@diagnostic disable-next-line: unused-local
 local on_attach = function(client, bufnr)
     vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
@@ -26,6 +36,10 @@ local on_attach = function(client, bufnr)
             buffer = 0,
             callback = vim.lsp.buf.clear_references,
         })
+    end
+
+    if client.name == "tsserver" then
+        client.server_capabilities.documentFormattingProvider = false -- 0.8 and later
     end
 end
 
@@ -81,9 +95,9 @@ lsp.jsonls.setup(coq.lsp_ensure_capabilities({
     },
 }))
 
-lsp.tsserver.setup {}
+lsp.tsserver.setup {on_attach=on_attach}
 
-lsp.cssls.setup {}
+lsp.cssls.setup {on_attach=on_attach}
 
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities.textDocument.completion.completionItem.snippetSupport = true

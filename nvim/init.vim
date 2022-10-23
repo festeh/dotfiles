@@ -3,7 +3,7 @@
     Plug 'windwp/nvim-autopairs'
     Plug 'vim-test/vim-test'
     Plug 'kyazdani42/nvim-web-devicons'
-    Plug 'ggandor/lightspeed.nvim'
+    Plug 'ggandor/leap.nvim'
     Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.0' }
     Plug 'mrjones2014/legendary.nvim'
     Plug 'projekt0n/github-nvim-theme'
@@ -29,6 +29,7 @@
     Plug 'hrsh7th/vim-searchx'
     Plug 'jose-elias-alvarez/null-ls.nvim'
     Plug 'NvChad/nvim-colorizer.lua'
+    Plug 'stevearc/overseer.nvim'
     Plug 'ms-jpq/coq_nvim', {'branch': 'coq'}
     Plug 'ms-jpq/coq.artifacts', {'branch': 'artifacts'}
     Plug 'ms-jpq/coq.thirdparty', {'branch': '3p'}
@@ -107,6 +108,8 @@ modules = {
     'plugins.tests',
     'plugins.null-ls',
     'plugins.colorizer',
+    'plugins.overseer',
+    'plugins.leap',
     }
 for i, mod in pairs(modules) do 
     local ok, res = pcall(require, mod)

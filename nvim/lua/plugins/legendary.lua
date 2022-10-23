@@ -26,7 +26,7 @@ require('legendary').setup({
     -- Initial keymaps to bind
     keymaps = {
         -- LSP Generics
-        { '<leader>fm', vim.lsp.buf.formatting_sync, description = 'Format buffer with LSP' },
+        { '<leader>fm', vim.lsp.buf.format, description = 'Format buffer with LSP' },
         { '<leader>lr', vim.lsp.buf.rename, description = 'Rename variable with LSP' },
         { '<leader>la', vim.lsp.buf.code_action, description = 'Code action with LSP' },
         { '<leader>ld', vim.diagnostic.open_float, description = 'Line diagnostics with LSP' },
