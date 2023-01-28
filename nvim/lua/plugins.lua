@@ -73,15 +73,12 @@ packer.startup {
 
     use { "tpope/vim-sleuth" }
     use { 'folke/neodev.nvim' }
-    -- use { 'Olical/conjure' }
-    -- use { "PaterJason/cmp-conjure" }
     use { "AckslD/nvim-FeMaco.lua", config = [[require("config.femaco")]] }
     use { "szw/vim-maximizer" }
     use { "glepnir/lspsaga.nvim", branch = "main", config = [[require("config.lspsaga")]] }
     use {
       'Exafunction/codeium.vim',
       config = function()
-        -- Change '<C-g>' here to any keycode you like.
         vim.keymap.set('i', '<C-g>', function()
           return vim.fn['codeium#Accept']()
         end, { expr = true })
@@ -89,7 +86,11 @@ packer.startup {
     }
     use { "stevearc/overseer.nvim", config = [[require("config.overseer")]] }
     use { 'sindrets/diffview.nvim', requires = 'nvim-lua/plenary.nvim' }
-    use {'tpope/vim-fugitive'}
+    use { 'tpope/vim-fugitive' }
+    use { 'nvim-neotest/neotest-python' }
+    use { "lukas-reineke/indent-blankline.nvim", config = [[require("config.indent")]] }
+    use { "iamcco/markdown-preview.nvim", run = function() vim.fn["mkdp#util#install"]() end }
+    use { 'nvim-neotest/neotest', config = [[require("config.neotest")]] }
     -- %Next goes here
     --
     -- use { "MunifTanjim/nui.nvim" }
