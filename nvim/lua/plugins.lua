@@ -91,6 +91,7 @@ packer.startup {
     use { "lukas-reineke/indent-blankline.nvim", config = [[require("config.indent")]] }
     use { "iamcco/markdown-preview.nvim", run = function() vim.fn["mkdp#util#install"]() end }
     use { 'nvim-neotest/neotest', config = [[require("config.neotest")]] }
+    use {'sbdchd/neoformat', config = [[require('config.neoformat')]] }
     -- %Next goes here
     --
     -- use { "MunifTanjim/nui.nvim" }
