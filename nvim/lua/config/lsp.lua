@@ -42,20 +42,22 @@ local capabilities = require('cmp_nvim_lsp').default_capabilities()
 -- }
 
 lspconfig.pylsp.setup {
-  configurationSources = { "flake8" },
+  -- configurationSources = { "flake8" },
   on_attach = custom_attach,
   settings = {
     pylsp = {
       plugins = {
-        pylint          = { enabled = false },
+        pylint          = { enabled = true, executable = "pylint" },
         pyflakes        = { enabled = false },
         pycodestyle     = { enabled = false },
         mccabe          = { enabled = false },
-        flake8          = { enabled = true, maxLineLength = 140 },
+        -- flake8          = { enabled = true, maxLineLength = 140 },
         jedi_completion = { fuzzy = true },
         pyls_isort      = { enabled = true },
         pylsp_mypy      = { enabled = true },
         yapf            = { enabled = true },
+        ruff            = { enabled = true },
+        python_lsp_ruff = { enabled = true },
       },
     },
   },
