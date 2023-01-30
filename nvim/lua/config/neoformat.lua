@@ -3,7 +3,6 @@ vim.g.neoformat_enabled_python = { 'yapf' }
 local ext_to_lang = {
   py = "python",
   lua = "lua",
-  rs = "rust",
 }
 
 local function format()
