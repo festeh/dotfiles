@@ -15,6 +15,8 @@ keymap.set("n", "<leader>-", "<C-x>", { desc = { "Decrement number" } })
 keymap.set("x", "<", "<gv", { desc = "Shift selection left" })
 keymap.set("x", ">", ">gv", { desc = "Shift selelction right" })
 
+keymap.set("n", "<S-Tab>", "<<", {desc = "Un-tab line"})
+keymap.set("i", "<S-Tab>", "<C-d>", {desc = "Un-tab line"})
 
 keymap.set("n", "<leader>q", "<cmd>q<CR>", { desc = "Close window" })
 
