@@ -92,6 +92,7 @@ packer.startup {
     use { "iamcco/markdown-preview.nvim", run = function() vim.fn["mkdp#util#install"]() end }
     use { 'nvim-neotest/neotest', config = [[require("config.neotest")]] }
     use {'sbdchd/neoformat', config = [[require('config.neoformat')]] }
+    use {'ggandor/leap.nvim', config = [[require('config.leap')]]}
     -- %Next goes here
     --
     -- use { "MunifTanjim/nui.nvim" }
