@@ -34,3 +34,12 @@ ln -sf "$DOTFILES/tmux/tmux.conf" "$XDG_CONFIG_HOME/tmux/tmux.conf"
 [ ! -d "$XDG_CONFIG_HOME/tmux/plugins" ] \
     && mkdir "$XDG_CONFIG_HOME/tmux/plugins" \
     && git clone https://github.com/tmux-plugins/tpm "$XDG_CONFIG_HOME/tmux/plugins/tpm" 
+
+# starship prompt
+if ! [ -x "$(command -v starship)" ]; then
+  echo 'Installing Starship'
+  curl -sS https://starship.rs/install.sh | sh
+  STARSHIP_PATH="$XDG_CONFIG_HOME/starship.toml"
+  rm -rf "$STARSHIP_PATH"
+  ln -sf "$DOTFILES/starship/starship.toml" "$STARSHIP_PATH"
+fi

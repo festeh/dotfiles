@@ -32,7 +32,7 @@ setopt    sharehistory      #Share history across terminals
 setopt    incappendhistory  #Immediately append to the history file, not just when a term is killed
 
 fpath=($ZDOTDIR/external $fpath)
-autoload -Uz prompt_purification_setup; prompt_purification_setup
+
 autoload -Uz cursor_mode && cursor_mode
 
 zmodload zsh/complist
@@ -94,3 +94,5 @@ unset __conda_setup
 # <<< conda initialize <<<
 
 export PATH="$PATH:$HOME/.local/bin"
+eval "$(starship init zsh)"
+
