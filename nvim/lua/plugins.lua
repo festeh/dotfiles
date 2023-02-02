@@ -75,7 +75,6 @@ packer.startup {
     use { 'folke/neodev.nvim' }
     use { "AckslD/nvim-FeMaco.lua", config = [[require("config.femaco")]] }
     use { "szw/vim-maximizer" }
-    use { "glepnir/lspsaga.nvim", branch = "main", config = [[require("config.lspsaga")]] }
     use {
       'Exafunction/codeium.vim',
       config = function()
@@ -93,6 +92,7 @@ packer.startup {
     use { 'nvim-neotest/neotest', config = [[require("config.neotest")]] }
     use {'sbdchd/neoformat', config = [[require('config.neoformat')]] }
     use {'ggandor/leap.nvim', config = [[require('config.leap')]]}
+    use {'DNLHC/glance.nvim', config = [[require('config.glance')]]}
     -- %Next goes here
     --
     -- use { "MunifTanjim/nui.nvim" }

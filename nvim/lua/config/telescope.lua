@@ -6,10 +6,12 @@ require("telescope").setup({
     sorting_strategy = "ascending",
     layout_config = {
       horizontal = {
-        preview_cutoff = 120
+        width=0.95,
+        preview_width=0.55
       },
       prompt_position = "top"
     },
+    path_display = {"smart", "truncate"},
     mappings = {
       i = {
         ["<Tab>"] = actions.move_selection_next,
