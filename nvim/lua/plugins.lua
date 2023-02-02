@@ -93,6 +93,7 @@ packer.startup {
     use {'sbdchd/neoformat', config = [[require('config.neoformat')]] }
     use {'ggandor/leap.nvim', config = [[require('config.leap')]]}
     use {'DNLHC/glance.nvim', config = [[require('config.glance')]]}
+    use {'NoahTheDuke/vim-just'}
     -- %Next goes here
     --
     -- use { "MunifTanjim/nui.nvim" }
