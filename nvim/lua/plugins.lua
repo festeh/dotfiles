@@ -90,10 +90,23 @@ packer.startup {
     use { "lukas-reineke/indent-blankline.nvim", config = [[require("config.indent")]] }
     use { "iamcco/markdown-preview.nvim", run = function() vim.fn["mkdp#util#install"]() end }
     use { 'nvim-neotest/neotest', config = [[require("config.neotest")]] }
-    use {'sbdchd/neoformat', config = [[require('config.neoformat')]] }
-    use {'ggandor/leap.nvim', config = [[require('config.leap')]]}
-    use {'DNLHC/glance.nvim', config = [[require('config.glance')]]}
-    use {'NoahTheDuke/vim-just'}
+    use { 'sbdchd/neoformat', config = [[require('config.neoformat')]] }
+    use { 'ggandor/leap.nvim', config = [[require('config.leap')]] }
+    use { 'DNLHC/glance.nvim', config = [[require('config.glance')]] }
+    use { 'NoahTheDuke/vim-just' }
+    use {
+      'chipsenkbeil/distant.nvim',
+      config = function()
+        require('distant').setup {
+          -- Applies Chip's personal settings to every machine you connect to
+          --
+          -- 1. Ensures that distant servers terminate with no connections
+          -- 2. Provides navigation bindings for remote directories
+          -- 3. Provides keybinding to jump into a remote file's parent directory
+          ['*'] = require('distant.settings').chip_default()
+        }
+      end
+    }
     -- %Next goes here
     --
     -- use { "MunifTanjim/nui.nvim" }
