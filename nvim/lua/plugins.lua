@@ -16,7 +16,7 @@ packer.startup {
     }
     use { "hrsh7th/nvim-cmp", config = [[require('config.nvim-cmp')]] }
     use { "rafamadriz/friendly-snippets" }
-    use({ "L3MON4D3/LuaSnip", tag = "v<CurrentMajor>.*", config = "require('config.luasnip')" })
+    use({ "L3MON4D3/LuaSnip", config = "require('config.luasnip')" })
 
     -- nvim-cmp completion sources
     use { "hrsh7th/cmp-nvim-lsp", after = "nvim-cmp" }
@@ -109,6 +109,7 @@ packer.startup {
     }
     use { 'mfussenegger/nvim-dap', config = [[require('config.dap')]] }
     use {'rcarriga/nvim-dap-ui', config = [[require('config.dapui')]] }
+    use {'simrat39/rust-tools.nvim',after={"nvim-lspconfig", "cmp-nvim-lsp"}, config = [[require('config.rusttools')]]}
     -- %Next goes here
     --
     -- use { "MunifTanjim/nui.nvim" }

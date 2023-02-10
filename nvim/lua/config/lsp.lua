@@ -95,10 +95,10 @@ lspconfig.sumneko_lua.setup {
   capabilities = capabilities,
 }
 
-lspconfig.rust_analyzer.setup {
-  on_attach = custom_attach,
-  capabilities = capabilities
-}
+-- lspconfig.rust_analyzer.setup {
+--   on_attach = custom_attach,
+--   capabilities = capabilities
+-- }
 
 lspconfig.tsserver.setup {
   on_attach = custom_attach,
