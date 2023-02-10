@@ -107,6 +107,8 @@ packer.startup {
         }
       end
     }
+    use { 'mfussenegger/nvim-dap', config = [[require('config.dap')]] }
+    use {'rcarriga/nvim-dap-ui', config = [[require('config.dapui')]] }
     -- %Next goes here
     --
     -- use { "MunifTanjim/nui.nvim" }
