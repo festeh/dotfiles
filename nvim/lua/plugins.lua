@@ -108,8 +108,18 @@ packer.startup {
       end
     }
     use { 'mfussenegger/nvim-dap', config = [[require('config.dap')]] }
-    use {'rcarriga/nvim-dap-ui', config = [[require('config.dapui')]] }
-    use {'simrat39/rust-tools.nvim',after={"nvim-lspconfig", "cmp-nvim-lsp"}, config = [[require('config.rusttools')]]}
+    use { 'rcarriga/nvim-dap-ui', config = [[require('config.dapui')]] }
+    use { 'simrat39/rust-tools.nvim', after = { "nvim-lspconfig", "cmp-nvim-lsp" },
+      config = [[require('config.rusttools')]] }
+    use {
+      "folke/which-key.nvim",
+      config = function()
+        vim.o.timeout = true
+        vim.o.timeoutlen = 300
+        require("which-key").setup {
+        }
+      end
+    }
     -- %Next goes here
     --
     -- use { "MunifTanjim/nui.nvim" }
