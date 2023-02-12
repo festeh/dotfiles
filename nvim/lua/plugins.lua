@@ -83,7 +83,6 @@ packer.startup {
         end, { expr = true })
       end
     }
-    use { "stevearc/overseer.nvim", config = [[require("config.overseer")]] }
     use { 'sindrets/diffview.nvim', requires = 'nvim-lua/plenary.nvim' }
     use { 'tpope/vim-fugitive' }
     use { 'nvim-neotest/neotest-python' }
