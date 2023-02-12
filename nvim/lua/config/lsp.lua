@@ -67,7 +67,7 @@ lspconfig.pylsp.setup {
 }
 
 
-lspconfig.sumneko_lua.setup {
+lspconfig.lua_ls.setup {
   on_attach = custom_attach,
   settings = {
     Lua = {
