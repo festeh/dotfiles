@@ -119,6 +119,7 @@ packer.startup {
         }
       end
     }
+    use {'stevearc/dressing.nvim', config = [[require('config.dressing')]] }
     -- %Next goes here
     --
     -- use { "MunifTanjim/nui.nvim" }
