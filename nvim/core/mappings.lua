@@ -17,7 +17,7 @@ keymap.set("x", ">", ">gv", { desc = "Shift selelction right" })
 keymap.set("n", "<S-Tab>", "<<", {desc = "Un-tab line"})
 keymap.set("i", "<S-Tab>", "<C-d>", {desc = "Un-tab line"})
 
-keymap.set("n", "<leader>q", "<cmd>bd<CR>", { desc = "Close buffer" })
+keymap.set("n", "<leader>q", "<cmd>bd!<CR>", { desc = "Close buffer" })
 keymap.set("n", "<leader>x", "<cmd>q<CR>", { desc = "Close window" })
 
 keymap.set("n", "<F11>", "<cmd>set spell!<cr>", { desc = "toggle spell" })
