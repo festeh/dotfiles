@@ -13,6 +13,7 @@ packer.startup {
       "nvim-tree/nvim-tree.lua",
       requires = { "kyazdani42/nvim-web-devicons" },
       config = [[require('config.nvim-tree')]],
+      tag = "nightly"
     }
     use { "hrsh7th/nvim-cmp", config = [[require('config.nvim-cmp')]] }
     use { "rafamadriz/friendly-snippets" }
