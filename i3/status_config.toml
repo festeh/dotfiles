@@ -1,8 +1,20 @@
+[theme]
+name = "slick"
+
+[theme.overrides]
+separator = ""
+
+[icons]
+name = "awesome6"
+
+[[block]]
+block = "custom_dbus"
+name = "Pomodoro"
+initial_text = "Waiting"
 
 [[block]]
 block = "battery"
 critical = 10
-
 
 [[block]]
 block = "backlight"

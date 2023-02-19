@@ -235,7 +235,7 @@ for_window [class="Google-chrome"] border none
 bar {
         status_command /usr/bin/i3status-rs
         position top
-        mode hide
+        # mode hide
         modifier Mod4
         # tray_output none
 }
