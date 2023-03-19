@@ -64,7 +64,6 @@ packer.startup {
     }
     use { 'lewis6991/gitsigns.nvim', config = "require('config.gitsigns')" }
     use { 'TimUntersberger/neogit', requires = 'nvim-lua/plenary.nvim', config = [[require('config.neogit')]] }
-    use { "olimorris/persisted.nvim", config = [[require('config.persisted')]] }
     use { "nvim-pack/nvim-spectre", config = [[require('config.spectre')]] }
     use { "kevinhwang91/nvim-bqf", config = [[require('config.bqf')]] }
     use { 'nvim-treesitter/nvim-treesitter-textobjects', config = [[require('config.treesitter-textobjects')]] }
@@ -129,6 +128,16 @@ packer.startup {
         },
         config = [[require('config.flutter-tools')]]
     }
+    use {'MunifTanjim/exrc.nvim', config = [[require('config.exrc')]]}
+    use {'lakshayg/vim-bazel'}
+    use({
+        'ray-x/navigator.lua',
+        requires = {
+            { 'ray-x/guihua.lua', run = 'cd lua/fzy && make' },
+            { 'neovim/nvim-lspconfig' },
+        },
+        config = [[require('config.rayx')]]
+    })
     -- %Next goes here
     --
     -- use { "MunifTanjim/nui.nvim" }
@@ -160,6 +169,7 @@ packer.startup {
     use { "tanvirtin/monokai.nvim", opt = true }
     use { "marko-cerovac/material.nvim", opt = true }
     use { "kyazdani42/nvim-web-devicons", event = "VimEnter" }
+    use { "olimorris/persisted.nvim", config = [[require('config.persisted')]] }
   end,
   config = {
     max_jobs = 7,

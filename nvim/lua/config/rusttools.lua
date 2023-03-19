@@ -43,10 +43,18 @@ require("rust-tools").setup({
       lens = {
         enable = true,
       },
-      -- enable clippy on save
-      checkOnSave = {
-        command = "clippy",
+      procMacro = {
+        enable = true
       },
+      cargo = {
+        buildScripts = {
+          enable = true,
+        },
+      },
+      -- enable clippy on save
+      -- checkOnSave = {
+      --   command = "clippy",
+      -- },
     },
   },
   dap = {
