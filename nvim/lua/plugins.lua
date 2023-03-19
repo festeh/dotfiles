@@ -121,6 +121,14 @@ packer.startup {
       end
     }
     use {'stevearc/dressing.nvim', config = [[require('config.dressing')]] }
+    use {
+        'akinsho/flutter-tools.nvim',
+        requires = {
+            'nvim-lua/plenary.nvim',
+            'stevearc/dressing.nvim', -- optional for vim.ui.select
+        },
+        config = [[require('config.flutter-tools')]]
+    }
     -- %Next goes here
     --
     -- use { "MunifTanjim/nui.nvim" }
