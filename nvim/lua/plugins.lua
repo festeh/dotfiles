@@ -110,34 +110,38 @@ packer.startup {
     use { 'rcarriga/nvim-dap-ui', config = [[require('config.dapui')]] }
     use { 'simrat39/rust-tools.nvim', after = { "nvim-lspconfig", "cmp-nvim-lsp" },
       config = [[require('config.rusttools')]] }
+    -- use {
+    --   "folke/which-key.nvim",
+    --   config = function()
+    --     vim.o.timeout = true
+    --     vim.o.timeoutlen = 300
+    --     require("which-key").setup {
+    --     }
+    --   end
+    -- }
+    use { 'stevearc/dressing.nvim', config = [[require('config.dressing')]] }
     use {
-      "folke/which-key.nvim",
-      config = function()
-        vim.o.timeout = true
-        vim.o.timeoutlen = 300
-        require("which-key").setup {
-        }
-      end
+      'akinsho/flutter-tools.nvim',
+      requires = {
+        'nvim-lua/plenary.nvim',
+        'stevearc/dressing.nvim', -- optional for vim.ui.select
+      },
+      config = [[require('config.flutter-tools')]]
     }
-    use {'stevearc/dressing.nvim', config = [[require('config.dressing')]] }
-    use {
-        'akinsho/flutter-tools.nvim',
-        requires = {
-            'nvim-lua/plenary.nvim',
-            'stevearc/dressing.nvim', -- optional for vim.ui.select
-        },
-        config = [[require('config.flutter-tools')]]
-    }
-    use {'MunifTanjim/exrc.nvim', config = [[require('config.exrc')]]}
-    use {'lakshayg/vim-bazel'}
+    use { 'MunifTanjim/exrc.nvim', config = [[require('config.exrc')]] }
+    use { 'lakshayg/vim-bazel' }
     use({
-        'ray-x/navigator.lua',
-        requires = {
-            { 'ray-x/guihua.lua', run = 'cd lua/fzy && make' },
-            { 'neovim/nvim-lspconfig' },
-        },
-        config = [[require('config.rayx')]]
+      'ray-x/navigator.lua',
+      requires = {
+        { 'ray-x/guihua.lua',     run = 'cd lua/fzy && make' },
+        { 'neovim/nvim-lspconfig' },
+      },
+      config = [[require('config.rayx')]]
     })
+    use { 'echasnovski/mini.nvim', config = [[require('config.mini')]] }
+    use { 'rcarriga/nvim-notify', config = [[require('config.notify')]] }
+    use { 'drybalka/tree-climber.nvim', config = [[require('config.treeclimber')]] }
+    use { 'themercorp/themer.lua', config = [[require('config.themer')]] }
     -- %Next goes here
     --
     -- use { "MunifTanjim/nui.nvim" }
@@ -169,7 +173,7 @@ packer.startup {
     use { "tanvirtin/monokai.nvim", opt = true }
     use { "marko-cerovac/material.nvim", opt = true }
     use { "kyazdani42/nvim-web-devicons", event = "VimEnter" }
-    use { "olimorris/persisted.nvim", config = [[require('config.persisted')]] }
+    -- use { "olimorris/persisted.nvim", config = [[require('config.persisted')]] }
   end,
   config = {
     max_jobs = 7,

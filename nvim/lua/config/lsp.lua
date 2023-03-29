@@ -18,7 +18,7 @@ local custom_attach = function(client, bufnr)
 
   map("n", "gd", vim.lsp.buf.definition, { desc = "go to definition" })
   map("n", "<C-]>", vim.lsp.buf.definition)
-  map("n", "K", vim.lsp.buf.hover)
+  -- map("n", "K", vim.lsp.buf.hover)
   -- map("n", "<C-k>", vim.lsp.buf.signature_help)
   map("n", "<leader>rn", vim.lsp.buf.rename, { desc = "varialbe rename" })
   map("n", "gr", vim.lsp.buf.references, { desc = "show references" })
@@ -90,7 +90,12 @@ lspconfig.lua_ls.setup {
         },
         maxPreload = 2000,
         preloadFileSize = 50000,
+        checkThirdParty = false,
       },
+      telemetry = {
+        enable = false,
+      },
+      single_file_support = false,
     },
   },
   capabilities = capabilities,

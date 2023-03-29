@@ -17,7 +17,6 @@ function chpwd() {
         poetry shell
     else
         if [[ $POETRY_ACTIVE == "1" ]]; then
-            exit
         fi
     fi
 }

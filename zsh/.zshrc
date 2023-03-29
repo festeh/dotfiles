@@ -98,5 +98,4 @@ eval "$(starship init zsh)"
 
 export PATH="$HOME/.pyenv/bin:$PATH"
 eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
 pyenv global 3.10

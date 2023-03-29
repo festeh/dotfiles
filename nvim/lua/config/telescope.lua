@@ -6,12 +6,12 @@ require("telescope").setup({
     sorting_strategy = "ascending",
     layout_config = {
       horizontal = {
-        width=0.95,
-        preview_width=0.55
+        width = 0.95,
+        preview_width = 0.55
       },
       prompt_position = "top"
     },
-    path_display = {"smart", "truncate"},
+    path_display = { "smart", "truncate" },
     mappings = {
       i = {
         ["<Tab>"] = actions.move_selection_next,
@@ -21,7 +21,9 @@ require("telescope").setup({
   }
 })
 
-vim.keymap.set('n', '<leader>?', require('telescope.builtin').oldfiles, { desc = '[?] Find recently opened files' })
+vim.keymap.set('n', '<leader>?', function()
+  require('telescope.builtin').oldfiles({ cwd_only = true })
+end, { desc = '[?] Find recently opened files' })
 
 
 vim.keymap.set('n', '<leader>/', function()
