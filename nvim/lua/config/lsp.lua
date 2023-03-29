@@ -31,7 +31,6 @@ local custom_attach = function(client, bufnr)
     function()
       vim.inspect(vim.lsp.buf.list_workspace_folders())
     end, { desc = "list workspace folder" })
-  require('navigator.lspclient.mapping').setup({ bufnr = bufnr, client = client })
 end
 
 local capabilities = require('cmp_nvim_lsp').default_capabilities()

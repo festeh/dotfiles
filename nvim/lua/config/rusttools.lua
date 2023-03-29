@@ -12,7 +12,7 @@ local custom_attach = function(client, bufnr)
 
   map("n", "gd", vim.lsp.buf.definition, { desc = "go to definition" })
   map("n", "<C-]>", vim.lsp.buf.definition)
-  map("n", "K", vim.lsp.buf.hover)
+  -- map("n", "K", vim.lsp.buf.hover)
   -- map("n", "<C-k>", vim.lsp.buf.signature_help)
   map("n", "<leader>rn", vim.lsp.buf.rename, { desc = "varialbe rename" })
   map("n", "gr", vim.lsp.buf.references, { desc = "show references" })
@@ -38,7 +38,6 @@ require("rust-tools").setup({
   server = {
     on_attach = custom_attach,
     capabilities = capabilities,
-
     ["rust-analyzer"] = {
       lens = {
         enable = true,
