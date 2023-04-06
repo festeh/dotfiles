@@ -97,11 +97,6 @@ packer.startup {
       'chipsenkbeil/distant.nvim',
       config = function()
         require('distant').setup {
-          -- Applies Chip's personal settings to every machine you connect to
-          --
-          -- 1. Ensures that distant servers terminate with no connections
-          -- 2. Provides navigation bindings for remote directories
-          -- 3. Provides keybinding to jump into a remote file's parent directory
           ['*'] = require('distant.settings').chip_default()
         }
       end
@@ -136,7 +131,7 @@ packer.startup {
         { 'ray-x/guihua.lua',     run = 'cd lua/fzy && make' },
         { 'neovim/nvim-lspconfig' },
       },
-      config = [[require('config.rayx')]]
+      config = [[require('config.navigator')]]
     })
     use { 'echasnovski/mini.nvim', config = [[require('config.mini')]] }
     use { 'rcarriga/nvim-notify', config = [[require('config.notify')]] }

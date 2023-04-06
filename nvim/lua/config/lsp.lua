@@ -40,32 +40,44 @@ local capabilities = require('cmp_nvim_lsp').default_capabilities()
 --     capabilities = capabilities,
 -- }
 
-lspconfig.pylsp.setup {
-  -- configurationSources = { "flake8" },
+-- lspconfig.pylsp.setup {
+--   -- configurationSources = { "flake8" },
+--   on_attach = custom_attach,
+--   settings = {
+--     pylsp = {
+--       plugins = {
+--         -- pylint          = { enabled = true, executable = "pylint" },
+--         -- pyflakes        = { enabled = false },
+--         -- pycodestyle     = { enabled = false },
+--         -- mccabe          = { enabled = false },
+--         jedi_completion = { fuzzy = true },
+--         -- pyls_isort      = { enabled = true },
+--         -- pylsp_mypy      = { enabled = true },
+--         yapf            = { enabled = true },
+--         ruff            = { enabled = true },
+--         python_lsp_ruff = { enabled = true },
+--       },
+--     },
+--   },
+--   flags = {
+--     debounce_text_changes = 200,
+--   },
+--   capabilities = capabilities,
+-- }
+lspconfig.ruff_lsp.setup{
+  init_options = {
+    settings = {
+      -- Any extra CLI arguments for `ruff` go here.
+      args = {},
+    }
+  },
   on_attach = custom_attach,
-  settings = {
-    pylsp = {
-      plugins = {
-        pylint          = { enabled = true, executable = "pylint" },
-        pyflakes        = { enabled = false },
-        pycodestyle     = { enabled = false },
-        mccabe          = { enabled = false },
-        -- flake8          = { enabled = true, maxLineLength = 140 },
-        jedi_completion = { fuzzy = true },
-        pyls_isort      = { enabled = true },
-        pylsp_mypy      = { enabled = true },
-        yapf            = { enabled = true },
-        ruff            = { enabled = true },
-        python_lsp_ruff = { enabled = true },
-      },
-    },
-  },
-  flags = {
-    debounce_text_changes = 200,
-  },
-  capabilities = capabilities,
 }
 
+lspconfig.pyright.setup {
+  single_file_support = false,
+  on_attach = custom_attach,
+}
 
 lspconfig.lua_ls.setup {
   on_attach = custom_attach,

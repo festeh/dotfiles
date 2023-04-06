@@ -5,4 +5,7 @@ require("neotest").setup({
       runner = "pytest",
     }),
   },
+  quickfix = {
+    open = false
+  }
 })
