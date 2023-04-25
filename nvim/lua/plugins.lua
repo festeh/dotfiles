@@ -6,6 +6,10 @@ local packer_util = require("packer.util")
 
 packer.startup {
   function(use)
+    -- use {
+    --   'glacambre/firenvim',
+    --   run = function() vim.fn['firenvim#install'](0) end
+    -- }
     use { "lewis6991/impatient.nvim", config = "require('impatient')" }
     use { "wbthomason/packer.nvim", opt = true }
     use { "nvim-lua/plenary.nvim" }
@@ -90,7 +94,7 @@ packer.startup {
     use { "iamcco/markdown-preview.nvim", run = function() vim.fn["mkdp#util#install"]() end }
     use { 'nvim-neotest/neotest', config = [[require("config.neotest")]] }
     use { 'sbdchd/neoformat', config = [[require('config.neoformat')]] }
-    use { 'ggandor/leap.nvim', config = [[require('config.leap')]] }
+    -- use { 'ggandor/leap.nvim', config = [[require('config.leap')]] }
     use { 'DNLHC/glance.nvim', config = [[require('config.glance')]] }
     use { 'NoahTheDuke/vim-just' }
     use {
@@ -137,6 +141,11 @@ packer.startup {
     use { 'rcarriga/nvim-notify', config = [[require('config.notify')]] }
     use { 'drybalka/tree-climber.nvim', config = [[require('config.treeclimber')]] }
     use { 'themercorp/themer.lua', config = [[require('config.themer')]] }
+    use {'rlane/pounce.nvim', config = [[require('config.pounce')]] }
+    use {
+      'declancm/cinnamon.nvim',
+      config = function() require('cinnamon').setup() end
+    }
     -- %Next goes here
     --
     -- use { "MunifTanjim/nui.nvim" }
