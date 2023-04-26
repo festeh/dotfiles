@@ -1,7 +1,9 @@
 local actions = require "telescope.actions"
 
+local telescope = require("telescope")
+telescope.load_extension("frecency")
 
-require("telescope").setup({
+telescope.setup({
   defaults = {
     sorting_strategy = "ascending",
     layout_config = {
@@ -16,6 +18,13 @@ require("telescope").setup({
       i = {
         ["<Tab>"] = actions.move_selection_next,
         ["<S-Tab>"] = actions.move_selection_previous,
+      }
+    },
+    extensions = {
+      frecency = {
+        default_workspace = "CWD",
+        ignore_patterns = {"*.git/*", "*__pycache__/*"},
+        show_unindexed = false,
       }
     }
   }

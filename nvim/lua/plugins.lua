@@ -146,6 +146,12 @@ packer.startup {
       'declancm/cinnamon.nvim',
       config = function() require('cinnamon').setup() end
     }
+    use {
+      "nvim-telescope/telescope-frecency.nvim",
+      config = [[require('config.telescope-frecency')]],
+
+      requires = {"kkharji/sqlite.lua"}
+    }
     -- %Next goes here
     --
     -- use { "MunifTanjim/nui.nvim" }
