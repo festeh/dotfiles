@@ -75,14 +75,14 @@ packer.startup {
     use { 'folke/neodev.nvim' }
     use { "AckslD/nvim-FeMaco.lua", config = [[require("config.femaco")]] }
     use { "szw/vim-maximizer" }
-    use {
-      'Exafunction/codeium.vim',
-      config = function()
-        vim.keymap.set('i', '<C-g>', function()
-          return vim.fn['codeium#Accept']()
-        end, { expr = true })
-      end
-    }
+    -- use {
+    --   'Exafunction/codeium.vim',
+    --   config = function()
+    --     vim.keymap.set('i', '<C-g>', function()
+    --       return vim.fn['codeium#Accept']()
+    --     end, { expr = true })
+    --   end
+    -- }
     use { 'sindrets/diffview.nvim', requires = 'nvim-lua/plenary.nvim' }
     use { 'tpope/vim-fugitive' }
     use { 'nvim-neotest/neotest-python' }
@@ -137,6 +137,13 @@ packer.startup {
     use { 'rcarriga/nvim-notify', config = [[require('config.notify')]] }
     use { 'drybalka/tree-climber.nvim', config = [[require('config.treeclimber')]] }
     use { 'themercorp/themer.lua', config = [[require('config.themer')]] }
+    use {
+      "glacambre/firenvim",
+      run = function()
+        vim.fn["firenvim#install"](0)
+      end,
+    }
+    use {'LeonHeidelbach/trailblazer.nvim', config = [[require('config.trailblazer')]]}
     -- %Next goes here
     --
     -- use { "MunifTanjim/nui.nvim" }

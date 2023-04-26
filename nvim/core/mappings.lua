@@ -1,7 +1,7 @@
 local keymap = vim.keymap
 
 keymap.set({ "n", "i", "x" }, '<C-s>',
-  "<cmd>update<CR><Esc>",
+  "<cmd>update!<CR><Esc>",
   { silent = true, noremap = true, desc = "save current buffer" })
 keymap.set("n", "q:", "<Nop>", { desc = "Doesn't open command history" })
 keymap.set("n", "Q", "<Nop>", { desc = "Doesn't open command history" })
