@@ -79,14 +79,14 @@ packer.startup {
     use { 'folke/neodev.nvim' }
     use { "AckslD/nvim-FeMaco.lua", config = [[require("config.femaco")]] }
     use { "szw/vim-maximizer" }
-    -- use {
-    --   'Exafunction/codeium.vim',
-    --   config = function()
-    --     vim.keymap.set('i', '<C-g>', function()
-    --       return vim.fn['codeium#Accept']()
-    --     end, { expr = true })
-    --   end
-    -- }
+    use {
+      'Exafunction/codeium.vim',
+      config = function()
+        vim.keymap.set('i', '<C-g>', function()
+          return vim.fn['codeium#Accept']()
+        end, { expr = true })
+      end
+    }
     use { 'sindrets/diffview.nvim', requires = 'nvim-lua/plenary.nvim' }
     use { 'tpope/vim-fugitive' }
     use { 'nvim-neotest/neotest-python' }
@@ -106,8 +106,8 @@ packer.startup {
     }
     use { 'mfussenegger/nvim-dap', config = [[require('config.dap')]] }
     use { 'rcarriga/nvim-dap-ui', config = [[require('config.dapui')]] }
-    use {"nvim-telescope/telescope-dap.nvim"}
-    use {"jbyuki/one-small-step-for-vimkind"}
+    use { "nvim-telescope/telescope-dap.nvim" }
+    use { "jbyuki/one-small-step-for-vimkind" }
     use { 'simrat39/rust-tools.nvim', after = { "nvim-lspconfig", "cmp-nvim-lsp" },
       config = [[require('config.rusttools')]] }
     use { 'stevearc/dressing.nvim', config = [[require('config.dressing')]] }
@@ -133,31 +133,22 @@ packer.startup {
     use { 'rcarriga/nvim-notify', config = [[require('config.notify')]] }
     use { 'drybalka/tree-climber.nvim', config = [[require('config.treeclimber')]] }
     use { 'themercorp/themer.lua', config = [[require('config.themer')]] }
-    use {
-      "glacambre/firenvim",
-      run = function()
-        vim.fn["firenvim#install"](0)
-      end,
-    }
-    use {'LeonHeidelbach/trailblazer.nvim', config = [[require('config.trailblazer')]]}
-    use {'rlane/pounce.nvim', config = [[require('config.pounce')]] }
+    -- use {
+    --   "glacambre/firenvim",
+    --   run = function()
+    --     vim.fn["firenvim#install"](0)
+    --   end,
+    -- }
+    use { 'LeonHeidelbach/trailblazer.nvim', config = [[require('config.trailblazer')]] }
+    use { 'rlane/pounce.nvim', config = [[require('config.pounce')]] }
     use {
       'declancm/cinnamon.nvim',
       config = function() require('cinnamon').setup() end
     }
-    use {"smartpde/telescope-recent-files"}
-
-<<<<<<< HEAD
-      requires = {"kkharji/sqlite.lua"}
-    }
-    use {'ray-x/go.nvim', config = [[require('config.go')]] }
+    use { "smartpde/telescope-recent-files" }
+    use { 'ray-x/go.nvim', config = [[require('config.go')]] }
     -- use {'folke/noice.nvim', config = [[require('config.noice')]] }
-    use {"mrjones2014/legendary.nvim", config = [[require('config.legendary')]] }
-||||||| e7caa4b
-      requires = {"kkharji/sqlite.lua"}
-    }
-=======
->>>>>>> origin/master
+    use { "mrjones2014/legendary.nvim", config = [[require('config.legendary')]] }
     -- %Next goes here
     --
     use { "MunifTanjim/nui.nvim" }

@@ -6,6 +6,7 @@ local modules = {
   "mappings.lua",
   "plugins.lua",
   "themes.lua",
+  "local.lua"
 }
 
 local config_dir = vim.fn.stdpath("config")

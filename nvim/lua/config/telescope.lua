@@ -1,13 +1,7 @@
 local actions = require "telescope.actions"
 
 local telescope = require("telescope")
-<<<<<<< HEAD
-telescope.load_extension("frecency")
 telescope.load_extension('dap')
-||||||| e7caa4b
-telescope.load_extension("frecency")
-=======
->>>>>>> origin/master
 
 telescope.setup({
   defaults = {
