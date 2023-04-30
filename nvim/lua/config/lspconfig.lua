@@ -131,3 +131,8 @@ lspconfig.bufls.setup {
   on_attach = custom_attach,
   capabilities = capabilities
 }
+
+lspconfig.gopls.setup {
+  on_attach = custom_attach,
+  capabilities = capabilities
+}

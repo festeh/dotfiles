@@ -4,6 +4,11 @@ local path = vim.fn.glob(vim.fn.stdpath("data") .. "/mason/packages/codelldb/ext
 local codelldb_path = path .. "adapter/codelldb"
 local liblldb_path = path .. "lldb/lib/liblldb.so"
 
+local opts = {}
+vim.keymap.set("n", "<leader>d", dap.continue, opts)
+vim.keymap.set("n", "<leader>i", dap.step_into, opts)
+vim.keymap.set("n", "<leader>n", dap.step_over, opts)
+vim.keymap.set("n", "<leader>o", dap.step_out, opts)
 
 dap.adapters.codelldb = {
   type = 'server',

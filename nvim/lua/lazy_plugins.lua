@@ -78,18 +78,20 @@ local plugins = {
   -- }
   -- use { 'MunifTanjim/exrc.nvim', config = [[require('config.exrc')]] }
   { 'lakshayg/vim-bazel' },
-  {'ray-x/navigator.lua', event = "VeryLazy", dependencies = { { 'ray-x/guihua.lua'}, { 'neovim/nvim-lspconfig' }}, config = req('navigator') },
+  { 'ray-x/navigator.lua', event = "VeryLazy", dependencies = { { 'ray-x/guihua.lua' }, { 'neovim/nvim-lspconfig' } },
+    config = req('navigator') },
   { 'echasnovski/mini.nvim', config = req('mini') },
   { 'rcarriga/nvim-notify', config = req('notify') },
   { 'drybalka/tree-climber.nvim', config = req('treeclimber') },
   { 'themercorp/themer.lua', config = req('themer') },
-  { 'LeonHeidelbach/trailblazer.nvim', config = [[require('config.trailblazer')]] },
-  { 'rlane/pounce.nvim', config = [[require('config.pounce')]] },
+  { 'LeonHeidelbach/trailblazer.nvim', config = req('trailblazer') },
+  { 'rlane/pounce.nvim', config = req('pounce') },
   { 'declancm/cinnamon.nvim', config = true },
   { "smartpde/telescope-recent-files" },
   { 'ray-x/go.nvim', config = req('go') },
   -- -- use {'folke/noice.nvim', config = [[require('config.noice')]] }
   { "mrjones2014/legendary.nvim", config = req('legendary') },
+  { 'Exafunction/codeium.vim', event = "VeryLazy", enabled = (vim.g.codeium_enabled == true) },
   -- -- %Next goes here
   -- --
   { "MunifTanjim/nui.nvim" },
@@ -107,19 +109,19 @@ local plugins = {
   -- --   }
   -- -- })
   --
-{ "navarasu/onedark.nvim", opt = true },
-{ "sainnhe/edge", opt = true },
-{ "sainnhe/sonokai", opt = true },
-{ "sainnhe/gruvbox-material", opt = true },
-{ "shaunsingh/nord.nvim", opt = true },
-{ "sainnhe/everforest", opt = true },
-{ "EdenEast/nightfox.nvim", opt = true },
-{ "rebelot/kanagawa.nvim", opt = true },
-{ "catppuccin/nvim", as = "catppuccin", opt = true },
-{ "rose-pine/neovim", as = 'rose-pine', opt = true },
-{ "olimorris/onedarkpro.nvim", opt = true },
-{ "tanvirtin/monokai.nvim", opt = true },
-{ "marko-cerovac/material.nvim", opt = true },
+  { "navarasu/onedark.nvim", opt = true },
+  { "sainnhe/edge", opt = true },
+  { "sainnhe/sonokai", opt = true },
+  { "sainnhe/gruvbox-material", opt = true },
+  { "shaunsingh/nord.nvim", opt = true },
+  { "sainnhe/everforest", opt = true },
+  { "EdenEast/nightfox.nvim", opt = true },
+  { "rebelot/kanagawa.nvim", opt = true },
+  { "catppuccin/nvim", as = "catppuccin", opt = true },
+  { "rose-pine/neovim", as = 'rose-pine', opt = true },
+  { "olimorris/onedarkpro.nvim", opt = true },
+  { "tanvirtin/monokai.nvim", opt = true },
+  { "marko-cerovac/material.nvim", opt = true },
 }
 local opts = {}
 

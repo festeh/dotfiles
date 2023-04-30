@@ -13,7 +13,9 @@ local function get_random_theme()
     "themer_kanagawa", "themer_kurai", "themer_monokai", "themer_monokai_pro",
     "themer_monokai_vibrant",
     "themer_nightlamp", "themer_nord", "themer_onedark", "themer_onedark_deep", "themer_papa_dark", "themer_radium",
-    "themer_rose_pine", "themer_rose_pine_dawn", "themer_rose_pine_moon", "themer_sakura", "themer_scery", "themer_shado",
+    "themer_rose_pine", 
+    -- "themer_rose_pine_dawn",
+    "themer_rose_pine_moon", "themer_sakura", "themer_scery", "themer_shado",
     "themer_sonokai_deep", "themer_tokyodark", "themer_tokyonight", "themer_uwu"
   }
   for i, t in pairs(themes) do

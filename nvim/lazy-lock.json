@@ -10,6 +10,7 @@
   "cmp-omni": { "branch": "main", "commit": "8457e4144ea2fc5efbadb7d22250d5ee8f8862ba" },
   "cmp-path": { "branch": "main", "commit": "91ff86cd9c29299a64f968ebb45846c485725f23" },
   "cmp_luasnip": { "branch": "master", "commit": "18095520391186d634a0045dacaa346291096566" },
+  "codeium.vim": { "branch": "main", "commit": "e4109d2cbe856e6038c461c82bc2fdb33036c381" },
   "diffview.nvim": { "branch": "main", "commit": "8c1702470fd5186cb401b21f9bf8bdfad6d5cc87" },
   "dressing.nvim": { "branch": "master", "commit": "f5d7fa1fa5ce6bcebc8f07922f39b1eda4d01e37" },
   "edge": { "branch": "master", "commit": "358cb6688ac577470a4eafcb53bdd63899dfc937" },
