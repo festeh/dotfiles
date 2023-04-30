@@ -51,9 +51,8 @@ require("rust-tools").setup({
         },
       },
       -- enable clippy on save
-      -- checkOnSave = {
-      --   command = "clippy",
-      -- },
+      checkOnSave = {
+      },
     },
   },
   dap = {
