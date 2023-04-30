@@ -2,6 +2,7 @@ local actions = require "telescope.actions"
 
 local telescope = require("telescope")
 telescope.load_extension("frecency")
+telescope.load_extension('dap')
 
 telescope.setup({
   defaults = {

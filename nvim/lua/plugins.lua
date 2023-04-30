@@ -72,7 +72,7 @@ packer.startup {
     use { "kevinhwang91/nvim-bqf", config = [[require('config.bqf')]] }
     use { 'nvim-treesitter/nvim-treesitter-textobjects', config = [[require('config.treesitter-textobjects')]] }
     use { 'stevearc/aerial.nvim', config = [[require('config.aerial')]] }
-    use { "gelguy/wilder.nvim", config = [[require('config.wilder')]] }
+    use { "festeh/wilder.nvim", config = [[require('config.wilder')]] }
     use { "j-hui/fidget.nvim", config = [[require('config.fidget')]] }
 
     use { "tpope/vim-sleuth" }
@@ -107,6 +107,8 @@ packer.startup {
     }
     use { 'mfussenegger/nvim-dap', config = [[require('config.dap')]] }
     use { 'rcarriga/nvim-dap-ui', config = [[require('config.dapui')]] }
+    use {"nvim-telescope/telescope-dap.nvim"}
+    use {"jbyuki/one-small-step-for-vimkind"}
     use { 'simrat39/rust-tools.nvim', after = { "nvim-lspconfig", "cmp-nvim-lsp" },
       config = [[require('config.rusttools')]] }
     -- use {
@@ -152,9 +154,12 @@ packer.startup {
 
       requires = {"kkharji/sqlite.lua"}
     }
+    use {'ray-x/go.nvim', config = [[require('config.go')]] }
+    -- use {'folke/noice.nvim', config = [[require('config.noice')]] }
+    use {"mrjones2014/legendary.nvim", config = [[require('config.legendary')]] }
     -- %Next goes here
     --
-    -- use { "MunifTanjim/nui.nvim" }
+    use { "MunifTanjim/nui.nvim" }
     -- use({
     --   "jackMort/ChatGPT.nvim",
     --   config = function()
