@@ -1,7 +1,8 @@
 local actions = require "telescope.actions"
 
+local telescope = require("telescope")
 
-require("telescope").setup({
+telescope.setup({
   defaults = {
     sorting_strategy = "ascending",
     layout_config = {
@@ -11,15 +12,23 @@ require("telescope").setup({
       },
       prompt_position = "top"
     },
-    path_display = { "smart", "truncate" },
+    -- path_display = { "smart", },
     mappings = {
       i = {
         ["<Tab>"] = actions.move_selection_next,
         ["<S-Tab>"] = actions.move_selection_previous,
       }
+    },
+    extensions = {
+      recent_files = {
+        show_current_file = true,
+        cwd_only = true,
+        only_cwd = true,
+      }
     }
   }
 })
+require("telescope").load_extension("recent_files")
 
 vim.keymap.set('n', '<leader>?', function()
   require('telescope.builtin').oldfiles({ cwd_only = true })
@@ -41,4 +50,6 @@ vim.keymap.set('n', '<leader>fb', "<cmd>lua require('telescope.builtin').buffers
 vim.keymap.set('n', '<leader>fh', "<cmd>lua require('telescope.builtin').help_tags()<cr>", opts)
 vim.keymap.set('n', '<leader>fr', "<cmd>lua require('telescope.builtin').lsp_references()<cr>", opts)
 vim.keymap.set('n', '<leader>fi', "<cmd>lua require('telescope.builtin').lsp_incoming_calls()<cr>", opts)
-vim.keymap.set('n', '<leader>fd', "<cmd>lua require('telescope.builtin').lsp_definitions()<cr>", opts)
+vim.keymap.set('n', '<leader>k', "<cmd>lua require('telescope.builtin').lsp_document_symbols()<cr>", opts)
+vim.keymap.set('n', '<leader>j', "<cmd>lua require('telescope').extensions.recent_files.pick()<cr>", opts)
+

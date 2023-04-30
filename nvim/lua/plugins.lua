@@ -6,6 +6,10 @@ local packer_util = require("packer.util")
 
 packer.startup {
   function(use)
+    -- use {
+    --   'glacambre/firenvim',
+    --   run = function() vim.fn['firenvim#install'](0) end
+    -- }
     use { "lewis6991/impatient.nvim", config = "require('impatient')" }
     use { "wbthomason/packer.nvim", opt = true }
     use { "nvim-lua/plenary.nvim" }
@@ -90,7 +94,6 @@ packer.startup {
     use { "iamcco/markdown-preview.nvim", run = function() vim.fn["mkdp#util#install"]() end }
     use { 'nvim-neotest/neotest', config = [[require("config.neotest")]] }
     use { 'sbdchd/neoformat', config = [[require('config.neoformat')]] }
-    use { 'ggandor/leap.nvim', config = [[require('config.leap')]] }
     use { 'DNLHC/glance.nvim', config = [[require('config.glance')]] }
     use { 'NoahTheDuke/vim-just' }
     use {
@@ -105,15 +108,6 @@ packer.startup {
     use { 'rcarriga/nvim-dap-ui', config = [[require('config.dapui')]] }
     use { 'simrat39/rust-tools.nvim', after = { "nvim-lspconfig", "cmp-nvim-lsp" },
       config = [[require('config.rusttools')]] }
-    -- use {
-    --   "folke/which-key.nvim",
-    --   config = function()
-    --     vim.o.timeout = true
-    --     vim.o.timeoutlen = 300
-    --     require("which-key").setup {
-    --     }
-    --   end
-    -- }
     use { 'stevearc/dressing.nvim', config = [[require('config.dressing')]] }
     use {
       'akinsho/flutter-tools.nvim',
@@ -144,6 +138,13 @@ packer.startup {
       end,
     }
     use {'LeonHeidelbach/trailblazer.nvim', config = [[require('config.trailblazer')]]}
+    use {'rlane/pounce.nvim', config = [[require('config.pounce')]] }
+    use {
+      'declancm/cinnamon.nvim',
+      config = function() require('cinnamon').setup() end
+    }
+    use {"smartpde/telescope-recent-files"}
+
     -- %Next goes here
     --
     -- use { "MunifTanjim/nui.nvim" }

@@ -24,6 +24,7 @@ export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_DEFAULT_OPTS="--bind 'tab:down,btab:up'"
 
 export BANGLE_MAC="F6:DE:8A:55:7E:03"
+export CHROME_EXECUTABLE=google-chrome-stable
 
 pathadd() {
     if [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]]; then
