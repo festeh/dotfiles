@@ -142,14 +142,14 @@ M.rand_colorscheme = function()
     end
 
     -- Load the colorscheme, because all the colorschemes are declared as opt plugins, so the colorscheme isn't loaded yet.
-    local status = add_pack(M.colorscheme2dir[colorscheme])
-
-    if not status then
-        local msg = string.format("Colorscheme %s is not installed. Run PackerSync to install.", colorscheme)
-        vim.notify(msg, vim.log.levels.ERROR, { title = "nvim-config" })
-
-        return
-    end
+    -- local status = add_pack(M.colorscheme2dir[colorscheme])
+    --
+    -- if not status then
+    --     local msg = string.format("Colorscheme %s is not installed. Run PackerSync to install.", colorscheme)
+    --     vim.notify(msg, vim.log.levels.ERROR, { title = "nvim-config" })
+    --
+    --     return
+    -- end
 
     -- Load the colorscheme and its settings
     M[colorscheme]()
@@ -160,4 +160,4 @@ M.rand_colorscheme = function()
 end
 
 -- Load a random colorscheme
-M.rand_colorscheme()
+--M.rand_colorscheme()

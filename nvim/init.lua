@@ -1,12 +1,12 @@
 local api = vim.api
 
 local modules = {
+  "local.lua",
   "globals.lua",
   "options.lua",
   "mappings.lua",
-  "plugins.lua",
+  -- "plugins.lua",
   "themes.lua",
-  "local.lua"
 }
 
 local config_dir = vim.fn.stdpath("config")
@@ -33,19 +33,10 @@ vim.cmd([[
   augroup end
 ]])
 
-if vim.g.started_by_firenvim ~= true then
-  for _, module in ipairs(modules) do
-    local cmd = string.format("source %s/core/%s", config_dir, module)
-    api.nvim_exec(cmd, false)
-  end
-else
-  -- local packer = require("packer")
-  -- packer.startup {
-  --   function(use)
-  --     use {
-  --       'glacambre/firenvim',
-  --       run = function() vim.fn['firenvim#install'](0) end
-  --     }
-  --   end
-  -- }
+for _, module in ipairs(modules) do
+  local cmd = string.format("source %s/core/%s", config_dir, module)
+  vim.api.nvim_exec(cmd, false)
 end
+
+-- require("plugins")
+require("lazy_plugins")

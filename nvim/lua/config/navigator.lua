@@ -37,7 +37,7 @@ require 'navigator'.setup({
     diagnostic_head_severity_1 = "🈲",
     -- refer to lua/navigator.lua for more icons setups
   },
-  mason = true,          -- set to true if you would like use the lsp installed by williamboman/mason
+  mason = false,          -- set to true if you would like use the lsp installed by williamboman/mason
   lsp = {
     disable_lsp = "all", -- skip lsp setup, and only use treesitter in navigator.
     -- Use this if you are not using LSP servers, and only want to enable treesitter support.

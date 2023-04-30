@@ -1,11 +1,9 @@
 local fn = vim.fn
 local keymap = vim.keymap
-local lspconfig = require("lspconfig")
 local diagnostic = vim.diagnostic
 
-
 require("neodev").setup({
-  -- add any options here, or leave empty to use the default settings
+ -- add any options here, or leave empty to use the default settings
 })
 
 local custom_attach = function(client, bufnr)
@@ -35,6 +33,7 @@ end
 
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
+local lspconfig = require("lspconfig")
 -- lspconfig.pyright.setup {
 --     on_attach = custom_attach,
 --     capabilities = capabilities,

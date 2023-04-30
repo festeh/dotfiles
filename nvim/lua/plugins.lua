@@ -1,3 +1,5 @@
+require("packer_install")
+
 local fn = vim.fn
 local api = vim.api
 local packer = require("packer")
@@ -79,14 +81,6 @@ packer.startup {
     use { 'folke/neodev.nvim' }
     use { "AckslD/nvim-FeMaco.lua", config = [[require("config.femaco")]] }
     use { "szw/vim-maximizer" }
-    use {
-      'Exafunction/codeium.vim',
-      config = function()
-        vim.keymap.set('i', '<C-g>', function()
-          return vim.fn['codeium#Accept']()
-        end, { expr = true })
-      end
-    }
     use { 'sindrets/diffview.nvim', requires = 'nvim-lua/plenary.nvim' }
     use { 'tpope/vim-fugitive' }
     use { 'nvim-neotest/neotest-python' }
@@ -121,14 +115,14 @@ packer.startup {
     }
     use { 'MunifTanjim/exrc.nvim', config = [[require('config.exrc')]] }
     use { 'lakshayg/vim-bazel' }
-    use({
-      'ray-x/navigator.lua',
-      requires = {
-        { 'ray-x/guihua.lua',     run = 'cd lua/fzy && make' },
-        { 'neovim/nvim-lspconfig' },
-      },
-      config = [[require('config.navigator')]]
-    })
+    -- use({
+    --   'ray-x/navigator.lua',
+    --   requires = {
+    --     { 'ray-x/guihua.lua',     run = 'cd lua/fzy && make' },
+    --     { 'neovim/nvim-lspconfig' },
+    --   },
+    --   config = [[require('config.navigator')]]
+    -- })
     use { 'echasnovski/mini.nvim', config = [[require('config.mini')]] }
     use { 'rcarriga/nvim-notify', config = [[require('config.notify')]] }
     use { 'drybalka/tree-climber.nvim', config = [[require('config.treeclimber')]] }
