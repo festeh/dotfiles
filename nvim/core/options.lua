@@ -29,5 +29,4 @@ wo.signcolumn = "yes"
 o.foldlevel = 20
 o.foldmethod = "expr"
 o.foldexpr = "nvim_treesitter#foldexpr()"
-
 o.exrc = true

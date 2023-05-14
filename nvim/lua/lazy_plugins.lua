@@ -16,7 +16,7 @@ local plugins = {
       "nvim-tree/nvim-web-devicons",
     },
     config = req("nvim-tree") },
-  { "hrsh7th/nvim-cmp", config = req("nvim-cmp") },
+ { "hrsh7th/nvim-cmp", config = req("nvim-cmp") },
   { "rafamadriz/friendly-snippets" },
   { "L3MON4D3/LuaSnip", config = req('luasnip') },
 
@@ -92,6 +92,7 @@ local plugins = {
   -- -- use {'folke/noice.nvim', config = [[require('config.noice')]] }
   { "mrjones2014/legendary.nvim", config = req('legendary') },
   { 'Exafunction/codeium.vim', event = "VeryLazy", enabled = (vim.g.codeium_enabled == true) },
+  { 'neomake/neomake' },
   -- -- %Next goes here
   -- --
   { "MunifTanjim/nui.nvim" },
