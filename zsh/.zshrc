@@ -96,6 +96,8 @@ unset __conda_setup
 export PATH="$PATH:$HOME/.local/bin"
 eval "$(starship init zsh)"
 
-export PATH="$HOME/.pyenv/bin:$PATH"
-eval "$(pyenv init -)"
-pyenv global 3.10
+LOCAL_SETTINGS="$DOTFILES/zsh/local.sh"
+if [ -f "$LOCAL_SETTINGS" ]; then
+    source "$LOCAL_SETTINGS"
+fi
+
