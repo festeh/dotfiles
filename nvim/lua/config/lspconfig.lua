@@ -95,7 +95,7 @@ lspconfig.lua_ls.setup {
         -- see also https://github.com/sumneko/lua-language-server/wiki/Libraries#link-to-workspace .
         -- Lua-dev.nvim also has similar settings for sumneko lua, https://github.com/folke/lua-dev.nvim/blob/main/lua/lua-dev/sumneko.lua .
         library = {
-          fn.stdpath("data") .. "/site/pack/packer/opt/emmylua-nvim",
+          -- fn.stdpath("data") .. "/site/pack/packer/opt/emmylua-nvim",
           fn.stdpath("config"),
         },
         maxPreload = 2000,
@@ -136,3 +136,17 @@ lspconfig.gopls.setup {
   on_attach = custom_attach,
   capabilities = capabilities
 }
+
+lspconfig.emmet_ls.setup({
+    on_attach = custom_attach,
+    capabilities = capabilities,
+    filetypes = { "css", "eruby", "html", "javascript", "javascriptreact", "less", "sass", "scss", "svelte", "pug", "typescriptreact", "vue" },
+    init_options = {
+      html = {
+        options = {
+          -- For possible options, see: https://github.com/emmetio/emmet/blob/master/src/config.ts#L79-L267
+          ["bem.enabled"] = true,
+        },
+      },
+    }
+})
