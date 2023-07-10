@@ -100,4 +100,3 @@ LOCAL_SETTINGS="$DOTFILES/zsh/local.sh"
 if [ -f "$LOCAL_SETTINGS" ]; then
     source "$LOCAL_SETTINGS"
 fi
-
