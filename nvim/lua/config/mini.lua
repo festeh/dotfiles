@@ -9,10 +9,10 @@ require("mini.basics").setup(
     }
   }
 )
-require("mini.bracketed").setup()
+-- require("mini.bracketed").setup()
 require("mini.bufremove").setup()
 require("mini.indentscope").setup()
-require("mini.jump").setup()
+-- require("mini.jump").setup()
 
 local starter = require("mini.starter")
 starter.setup(

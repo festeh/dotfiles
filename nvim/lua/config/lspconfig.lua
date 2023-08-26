@@ -2,8 +2,10 @@ local fn = vim.fn
 local keymap = vim.keymap
 local diagnostic = vim.diagnostic
 
+local util = require("lspconfig/util")
+
 require("neodev").setup({
- -- add any options here, or leave empty to use the default settings
+  -- add any options here, or leave empty to use the default settings
 })
 
 local custom_attach = function(client, bufnr)
@@ -34,10 +36,6 @@ end
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
 local lspconfig = require("lspconfig")
--- lspconfig.pyright.setup {
---     on_attach = custom_attach,
---     capabilities = capabilities,
--- }
 
 -- lspconfig.pylsp.setup {
 --   -- configurationSources = { "flake8" },
@@ -73,10 +71,24 @@ lspconfig.ruff_lsp.setup {
   on_attach = custom_attach,
 }
 
-lspconfig.pyright.setup {
-  single_file_support = false,
-  on_attach = custom_attach,
-}
+-- lspconfig.pyright.setup {
+--   single_file_support = true,
+--   python = {
+--     analysis = {
+--       autoSearchPaths = false,
+--       diagnosticMode = "openFilesOnly",
+--       autoImportCompletions = true,
+--       useLibraryCodeForTypes = false
+--     }
+--   },
+--   root_dir = function(fname)
+--     return util.root_pattern("setup.cfg", "pyproject.toml", "requirements.txt")(fname) or
+--         util.path.dirname(fname)
+--   end,
+--   on_attach = custom_attach,
+-- }
+
+require'lspconfig'.jedi_language_server.setup{}
 
 lspconfig.lua_ls.setup {
   on_attach = custom_attach,
@@ -138,15 +150,16 @@ lspconfig.gopls.setup {
 }
 
 lspconfig.emmet_ls.setup({
-    on_attach = custom_attach,
-    capabilities = capabilities,
-    filetypes = { "css", "eruby", "html", "javascript", "javascriptreact", "less", "sass", "scss", "svelte", "pug", "typescriptreact", "vue" },
-    init_options = {
-      html = {
-        options = {
-          -- For possible options, see: https://github.com/emmetio/emmet/blob/master/src/config.ts#L79-L267
-          ["bem.enabled"] = true,
-        },
+  on_attach = custom_attach,
+  capabilities = capabilities,
+  filetypes = { "css", "eruby", "html", "javascript", "javascriptreact", "less", "sass", "scss", "svelte", "pug",
+    "typescriptreact", "vue" },
+  init_options = {
+    html = {
+      options = {
+        -- For possible options, see: https://github.com/emmetio/emmet/blob/master/src/config.ts#L79-L267
+        ["bem.enabled"] = true,
       },
-    }
+    },
+  }
 })
