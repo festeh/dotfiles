@@ -17,7 +17,7 @@ font pango:monospace 8
 # Start XDG autostart .desktop files using dex. See also
 # https://wiki.archlinux.org/index.php/XDG_Autostart
 exec --no-startup-id dex --autostart --environment i3
-exec --no-startup-id yapona
+exec --no-startup-id yappy
 
 # The combination of xss-lock, nm-applet and pactl is a popular choice, so
 # they are included here as an example. Modify as you see fit.
@@ -155,6 +155,7 @@ assign [class="google-chrome"] $ws1
 assign [class="clion"] $ws2
 assign [class="alacritty"] $ws3
 assign [class="Zathura"] $ws4
+assign [class="Yappy"] $ws3
 
 # enable back-and-fourth switch
 workspace_auto_back_and_forth yes
@@ -238,7 +239,8 @@ bar {
         position top
         # mode hide
         modifier Mod4
-        # tray_output none
+        # tray_output primary
+        tray_padding 2
 }
 
 exec --no-startup-id dunst

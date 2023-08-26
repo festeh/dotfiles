@@ -71,7 +71,6 @@
   "telescope.nvim": { "branch": "master", "commit": "dc192faceb2db64231ead71539761e055df66d73" },
   "themer.lua": { "branch": "main", "commit": "7ac93ae015f0c9fa12508bde9532dc42a61c987e" },
   "trailblazer.nvim": { "branch": "main", "commit": "674bb6254a376a234d0d243366224122fc064eab" },
-  "tree-climber.nvim": { "branch": "main", "commit": "9b0c8c8358f575f924008945c74fd4f40d814cd7" },
   "vim-bazel": { "branch": "master", "commit": "60288bb58faf8d734ee3ea051bc70d7f680d90ef" },
   "vim-fugitive": { "branch": "master", "commit": "b3b838d690f315a503ec4af8c634bdff3b200aaf" },
   "vim-just": { "branch": "main", "commit": "927b41825b9cd07a40fc15b4c68635c4b36fa923" },
@@ -79,4 +78,3 @@
   "vim-sleuth": { "branch": "master", "commit": "1cc4557420f215d02c4d2645a748a816c220e99b" },
   "vim-unimpaired": { "branch": "master", "commit": "6d44a6dc2ec34607c41ec78acf81657248580bf1" },
   "wilder.nvim": { "branch": "master", "commit": "9929e1090dd84a60c1d1cc0220e0e35473c99b5e" }
-}
