@@ -100,3 +100,10 @@ LOCAL_SETTINGS="$DOTFILES/zsh/local.sh"
 if [ -f "$LOCAL_SETTINGS" ]; then
     source "$LOCAL_SETTINGS"
 fi
+
+setopt share_history      # Share command history across sessions
+setopt append_history     # Append history to the history file, don't overwrite it
+setopt inc_append_history # Immediately append commands to the history file, not just on exit
+
+eval "$(zoxide init zsh)"
+# eval "$(zellij setup --generate-completion zsh)"

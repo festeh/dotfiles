@@ -47,14 +47,14 @@ local plugins = {
   { "nvim-lualine/lualine.nvim", config = req("lualine") },
   { "akinsho/bufferline.nvim", config = req("bufferline") },
   { 'nvim-telescope/telescope.nvim', config = req("telescope") },
-  { 'lewis6991/gitsigns.nvim', config = req("gitsigns") },
   {
     'NeogitOrg/neogit',
     dependencies = { 'nvim-lua/plenary.nvim' },
     config = req(
       "neogit")
   },
-  { "nvim-pack/nvim-spectre",                      config = req("spectre") },
+  { 'nvim-lua/plenary.nvim' },
+  { "nvim-pack/nvim-spectre", config = req("spectre") },
   { "kevinhwang91/nvim-bqf", config = req("bqf") },
   { 'nvim-treesitter/nvim-treesitter-textobjects', config = req('treesitter-textobjects') },
   { 'stevearc/aerial.nvim', config = req('aerial') },
@@ -75,8 +75,8 @@ local plugins = {
   { 'sbdchd/neoformat', config = req("neoformat") },
   { 'DNLHC/glance.nvim', config = req('glance') },
   { 'NoahTheDuke/vim-just' },
-  { 'mfussenegger/nvim-dap', config = req("dap"), event="VeryLazy" },
-  { 'rcarriga/nvim-dap-ui', config = req("dapui"), event="VeryLazy" },
+  { 'mfussenegger/nvim-dap', config = req("dap"), event = "VeryLazy" },
+  { 'rcarriga/nvim-dap-ui', config = req("dapui"), event = "VeryLazy" },
   { "nvim-telescope/telescope-dap.nvim" },
   { "jbyuki/one-small-step-for-vimkind" },
   {
@@ -102,24 +102,60 @@ local plugins = {
     dependencies = { { 'ray-x/guihua.lua' }, { 'neovim/nvim-lspconfig' } },
     config = req('navigator')
   },
-  { 'echasnovski/mini.nvim',           config = req('mini') },
-  { 'rcarriga/nvim-notify',            config = req('notify') },
-  -- { 'drybalka/tree-climber.nvim',      config = req('treeclimber') },
-  {'ziontee113/syntax-tree-surfer',    config = req('syntax_tree_surfer') },
-  { 'themercorp/themer.lua',           config = req('themer') },
+  { 'echasnovski/mini.nvim', config = req('mini') },
+  { 'rcarriga/nvim-notify', config = req('notify') },
+  { 'drybalka/tree-climber.nvim',      config = req('treeclimber') },
+  { 'ziontee113/syntax-tree-surfer', config = req('syntax_tree_surfer') },
+  { 'themercorp/themer.lua', config = req('themer') },
   { 'LeonHeidelbach/trailblazer.nvim', config = req('trailblazer') },
   { 'rlane/pounce.nvim', config = req('pounce') },
-  { 'declancm/cinnamon.nvim', config = true },
+  { 'declancm/cinnamon.nvim', config = req('cinnamon') },
   { "smartpde/telescope-recent-files" },
   { 'ray-x/go.nvim', config = req('go') },
-  -- -- use {'folke/noice.nvim', config = [[require('config.noice')]] }
+  -- {'folke/noice.nvim', config = [[require('config.noice')]] },
   { "mrjones2014/legendary.nvim", config = req('legendary') },
-  { 'Exafunction/codeium.vim', event = "VeryLazy", enabled = (vim.g.codeium_enabled == true) },
+  -- { 'Exafunction/codeium.vim', event = "VeryLazy", enabled = (vim.g.codeium_enabled == true) },
   { 'neomake/neomake' },
-  { 'tpope/vim-sleuth' },
+  -- { 'tpope/vim-sleuth' },
   { "windwp/nvim-ts-autotag", config = req("autotag") },
   { 'theHamsta/nvim-dap-virtual-text', config = req("dap_virtual_text"),
     event = "VeryLazy" },
+  { 'Civitasv/cmake-tools.nvim', config = req('cmake') },
+  {
+    "zbirenbaum/copilot.lua",
+    cmd = "Copilot",
+    event = "InsertEnter",
+    config = req('copilot'),
+  },
+  {
+    'festeh/gp.nvim', config = req('gp'),
+  },
+  {
+    "tomasky/bookmarks.nvim",
+    config = req("bookmarks"),
+  },
+  { 'lewis6991/gitsigns.nvim', config = req("gitsigns") },
+  { "axkirillov/hbac.nvim", config = req("hbac") },
+  {
+    "folke/flash.nvim",
+    event = "VeryLazy",
+    ---@type Flash.Config
+    opts = {
+      modes = {
+        search = {
+          enabled = false,
+        }
+      }
+    },
+    -- stylua: ignore
+    keys = {
+      -- { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
+      { "S", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
+      { "r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
+      { "R", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
+      { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
+    },
+  },
   -- -- %Next goes here
   -- --
   { "MunifTanjim/nui.nvim" },
