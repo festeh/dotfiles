@@ -1,0 +1,3 @@
+[symlinks.nvim]
+target = "nvim"
+source = "~/.config/nvim"
