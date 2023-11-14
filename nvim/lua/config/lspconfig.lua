@@ -165,3 +165,8 @@ lspconfig.emmet_ls.setup({
     },
   }
 })
+
+lspconfig.svelte.setup {
+  on_attach = custom_attach,
+  capabilities = capabilities
+}
