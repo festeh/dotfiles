@@ -62,8 +62,6 @@ else
     echo "WARN: fzf is not found"
 fi
 
-setxkbmap -option caps:escape
-
 # Source zsh-system-clipboard
 source "$XDG_CONFIG_HOME/zsh/plugins/zsh-system-clipboard/zsh-system-clipboard.zsh"
 
@@ -74,9 +72,6 @@ zle -N up-line-or-beginning-search
 zle -N down-line-or-beginning-search
 bindkey "^[[A" up-line-or-beginning-search # Up
 bindkey "^[[B" down-line-or-beginning-search # Down
-
-
-setxkbmap -option ctrl:nocaps     #Swap Left Control and Caps Lock
 
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
@@ -96,7 +91,7 @@ unset __conda_setup
 export PATH="$PATH:$HOME/.local/bin"
 eval "$(starship init zsh)"
 
-LOCAL_SETTINGS="$DOTFILES/zsh/local.sh"
+LOCAL_SETTINGS="$ZDOTDIR/local.sh"
 if [ -f "$LOCAL_SETTINGS" ]; then
     source "$LOCAL_SETTINGS"
 fi
@@ -104,6 +99,3 @@ fi
 setopt share_history      # Share command history across sessions
 setopt append_history     # Append history to the history file, don't overwrite it
 setopt inc_append_history # Immediately append commands to the history file, not just on exit
-
-eval "$(zoxide init zsh)"
-# eval "$(zellij setup --generate-completion zsh)"
