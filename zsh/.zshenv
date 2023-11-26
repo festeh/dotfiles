@@ -26,10 +26,13 @@ export FZF_DEFAULT_OPTS="--bind 'tab:down,btab:up'"
 export BANGLE_MAC="F6:DE:8A:55:7E:03"
 export CHROME_EXECUTABLE=google-chrome-stable
 
+export OPPO_BUDS_MAC="2C:FD:B3:75:E4:F7"
+
 pathadd() {
     if [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]]; then
         PATH="${PATH:+"$PATH:"}$1"
     fi
 }
 
+# To not add if already in path
 pathadd "$HOME/.cargo/bin"
