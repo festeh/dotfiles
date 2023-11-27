@@ -1,0 +1,54 @@
+[simples.zsh]
+cmd = "pacman -S --noconfirm zsh"
+sudo = true
+check = "which zsh"
+
+[simples.fzf]
+cmd = "pacman -S --noconfirm fzf"
+sudo = true
+check = "which fzf"
+
+[simples.ripgrep]
+cmd = "pacman -S --noconfirm ripgrep"
+sudo = true
+check = "which rg"
+
+[simples.starship]
+cmd = "pacman -S --noconfirm starship"
+sudo = true
+check = "which starship"
+
+[simples.autojump]
+cmd = "yay -S --noconfirm autojump"
+sudo = false
+check = "which autojump"
+
+[simples.lazygit]
+cmd = "pacman -S --noconfirm lazygit"
+sudo = true
+check = "which lazygit"
+
+[simples.npm]
+cmd = "pacman -S --noconfirm npm"
+sudo = true
+check = "which npm"
+
+[simples.zsh-autosuggestions]
+cmd = "pacman -S --noconfirm zsh-autosuggestions"
+sudo = true
+check = "find /usr/share/zsh/plugins/zsh-autosuggestions"
+
+[simples.zsh-syntax-highlighting]
+cmd = "yay -S --noconfirm zsh-syntax-highlighting"
+sudo = false
+check = "find /usr/share/zsh/plugins/zsh-syntax-highlighting"
+
+[simples.zsh-system-clipboard]
+cmd = "git clone https://github.com/kutsan/zsh-system-clipboard ~/.config/zsh/plugins/zsh-system-clipboard"
+sudo = false
+check = "find ~/.config/zsh/plugins/zsh-system-clipboard"
+
+[simples.fdfind]
+cmd = "pacman -S --noconfirm fd"
+sudo = true
+check = "which fd"

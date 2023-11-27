@@ -66,7 +66,7 @@ local plugins = {
   },
   { 'folke/neodev.nvim' },
   { "szw/vim-maximizer" },
-  { 'sindrets/diffview.nvim', requires = 'nvim-lua/plenary.nvim' },
+  { 'sindrets/diffview.nvim', dependencies = {'nvim-lua/plenary.nvim'} },
   { 'tpope/vim-fugitive' },
   { "lukas-reineke/indent-blankline.nvim", config = req("indent") },
   { "iamcco/markdown-preview.nvim", run = function() vim.fn["mkdp#util#install"]() end },
