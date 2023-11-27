@@ -173,19 +173,6 @@ local plugins = {
   -- --   }
   -- -- })
   --
-  { "navarasu/onedark.nvim", opt = true },
-  { "sainnhe/edge", opt = true },
-  { "sainnhe/sonokai", opt = true },
-  { "sainnhe/gruvbox-material", opt = true },
-  { "shaunsingh/nord.nvim", opt = true },
-  { "sainnhe/everforest", opt = true },
-  { "EdenEast/nightfox.nvim", opt = true },
-  { "rebelot/kanagawa.nvim", opt = true },
-  { "catppuccin/nvim", as = "catppuccin", opt = true },
-  { "rose-pine/neovim", as = 'rose-pine', opt = true },
-  { "olimorris/onedarkpro.nvim", opt = true },
-  { "tanvirtin/monokai.nvim", opt = true },
-  { "marko-cerovac/material.nvim", opt = true },
 }
 local opts = {}
 
