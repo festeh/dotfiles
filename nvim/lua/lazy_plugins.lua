@@ -66,7 +66,7 @@ local plugins = {
   },
   { 'folke/neodev.nvim' },
   { "szw/vim-maximizer" },
-  { 'sindrets/diffview.nvim', dependencies = {'nvim-lua/plenary.nvim'} },
+  { 'sindrets/diffview.nvim', dependencies = { 'nvim-lua/plenary.nvim' } },
   { 'tpope/vim-fugitive' },
   { "lukas-reineke/indent-blankline.nvim", config = req("indent") },
   { "iamcco/markdown-preview.nvim", run = function() vim.fn["mkdp#util#install"]() end },
@@ -104,7 +104,7 @@ local plugins = {
   },
   { 'echasnovski/mini.nvim', config = req('mini') },
   { 'rcarriga/nvim-notify', config = req('notify') },
-  { 'drybalka/tree-climber.nvim',      config = req('treeclimber') },
+  { 'drybalka/tree-climber.nvim', config = req('treeclimber') },
   { 'ziontee113/syntax-tree-surfer', config = req('syntax_tree_surfer') },
   { 'themercorp/themer.lua', config = req('themer') },
   { 'LeonHeidelbach/trailblazer.nvim', config = req('trailblazer') },
@@ -136,6 +136,12 @@ local plugins = {
   },
   { 'lewis6991/gitsigns.nvim', config = req("gitsigns") },
   { "axkirillov/hbac.nvim", config = req("hbac") },
+  {
+    "kdheepak/lazygit.nvim",
+    init = function()
+      req('lazygit-vim')
+    end,
+  },
   {
     "folke/flash.nvim",
     event = "VeryLazy",
