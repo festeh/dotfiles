@@ -79,12 +79,6 @@ local plugins = {
   { 'rcarriga/nvim-dap-ui', config = req("dapui"), event = "VeryLazy" },
   { "nvim-telescope/telescope-dap.nvim" },
   { "jbyuki/one-small-step-for-vimkind" },
-  {
-    'simrat39/rust-tools.nvim',
-    dependencies = { "nvim-lspconfig", "cmp-nvim-lsp" },
-    config = req(
-      'rusttools')
-  },
   { 'stevearc/dressing.nvim', config = req('dressing') },
   -- use
   --   'akinsho/flutter-tools.nvim',
@@ -162,6 +156,11 @@ local plugins = {
       { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
     },
   },
+  -- {
+  --   'mrcjkb/rustaceanvim',
+  --   version = '^3', -- Recommended
+  --   ft = { 'rust' },
+  -- },
   -- -- %Next goes here
   -- --
   { "MunifTanjim/nui.nvim" },

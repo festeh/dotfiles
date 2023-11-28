@@ -88,7 +88,7 @@ lspconfig.ruff_lsp.setup {
 --   on_attach = custom_attach,
 -- }
 
-require'lspconfig'.jedi_language_server.setup{}
+require 'lspconfig'.jedi_language_server.setup {}
 
 lspconfig.lua_ls.setup {
   on_attach = custom_attach,
@@ -123,10 +123,33 @@ lspconfig.lua_ls.setup {
   capabilities = capabilities,
 }
 
--- lspconfig.rust_analyzer.setup {
---   on_attach = custom_attach,
---   capabilities = capabilities
--- }
+lspconfig.rust_analyzer.setup {
+  on_attach = custom_attach,
+  capabilities = capabilities,
+  settings = {
+    ["rust-analyzer"] = {
+      cargo = {
+        allFeatures = true,
+        loadOutDirsFromCheck = true,
+        runBuildScripts = true,
+      },
+      -- Add clippy lints for Rust.
+      checkOnSave = {
+        allFeatures = true,
+        command = "clippy",
+        extraArgs = { "--no-deps" },
+      },
+      procMacro = {
+        enable = false,
+        ignored = {
+          ["async-trait"] = { "async_trait" },
+          ["napi-derive"] = { "napi" },
+          ["async-recursion"] = { "async_recursion" },
+        },
+      },
+    },
+  }
+}
 
 lspconfig.tsserver.setup {
   on_attach = custom_attach,
