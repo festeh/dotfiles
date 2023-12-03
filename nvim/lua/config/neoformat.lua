@@ -7,8 +7,8 @@ local ext_to_lang = {
   py = "python",
   lua = "lua",
   -- js = "javascript",
-  css = "css",
-  html = "html",
+  -- css = "css",
+  -- html = "html",
 }
 
 local function format()

@@ -156,11 +156,7 @@ local plugins = {
       { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
     },
   },
-  -- {
-  --   'mrcjkb/rustaceanvim',
-  --   version = '^3', -- Recommended
-  --   ft = { 'rust' },
-  -- },
+  {"lambdalisue/suda.vim"},
   -- -- %Next goes here
   -- --
   { "MunifTanjim/nui.nvim" },
