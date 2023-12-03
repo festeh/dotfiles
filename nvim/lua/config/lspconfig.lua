@@ -174,19 +174,11 @@ lspconfig.gopls.setup {
   capabilities = capabilities
 }
 
-lspconfig.emmet_ls.setup({
+lspconfig.emmet_language_server.setup({
   on_attach = custom_attach,
   capabilities = capabilities,
   filetypes = { "css", "eruby", "html", "javascript", "javascriptreact", "less", "sass", "scss", "svelte", "pug",
     "typescriptreact", "vue" },
-  init_options = {
-    html = {
-      options = {
-        -- For possible options, see: https://github.com/emmetio/emmet/blob/master/src/config.ts#L79-L267
-        ["bem.enabled"] = true,
-      },
-    },
-  }
 })
 
 lspconfig.svelte.setup {

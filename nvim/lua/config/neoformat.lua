@@ -6,7 +6,7 @@ vim.g.neoformat_enabled_html = { 'prettier' }
 local ext_to_lang = {
   py = "python",
   lua = "lua",
-  js = "javascript",
+  -- js = "javascript",
   css = "css",
   html = "html",
 }
