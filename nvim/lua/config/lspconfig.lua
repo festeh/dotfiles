@@ -189,3 +189,9 @@ lspconfig.svelte.setup {
 lspconfig.html.setup {
   capabilities = capabilities,
 }
+
+lspconfig.dartls.setup {
+  on_attach = custom_attach,
+  capabilities = capabilities
+}
+
