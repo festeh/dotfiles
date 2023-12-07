@@ -1,0 +1,3 @@
+[symlinks.zsh_local]
+target = "main_laptop/local.sh"
+source = "~/.config/zsh/local.sh"

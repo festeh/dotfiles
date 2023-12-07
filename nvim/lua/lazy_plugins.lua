@@ -157,6 +157,7 @@ local plugins = {
     },
   },
   {"lambdalisue/suda.vim"},
+  {"tanvirtin/vgit.nvim"},
   -- -- %Next goes here
   -- --
   { "MunifTanjim/nui.nvim" },
