@@ -20,7 +20,6 @@ local plugins = {
   },
   { "hrsh7th/nvim-cmp", config = req("nvim-cmp") },
   { "rafamadriz/friendly-snippets" },
-  { "L3MON4D3/LuaSnip", dependencies = { "rafamadriz/friendly-snippets" }, config = req('luasnip') },
   -- nvim-cmp completion sources
   { "hrsh7th/cmp-nvim-lsp", dependencies = { "nvim-cmp" } },
   { "hrsh7th/cmp-path", dependencies = { "nvim-cmp" } },
@@ -122,7 +121,7 @@ local plugins = {
     config = req('copilot'),
   },
   {
-    'festeh/gp.nvim', config = req('gp'),
+    'Robitx/gp.nvim', config = req('gp'),
   },
   {
     "tomasky/bookmarks.nvim",
@@ -158,6 +157,7 @@ local plugins = {
   },
   {"lambdalisue/suda.vim"},
   {"tanvirtin/vgit.nvim"},
+  { "L3MON4D3/LuaSnip", dependencies = { "rafamadriz/friendly-snippets" }, config = req('luasnip') },
   -- -- %Next goes here
   -- --
   { "MunifTanjim/nui.nvim" },

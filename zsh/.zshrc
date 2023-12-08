@@ -53,7 +53,6 @@ else
     source /usr/share/zsh-syntax-highlighting
 fi
 
-source $DOTFILES/zsh/scripts.sh
 
 if [ $(command -v "fzf") ]; then
     source /usr/share/fzf/completion.zsh
@@ -99,3 +98,5 @@ fi
 setopt share_history      # Share command history across sessions
 setopt append_history     # Append history to the history file, don't overwrite it
 setopt inc_append_history # Immediately append commands to the history file, not just on exit
+
+source $DOTFILES/zsh/scripts.sh
