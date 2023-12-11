@@ -46,12 +46,6 @@ local plugins = {
   { "nvim-lualine/lualine.nvim", config = req("lualine") },
   { "akinsho/bufferline.nvim", config = req("bufferline") },
   { 'nvim-telescope/telescope.nvim', config = req("telescope") },
-  {
-    'NeogitOrg/neogit',
-    dependencies = { 'nvim-lua/plenary.nvim' },
-    config = req(
-      "neogit")
-  },
   { 'nvim-lua/plenary.nvim' },
   { "nvim-pack/nvim-spectre", config = req("spectre") },
   { "kevinhwang91/nvim-bqf", config = req("bqf") },

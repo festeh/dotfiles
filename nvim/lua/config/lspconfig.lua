@@ -195,3 +195,7 @@ lspconfig.dartls.setup {
   capabilities = capabilities
 }
 
+lspconfig.tailwindcss.setup{
+  on_attach = custom_attach,
+  capabilities = capabilities,
+}
