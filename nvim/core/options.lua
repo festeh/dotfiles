@@ -24,9 +24,6 @@ o.splitbelow = true
 
 o.updatetime = 100
 
-wo.signcolumn = "yes"
+o.signcolumn = "yes"
 
-o.foldlevel = 20
-o.foldmethod = "expr"
-o.foldexpr = "nvim_treesitter#foldexpr()"
 o.exrc = true
