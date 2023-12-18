@@ -93,7 +93,7 @@ local plugins = {
   { 'rcarriga/nvim-notify',            config = req('notify') },
   { 'drybalka/tree-climber.nvim',      config = req('treeclimber') },
   { 'ziontee113/syntax-tree-surfer',   config = req('syntax_tree_surfer') },
-  { 'themercorp/themer.lua',           config = req('themer') },
+  -- { 'themercorp/themer.lua',           config = req('themer') },
   { 'LeonHeidelbach/trailblazer.nvim', config = req('trailblazer') },
   { 'rlane/pounce.nvim',               config = req('pounce') },
   { 'declancm/cinnamon.nvim',          config = req('cinnamon') },
@@ -176,6 +176,7 @@ local plugins = {
     dependencies = { "kevinhwang91/promise-async" },
     config = req('ufo')
   },
+  {"catppuccin/nvim", priority=1000},
   -- -- %Next goes here
   -- --
   { "MunifTanjim/nui.nvim" },

@@ -38,3 +38,5 @@ end
 
 -- require("plugins")
 require("lazy_plugins")
+
+vim.cmd("colorscheme catppuccin-mocha")
