@@ -9,3 +9,11 @@ source = "~/.config/zsh"
 [symlinks.hyprland]
 target = "hyprland/hyprland.conf"
 source = "~/.config/hypr/hyprland.conf"
+
+[symlinks.tmux]
+target = "tmux/tmux.conf"
+source = "~/.config/tmux/tmux.conf"
+
+[symlinks.tmuxp]
+target = "tmuxp/"
+source = "~/.config/tmuxp/"
