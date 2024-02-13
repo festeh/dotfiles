@@ -1,0 +1,11 @@
+# Here be list of all possible packages
+
+[git]
+
+[neovim]
+ubuntu = snap
+
+[tmux]
+
+[zsh]
+

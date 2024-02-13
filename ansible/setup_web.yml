@@ -1,0 +1,28 @@
+---
+- hosts: "{{ target }}"
+  become: yes
+  vars:
+    deploy_dir : /opt/server/node
+  tasks:
+    - name: install_caddy
+      include_role:
+        name: caddy_ansible
+      vars:
+        caddy_config: |
+          files.example.com
+          encode gzip
+          file_server browse {
+              root /home/caddy/
+          }
+    - name: create_deploy_dir
+      file:
+        path: "{{ deploy_dir }}"
+        state: directory
+    - name: install_pm2
+      import_role:
+        name: isaackehle.ansible_pm2
+      environment:
+        PATH: "{{ ansible_env.HOME }}/.asdf/shims:{{ ansible_env.HOME }}/.asdf/bin:{{ ansible_env.PATH }}"
+
+
+
