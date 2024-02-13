@@ -23,7 +23,6 @@ export FZF_DEFAULT_COMMAND="rg --files --hidden --glob '!.git'"
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_DEFAULT_OPTS="--bind 'tab:down,btab:up'"
 
-export BANGLE_MAC="F6:DE:8A:55:7E:03"
 export CHROME_EXECUTABLE=google-chrome-stable
 
 export OPPO_BUDS_MAC="2C:FD:B3:75:E4:F7"
@@ -35,4 +34,10 @@ pathadd() {
 }
 
 # To not add if already in path
+pathadd "$HOME/.local/bin"
 pathadd "$HOME/.cargo/bin"
+pathadd "$HOME/go/bin"
+# TODO: only work pc
+pathadd "$HOME/Downloads/swift-5.7.3-RELEASE-ubuntu22.04"
+export GOENV_ROOT="$HOME/.goenv"
+export PATH="$GOENV_ROOT/bin:$PATH"

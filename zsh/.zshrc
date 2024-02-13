@@ -1,14 +1,9 @@
-source "$XDG_CONFIG_HOME/zsh/aliases"
+setopt AUTO_CD # cd to directory without typing cd
 
-unsetopt CASE_GLOB
-#If a command is issued that can’t be executed as a normal command, and the command is the name of a directory, perform the cd command to that directory
-setopt AUTO_CD
+source $DOTFILES/zsh/external/completion.zsh
 
-autoload -U compinit; compinit
-# Autocomplete hidden files
-_comp_options+=(globdots)
-source ~/dotfiles/zsh/external/completion.zsh
 
+# TODO: template
 if [ -f "/etc/arch-release" ]; then
     source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 else
@@ -18,18 +13,11 @@ source /usr/share/autojump/autojump.zsh
 
 bindkey -v
 bindkey  "^?" backward-delete-char
-bindkey  "^[L" forward-word
+bindkey  "^[L" forwar-word
 bindkey  "^[[1;3C" forward-word
 bindkey "^R" history-incremental-search-backward
 
 export KEYTIMEOUT=1
-
-setopt hist_ignore_all_dups
-setopt hist_find_no_dups
-unsetopt hist_ignore_space
-setopt    appendhistory     #Append history to the history file (no overwriting)
-setopt    sharehistory      #Share history across terminals
-setopt    incappendhistory  #Immediately append to the history file, not just when a term is killed
 
 fpath=($ZDOTDIR/external $fpath)
 
@@ -47,12 +35,12 @@ bindkey -M vicmd v edit-command-line
 
 bindkey '^_' undo
 
+# TODO: template
 if [ -f "/etc/arch-release" ]; then
     source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 else 
     source /usr/share/zsh-syntax-highlighting
 fi
-
 
 if [ $(command -v "fzf") ]; then
     source /usr/share/fzf/completion.zsh
@@ -72,22 +60,6 @@ zle -N down-line-or-beginning-search
 bindkey "^[[A" up-line-or-beginning-search # Up
 bindkey "^[[B" down-line-or-beginning-search # Down
 
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/home/dlipin/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/home/dlipin/miniconda3/etc/profile.d/conda.sh" ]; then
-        . "/home/dlipin/miniconda3/etc/profile.d/conda.sh"
-    else
-        export PATH="/home/dlipin/miniconda3/bin:$PATH"
-    fi
-fi
-unset __conda_setup
-# <<< conda initialize <<<
-
-export PATH="$PATH:$HOME/.local/bin"
 eval "$(starship init zsh)"
 
 LOCAL_SETTINGS="$ZDOTDIR/local.sh"
@@ -95,8 +67,32 @@ if [ -f "$LOCAL_SETTINGS" ]; then
     source "$LOCAL_SETTINGS"
 fi
 
+setopt hist_find_no_dups
+unsetopt hist_ignore_space
+setopt extended_history  # Record timestamp of command in HISTFILE
+setopt hist_ignore_dups  # Do not record an entry that was just recorded again
 setopt share_history      # Share command history across sessions
-setopt append_history     # Append history to the history file, don't overwrite it
-setopt inc_append_history # Immediately append commands to the history file, not just on exit
 
 source $DOTFILES/zsh/scripts.sh
+source $DOTFILES/zsh/aliases.sh
+
+eval "$(goenv init -)"
+
+. $HOME/.asdf/asdf.sh
+fpath=(${ASDF_DIR}/completions $fpath)
+
+_comp_options+=(globdots)
+autoload -U compinit;
+if [ "$(find $ZDOTDIR/.zcompdump -mtime +1)" ] ; then
+    echo "zcompdump is older than a day. Regenerating..."
+    compinit
+fi
+compinit -C
+
+# pnpm
+export PNPM_HOME="/home/dlipin/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end

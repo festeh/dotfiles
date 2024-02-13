@@ -1,5 +1,5 @@
-#!/bin/bash
-
+#!/bin/zsh
+#
 take () {
     mkdir -p "$1" && cd "$1"
 }
@@ -22,16 +22,23 @@ function chpwd() {
 }
 
 function copypath() {
-    export XSEL=$(which xsel)
+    # check if we are on wayland or xorg
+    if [ -z "$WAYLAND_DISPLAY" ]
+    then
+        XSEL=$(which xsel)
+        CMD="$XSEL --clipboard --input"
+    else
+      CMD=$(which wl-copy)
+    fi 
     if [ -z "$1" ]
     then
         echo "No argument supplied. Please provide a file or directory name."
     else
-        local path=$(realpath "$1")
-        if [ $? -eq 0 ]
+        local filepath=$(realpath "$1")
+        if [ -f "$filepath" ] || [ -d "$filepath" ]
         then
-            echo "$path" | $XSEL --clipboard --input
-            echo "The path has been copied to the clipboard."
+            FINAL_CMD="echo $filepath | $CMD 2>/dev/null"
+            eval "$FINAL_CMD" && echo "Copied $filepath to clipboard."
         else
             echo "Error getting the real path. Please check the file or directory name."
         fi
