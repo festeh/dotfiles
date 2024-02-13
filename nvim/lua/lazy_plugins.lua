@@ -29,9 +29,8 @@ local plugins = {
   {
     "neovim/nvim-lspconfig",
     dependencies = { "cmp-nvim-lsp" },
-    config = req("lspconfig")
   },
-  { "williamboman/mason.nvim",         config = true },
+  { "williamboman/mason.nvim",         config = req("masonlsp") },
   { "nvim-treesitter/nvim-treesitter", config = req('treesitter') },
   {
     'ibhagwan/fzf-lua',
@@ -73,14 +72,6 @@ local plugins = {
   { "nvim-telescope/telescope-dap.nvim" },
   { "jbyuki/one-small-step-for-vimkind" },
   { 'stevearc/dressing.nvim',              config = req('dressing') },
-  -- use
-  --   'akinsho/flutter-tools.nvim',
-  --   requires = {
-  --     'nvim-lua/plenary.nvim',
-  --     'stevearc/dressing.nvim', -- optional for vim.ui.select
-  --   },
-  --   config = [[require('config.flutter-tools')]]
-  -- }
   -- use { 'MunifTanjim/exrc.nvim', config = [[require('config.exrc')]] }
   { 'lakshayg/vim-bazel' },
   {
@@ -139,7 +130,6 @@ local plugins = {
   {
     "folke/flash.nvim",
     event = "VeryLazy",
-    ---@type Flash.Config
     opts = {
       modes = {
         search = {
@@ -176,7 +166,47 @@ local plugins = {
     dependencies = { "kevinhwang91/promise-async" },
     config = req('ufo')
   },
-  {"catppuccin/nvim", priority=1000},
+  { "elkowar/yuck.vim" },
+  -- { "theRealCarneiro/hyprland-vim-syntax", event = "VeryLazy" },
+  { "luckasRanarison/tree-sitter-hypr" },
+  { "williamboman/mason-lspconfig.nvim" },
+  {
+    'OscarCreator/rsync.nvim',
+    build = 'make',
+    dependencies = 'nvim-lua/plenary.nvim',
+    commit = "de014632b607992b810955ccf7aa9ef873bf09c3",
+    config = function()
+      require("rsync").setup()
+    end,
+  },
+  {
+    "benlubas/molten-nvim",
+    build = ":UpdateRemotePlugins",
+    init = function()
+      -- this is an example, not a default. Please see the readme for more configuration options
+      vim.g.molten_output_win_max_height = 12
+    end,
+  },
+  {
+    "otavioschwanck/arrow.nvim",
+    opts = {
+      show_icons = true,
+      leader_key = ';' -- Recommended to be a single key
+    }
+  },
+  {
+    'akinsho/flutter-tools.nvim',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'stevearc/dressing.nvim',
+    },
+    config = req('flutter-tools')
+  },
+
+
+  -- % themes
+  { "catppuccin/nvim",     priority = 1000 },
+
   -- -- %Next goes here
   -- --
   { "MunifTanjim/nui.nvim" },

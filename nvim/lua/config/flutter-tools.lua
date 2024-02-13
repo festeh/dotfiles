@@ -34,8 +34,5 @@ require("flutter-tools").setup {
   },
   lsp = {
     on_attach = custom_attach,
-    color = {
-      enabled = true,
-    }
   }
 }

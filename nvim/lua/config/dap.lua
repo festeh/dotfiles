@@ -46,6 +46,32 @@ dap.configurations.lua = {
   }
 }
 
+dap.adapters.python = {
+  type = 'executable',
+  command = 'python',
+  args = { '-m', 'debugpy.adapter' },
+}
+
+dap.configurations.python = {
+  {
+    type = 'python',
+    request = 'launch',
+    name = "Launch file",
+    program = "${file}",
+    justMyCode = false,
+    pythonPath = function()
+      local cwd = vim.fn.getcwd()
+      if vim.fn.executable('./venv/bin/python') == 1 then
+        return './venv/bin/python'
+      elseif vim.fn.executable('python') == 1 then
+        return 'python'
+      else
+        return '/usr/bin/python'
+      end
+    end,
+  },
+}
+
 dap.adapters.nlua = function(callback, config)
   callback({ type = 'server', host = config.host or "127.0.0.1", port = config.port or 8086 })
 end
