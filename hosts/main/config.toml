@@ -1,8 +1,8 @@
 [symlinks.zsh_local]
 target = "main/local.sh"
-source = "~/.config/zsh/local.sh"
+name = "~/.config/zsh/local.sh"
 
 
 [symlinks.kitty]
 target = "kitty"
-source = "~/.config/kitty"
+name = "~/.config/kitty"

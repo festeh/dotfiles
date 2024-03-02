@@ -1,15 +1,15 @@
 [symlinks.nvim]
 target = "nvim"
-source = "~/.config/nvim"
+name = "~/.config/nvim"
 
 [symlinks.zsh]
 target = "zsh"
-source = "~/.config/zsh"
+name = "~/.config/zsh"
 
 [symlinks.tmux]
 target = "tmux/tmux.conf"
-source = "~/.config/tmux/tmux.conf"
+name = "~/.config/tmux/tmux.conf"
 
 [symlinks.tmuxp]
 target = "tmuxp/"
-source = "~/.config/tmuxp/"
+name = "~/.config/tmuxp/"
