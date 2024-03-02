@@ -6,10 +6,6 @@ source = "~/.config/nvim"
 target = "zsh"
 source = "~/.config/zsh"
 
-[symlinks.hyprland]
-target = "hyprland/hyprland.conf"
-source = "~/.config/hypr/hyprland.conf"
-
 [symlinks.tmux]
 target = "tmux/tmux.conf"
 source = "~/.config/tmux/tmux.conf"

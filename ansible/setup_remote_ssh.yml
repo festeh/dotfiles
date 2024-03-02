@@ -1,0 +1,51 @@
+- name: Setup SSH key identification
+  hosts: "{{ target }}"
+  gather_facts: no
+
+  tasks:
+    - name: Install needed packages
+      become: yes
+      ansible.builtin.package:
+        name:
+          - openssh-client
+          - git
+        state: present
+
+    - name: (local) Get IdentityFile for the host from SSH config
+      shell: "ssh -G {{ target }} | grep -i identityfile | awk '{print $2}'"
+      register: keyfile
+      delegate_to: localhost
+      ignore_errors: true
+
+    - name: (local) Check if file exists
+      stat:
+        path: "{{ keyfile.stdout }}"
+      register: keyfile_exists
+      delegate_to: localhost
+
+    - name: (local) Generate a new SSH key pair if keyfile not found
+      local_action: 
+        module: openssh_keypair 
+        path: "{{ keyfile.stdout }}"
+        force: False
+      when: keyfile_exists.stat.exists == False
+
+    - name: (local) Get the public key
+      shell: "cat {{ keyfile.stdout }}.pub"
+      register: pubkeyfile
+      delegate_to: localhost
+
+    - name: Check if authorized_keys exists
+      stat:
+        path: "/home/{{ ansible_user }}/.ssh/authorized_keys"
+      register: remote_is_set
+
+    - block:
+        - name: Copy the public key to the remote machine
+          authorized_key:
+            user: "{{ ansible_user }}"
+            state: present
+            key: "{{ pubkeyfile.stdout }}"
+
+
+      when: remote_is_set.stat.exists == False

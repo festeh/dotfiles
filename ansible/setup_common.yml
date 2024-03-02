@@ -1,0 +1,48 @@
+- name: Setup common packages on a machine with root access
+  hosts: "{{ target }}"
+  gather_facts: no
+
+  tasks:
+    - name: install_asdf
+      include_role:
+        name: cimon-io.asdf
+      vars:
+        asdf_plugins:
+          - name: nodejs
+            version: latest
+            global: latest
+        asdf_user: "{{ ansible_user }}"
+
+# First, create a template for the Caddyfile (`templates/Caddyfile.j2`):
+#
+# ```jinja
+# ```
+#
+# Then, create an Ansible playbook (`setup-caddy.yml`) with the following tasks:
+#
+# ```yaml
+# ---
+# - name: Configure Caddy and restart service
+#   hosts: your_server_group
+#   become: yes  # Use sudo to execute tasks
+#   tasks:
+#     - name: Deploy Caddyfile
+#       template:
+#         src: templates/Caddyfile.j2
+#         dest: /etc/caddy/Caddyfile
+#         owner: root
+#         group: root
+#         mode: '0644'
+#       notify: restart caddy
+#
+#     - name: Ensure Caddy is running (will not start it if it is not running)
+#       service:
+#         name: caddy
+#         state: started
+#         enabled: yes
+#
+#   handlers:
+#     - name: restart caddy
+#       service:
+#         name: caddy
+#         state: restarted
