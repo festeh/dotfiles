@@ -155,7 +155,7 @@ assign [class="google-chrome"] $ws1
 assign [class="clion"] $ws2
 assign [class="alacritty"] $ws3
 assign [class="Zathura"] $ws4
-assign [class="Yappy"] $ws3
+# assign [class="Yappy"] $ws3
 
 # enable back-and-fourth switch
 workspace_auto_back_and_forth yes
