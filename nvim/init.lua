@@ -1,7 +1,6 @@
 local api = vim.api
 
 local modules = {
-  "local.lua",
   "globals.lua",
   "options.lua",
   "mappings.lua",
