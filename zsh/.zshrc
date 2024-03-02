@@ -76,10 +76,9 @@ setopt share_history      # Share command history across sessions
 source $DOTFILES/zsh/scripts.sh
 source $DOTFILES/zsh/aliases.sh
 
-eval "$(goenv init -)"
-
 . $HOME/.asdf/asdf.sh
 fpath=(${ASDF_DIR}/completions $fpath)
+. ~/.asdf/plugins/golang/set-env.zsh
 
 _comp_options+=(globdots)
 autoload -U compinit;

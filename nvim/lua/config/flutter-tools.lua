@@ -30,9 +30,11 @@ end
 require("flutter-tools").setup {
   dev_log = {
     enabled = true,
+    notify_errors = true,
     open_cmd = "tabedit",
   },
   lsp = {
     on_attach = custom_attach,
-  }
+  },
+  flutter_lookup_cmd = "asdf where flutter",
 }

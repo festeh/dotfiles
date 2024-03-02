@@ -27,6 +27,9 @@ export CHROME_EXECUTABLE=google-chrome-stable
 
 export OPPO_BUDS_MAC="2C:FD:B3:75:E4:F7"
 
+export ANDROID_HOME=$HOME/Android/sdk
+
+
 pathadd() {
     if [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]]; then
         PATH="${PATH:+"$PATH:"}$1"
@@ -37,6 +40,7 @@ pathadd() {
 pathadd "$HOME/.local/bin"
 pathadd "$HOME/.cargo/bin"
 pathadd "$HOME/go/bin"
+pathadd "$HOME/Android/Sdk/cmdline-tools/latest/bin"
 # TODO: only work pc
 pathadd "$HOME/Downloads/swift-5.7.3-RELEASE-ubuntu22.04"
 export GOENV_ROOT="$HOME/.goenv"

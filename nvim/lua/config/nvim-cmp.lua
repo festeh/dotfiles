@@ -26,7 +26,13 @@ cmp.setup {
   sources = {
     { name = "nvim_lsp" }, -- For nvim-lsp
     { name = "luasnip" },
-    { name = "path" }, -- for path completion
+    { name = "path",
+      option = {
+        get_cwd = function()
+          return vim.fn.getcwd()
+        end
+      }
+    },                                       -- for path completion
     { name = "buffer", keyword_length = 2 }, -- for buffer word completion
   },
   snippet = {
