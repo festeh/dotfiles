@@ -174,9 +174,8 @@ local plugins = {
     'OscarCreator/rsync.nvim',
     build = 'make',
     dependencies = 'nvim-lua/plenary.nvim',
-    commit = "de014632b607992b810955ccf7aa9ef873bf09c3",
     config = function()
-      require("rsync").setup()
+      require("rsync").setup({})
     end,
   },
   {
