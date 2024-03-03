@@ -7,6 +7,8 @@ export XDG_CACHE_HOME="$HOME/.cache"
 
 
 export EDITOR="nvim"
+export MANPAGER='nvim +Man!'
+
 export VISUAL="nvim"
 
 export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
