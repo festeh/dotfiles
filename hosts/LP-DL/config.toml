@@ -1,0 +1,4 @@
+[symlinks.hyprland]
+target = "hyprland"
+name = "~/.config/hypr/"
+

@@ -1,4 +1,0 @@
-[symlinks.zsh_local]
-target = "work/local.sh"
-name = "~/.config/zsh/local.sh"
-
