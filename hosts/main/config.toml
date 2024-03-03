@@ -1,8 +1,7 @@
-[symlinks.zsh_local]
-target = "main/local.sh"
-name = "~/.config/zsh/local.sh"
+[symlinks.zathurc]
+target = "zathura/zathurarc"
+name = "~/.config/zathura/zathurarc"
 
-
-[symlinks.kitty]
-target = "kitty"
-name = "~/.config/kitty"
+[symlinks.hyprland]
+target = "hyprland"
+name = "~/.config/hypr/"
