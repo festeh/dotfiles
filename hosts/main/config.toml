@@ -2,7 +2,10 @@
 target = "main/local.sh"
 name = "~/.config/zsh/local.sh"
 
-
 [symlinks.kitty]
 target = "kitty"
 name = "~/.config/kitty"
+
+[symlinks.hyprland_scripts]
+target = "hyprland/scripts"
+name = "~/.config/hypr/scripts"

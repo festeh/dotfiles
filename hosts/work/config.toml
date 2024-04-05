@@ -2,3 +2,8 @@
 target = "work/local.sh"
 name = "~/.config/zsh/local.sh"
 
+
+[symlinks.hyprland_scripts]
+target = "hyprland/scripts"
+name = "~/.config/hypr/scripts"
+

@@ -1,3 +1,16 @@
 [symlinks.zsh_local]
 target = "main_laptop/local.sh"
 name = "~/.config/zsh/local.sh"
+
+[symlinks.hyprland_scripts]
+target = "hyprland/scripts"
+name = "~/.config/hypr/scripts"
+
+[templates.hyprland]
+target = "hyprland/hyprland_template.conf"
+name = "~/.config/hypr/hyprland.conf"
+
+[symlinks.kitty]
+target = "kitty"
+name = "~/.config/kitty"
+
