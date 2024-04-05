@@ -2,10 +2,6 @@
 target = "zathura/zathurarc"
 name = "~/.config/zathura/zathurarc"
 
-[symlinks.hyprland]
-target = "hyprland"
-name = "~/.config/hypr/"
-
 [symlinks.waybar]
 target = "waybar"
 name = "~/.config/waybar/"
