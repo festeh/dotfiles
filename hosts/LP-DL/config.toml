@@ -1,0 +1,6 @@
+[symlinks.waybar]
+target = "waybar"
+name = "~/.config/waybar/"
+
+[templates.hyprland]
+target = "hyprland/hyprland.conf"

@@ -1,1 +1,3 @@
 set continuous-hist-save true
+set adjust-window width
+set selection-clipboard clipboard

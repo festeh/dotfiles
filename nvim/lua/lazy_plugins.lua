@@ -201,6 +201,13 @@ local plugins = {
     },
     config = req('flutter-tools')
   },
+  {
+    "harrisoncramer/gitlab.nvim",
+    config = function()
+      require("gitlab").setup()
+    end,
+  },
+  { "nvim-neotest/nvim-nio" },
 
 
   -- % themes

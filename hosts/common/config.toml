@@ -13,3 +13,7 @@ name = "~/.config/tmux/tmux.conf"
 [symlinks.tmuxp]
 target = "tmuxp/"
 name = "~/.config/tmuxp/"
+
+[symlinks.kitty]
+target = "kitty"
+name = "~/.config/kitty"
