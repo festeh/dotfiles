@@ -3,4 +3,12 @@ target = "waybar"
 name = "~/.config/waybar/"
 
 [templates.hyprland]
-target = "hyprland/hyprland.conf"
+target = "hyprland/hyprland_template.conf"
+name = "~/.config/hypr/hyprland.conf"
+USER = "dlipin"
+SCALING = "2"
+
+
+[symlinks.hyprland_scripts]
+target = "hyprland/scripts"
+name = "~/.config/hypr/scripts"
