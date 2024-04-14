@@ -28,8 +28,6 @@ local custom_attach = function(client, bufnr)
   map("n", "[d", diagnostic.goto_prev, { desc = "previous diagnostic" })
   map("n", "]d", diagnostic.goto_next, { desc = "next diagnostic" })
   map("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "LSP code action" })
-  map("n", "<leader>wa", vim.lsp.buf.add_workspace_folder, { desc = "add workspace folder" })
-  map("n", "<leader>wr", vim.lsp.buf.remove_workspace_folder, { desc = "remove workspace folder" })
   map("n", "<leader>wl",
     function()
       vim.inspect(vim.lsp.buf.list_workspace_folders())
