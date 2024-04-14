@@ -86,7 +86,7 @@ local plugins = {
   { 'ziontee113/syntax-tree-surfer',   config = req('syntax_tree_surfer') },
   -- { 'themercorp/themer.lua',           config = req('themer') },
   { 'LeonHeidelbach/trailblazer.nvim', config = req('trailblazer') },
-  { 'rlane/pounce.nvim',               config = req('pounce') },
+  { 'ggandor/leap.nvim',               config = req("leap") },
   { 'declancm/cinnamon.nvim',          config = req('cinnamon') },
   { "smartpde/telescope-recent-files" },
   { 'ray-x/go.nvim',                   config = req('go') },
@@ -140,7 +140,7 @@ local plugins = {
     -- stylua: ignore
     keys = {
       -- { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
-      { "S", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
+      { "Q", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
       { "r", mode = "o",               function() require("flash").remote() end,     desc = "Remote Flash" },
       {
         "R",
@@ -190,7 +190,7 @@ local plugins = {
     "otavioschwanck/arrow.nvim",
     opts = {
       show_icons = true,
-      leader_key = ';' -- Recommended to be a single key
+      leader_key = '<c-;>',
     }
   },
   {
@@ -208,10 +208,45 @@ local plugins = {
     end,
   },
   { "nvim-neotest/nvim-nio" },
+  {
+    "roobert/tabtree.nvim",
+    config = function()
+      require("tabtree").setup({
+        key_bindings = {
+          next = "<Tab>",
+          previous = "<S-Tab>",
+        },
+        language_configs = {
+          python = {
+            target_query = [[
+              (string) @string_capture
+              (interpolation) @interpolation_capture
+              (parameters) @parameters_capture
+              (argument_list) @argument_list_capture
+            ]],
+            -- experimental feature, to move the cursor in certain situations like when handling python f-strings
+            offsets = {
+              string_start_capture = 1,
+            },
+          },
+          go = {
+            target_query = [[
+              (parameter_list) @parameters_capture
+              (identifier) @identifier_capture
+              (interpreted_string_literal) @interpreted_string_literal_capture
+            ]],
+            offsets = {
+
+            },
+          }
+        },
+      })
+    end,
+  },
 
 
   -- % themes
-  { "catppuccin/nvim",     priority = 1000 },
+  { "catppuccin/nvim",      priority = 1000 },
 
   -- -- %Next goes here
   -- --
