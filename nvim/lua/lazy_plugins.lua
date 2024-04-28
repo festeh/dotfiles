@@ -56,7 +56,7 @@ local plugins = {
     tag = "legacy",
     config = req("fidget")
   },
-  { 'folke/neodev.nvim' },
+  -- { 'folke/neodev.nvim' },
   { "szw/vim-maximizer" },
   { 'sindrets/diffview.nvim',              dependencies = { 'nvim-lua/plenary.nvim' } },
   { 'tpope/vim-fugitive' },

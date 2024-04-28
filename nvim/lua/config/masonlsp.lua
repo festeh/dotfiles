@@ -7,9 +7,9 @@ local diagnostic = vim.diagnostic
 
 local util = require("lspconfig/util")
 
-require("neodev").setup({
+-- require("neodev").setup({
   -- add any options here, or leave empty to use the default settings
-})
+-- })
 
 local custom_attach = function(client, bufnr)
   local map = function(mode, l, r, opts)
