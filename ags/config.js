@@ -43,12 +43,14 @@ function SuspendBlocker() {
   let icon = Variable(normalIcon);
   return Widget.ToggleButton({
     onToggled: ({ active }) => {
-      print(active);
       if (active) {
+        Utils.exec("pkill -9 -f swayidle")
         icon.setValue(inhibitIcon);
       } else {
         icon.setValue(normalIcon);
+        print(Utils.execAsync(`bash -c "swayidle -w timeout 1500 'systemctl suspend' &"`))
       }
+      print(active);
     },
     child: Widget.Icon({
       icon: icon.bind(),

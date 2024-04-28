@@ -12,3 +12,6 @@ USER = "dima"
 target = "kitty"
 name = "~/.config/kitty"
 
+[symlinks.ags]
+target = "ags"
+name = "~/.config/ags"
