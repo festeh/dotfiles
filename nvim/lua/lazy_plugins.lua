@@ -183,7 +183,14 @@ local plugins = {
     build = ":UpdateRemotePlugins",
     init = function()
       -- this is an example, not a default. Please see the readme for more configuration options
-      vim.g.molten_output_win_max_height = 12
+      vim.g.molten_auto_open_output = false
+      vim.g.molten_enter_output_behavior = "open_and_enter"
+      -- vim.g.molten_output_show_more = true
+      vim.g.molten_output_virt_lines = true
+      vim.g.molten_output_win_max_height = 50
+      -- vim.g.molten_use_border_highlights = true
+      vim.g.molten_virt_text_output = true
+      vim.g.molten_virt_text_max_lines = 12
     end,
   },
   {

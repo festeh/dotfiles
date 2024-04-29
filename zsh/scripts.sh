@@ -44,3 +44,12 @@ function copypath() {
         fi
     fi
 }
+
+function bgrun() {
+    if [ -z "$1" ]
+    then
+        echo "No argument supplied. Please provide a command to run in the background."
+    else
+        nohup "$@" >/dev/null 2>&1 &
+    fi
+}
