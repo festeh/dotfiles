@@ -1,0 +1,17 @@
+* {
+    font-weight: bold;
+    font-size: 20px;
+}
+
+window.bar {
+    background-color: @theme_bg_color;
+    color: @theme_fg_color;
+}
+
+label {
+    font-weight: bold;
+}
+
+.network {
+    margin-right: 15px;
+}
