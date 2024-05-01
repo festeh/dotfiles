@@ -250,6 +250,10 @@ local plugins = {
       })
     end,
   },
+  {
+    'stevearc/overseer.nvim',
+    config = req('overseer'),
+  },
 
 
   -- % themes
