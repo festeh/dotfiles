@@ -12,3 +12,8 @@ SCALING = "2"
 [symlinks.hyprland_scripts]
 target = "hyprland/scripts"
 name = "~/.config/hypr/scripts"
+
+
+[symlinks.ags]
+target = "ags"
+name = "~/.config/ags"
