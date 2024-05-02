@@ -209,41 +209,6 @@ local plugins = {
   },
   { "nvim-neotest/nvim-nio" },
   {
-    "roobert/tabtree.nvim",
-    config = function()
-      require("tabtree").setup({
-        key_bindings = {
-          next = "<Tab>",
-          previous = "<S-Tab>",
-        },
-        language_configs = {
-          python = {
-            target_query = [[
-              (string) @string_capture
-              (interpolation) @interpolation_capture
-              (parameters) @parameters_capture
-              (argument_list) @argument_list_capture
-            ]],
-            -- experimental feature, to move the cursor in certain situations like when handling python f-strings
-            offsets = {
-              string_start_capture = 1,
-            },
-          },
-          go = {
-            target_query = [[
-              (parameter_list) @parameters_capture
-              (identifier) @identifier_capture
-              (interpreted_string_literal) @interpreted_string_literal_capture
-            ]],
-            offsets = {
-
-            },
-          }
-        },
-      })
-    end,
-  },
-  {
     'stevearc/overseer.nvim',
     config = req('overseer'),
   },
