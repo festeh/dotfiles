@@ -219,7 +219,13 @@ local plugins = {
     'stevearc/overseer.nvim',
     config = req('overseer'),
   },
-
+  {
+    'festeh/todoist.lua',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'muniftanjim/nui.nvim',
+    }
+  },
 
   -- % themes
   { "catppuccin/nvim",      priority = 1000 },
