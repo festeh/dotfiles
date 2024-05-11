@@ -15,3 +15,16 @@ label {
 .network {
     margin-right: 15px;
 }
+
+.blink {
+  animation: blinker 0.5s linear infinite;
+  color: red;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
+
+

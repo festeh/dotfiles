@@ -54,6 +54,7 @@ function Motivator() {
   setInterval(() => {
     const res = Utils.exec("motivator")
     icon.setValue(isOk(res) ? goodIcon : badIcon)
+    myLabel.toggleClassName("blink", !isOk(res))
   }, 3000)
 
   return myLabel
