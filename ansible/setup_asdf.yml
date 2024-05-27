@@ -1,17 +1,18 @@
-- name: Setup common packages on a machine with root access
+- name: Setup ASDF with node
   hosts: "{{ target }}"
   gather_facts: no
 
   tasks:
     - name: install_asdf
       include_role:
-        name: cimon-io.asdf
+        name: ansible-role-asdf
       vars:
         asdf_plugins:
           - name: nodejs
             version: latest
             global: latest
         asdf_user: "{{ ansible_user }}"
+        asdf_group: "{{ ansible_user }}"
 
 # First, create a template for the Caddyfile (`templates/Caddyfile.j2`):
 #

@@ -6,7 +6,7 @@
   tasks:
     - name: install_caddy
       include_role:
-        name: caddy_ansible
+        name: caddy-ansible
       vars:
         caddy_config: |
           files.example.com
@@ -20,7 +20,7 @@
         state: directory
     - name: install_pm2
       import_role:
-        name: isaackehle.ansible_pm2
+        name: ansible-pm2
       environment:
         PATH: "{{ ansible_env.HOME }}/.asdf/shims:{{ ansible_env.HOME }}/.asdf/bin:{{ ansible_env.PATH }}"
 

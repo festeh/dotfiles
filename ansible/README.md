@@ -17,5 +17,14 @@ ansible-playbook -i ~/.ansible/hosts/inventory -l <host> --key-file=~/.ssh/id_rs
 * isaackehle.ansible_pm2
 
 
-# Setup asdf (example)
-ansible-playbook setup_common.yml -i ~/.ansible/hosts -e target=contabo --key-file ~/.ssh/contabo -e ansible_user=root -e ansible_os_family=Debian -e asdf_group=root
+# Setup asdf
+ansible-playbook setup_asdf.yml -i ~/.ansible/hosts -e target=contabo --key-file ~/.ssh/contabo -e ansible_user=root -e ansible_os_family=Debian -e asdf_group=root
+
+# Setup pm2
+- Use -e "{'flags' : ['init']}"
+
+# pm2
+
+Use pm2 start SERVER_FILE to run
+
+# Caddy
