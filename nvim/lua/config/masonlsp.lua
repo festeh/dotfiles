@@ -136,10 +136,11 @@ lspconfig.rust_analyzer.setup {
   }
 }
 
-lspconfig.tsserver.setup {
-  on_attach = custom_attach,
-  capabilities = capabilities,
-}
+-- lspconfig.tsserver.setup {
+--   on_attach = custom_attach,
+--   capabilities = capabilities,
+--   single_file_support = false,
+-- }
 
 local clangd_capabilities = require('cmp_nvim_lsp').default_capabilities()
 clangd_capabilities.offsetEncoding = "utf-8"
