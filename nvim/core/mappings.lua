@@ -8,14 +8,14 @@ keymap.set("n", "Q", "<Nop>", { desc = "Doesn't open command history" })
 
 keymap.set("n", "<C-k>", "<cmd>Neogit<CR>")
 
-keymap.set("n", "<leader>+", "<C-a>", { desc = { "Increment number" } })
-keymap.set("n", "<leader>-", "<C-x>", { desc = { "Decrement number" } })
+keymap.set("n", "<leader>+", "<C-a>", { desc = "Increment number" })
+keymap.set("n", "<leader>-", "<C-x>", { desc = "Decrement number" })
 
 keymap.set("x", "<", "<gv", { desc = "Shift selection left" })
 keymap.set("x", ">", ">gv", { desc = "Shift selelction right" })
 
-keymap.set("n", "<S-Tab>", "<<", {desc = "Un-tab line"})
-keymap.set("i", "<S-Tab>", "<C-d>", {desc = "Un-tab line"})
+keymap.set("n", "<S-Tab>", "<<", { desc = "Un-tab line" })
+keymap.set("i", "<S-Tab>", "<C-d>", { desc = "Un-tab line" })
 
 keymap.set("n", "<leader>q", "<cmd>bd!<CR>", { desc = "Close buffer" })
 keymap.set("n", "<leader>x", "<cmd>q<CR>", { desc = "Close window" })
@@ -49,4 +49,4 @@ function M.reload()
 end
 
 keymap.set("n", '<Leader>r', M.reload)
-keymap.set("n", "<c-v>", '"+p', {noremap=true, silent=true})
+keymap.set("n", "<c-v>", '"+p', { noremap = true, silent = true })
