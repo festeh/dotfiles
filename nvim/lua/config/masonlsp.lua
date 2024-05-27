@@ -8,7 +8,7 @@ local diagnostic = vim.diagnostic
 local util = require("lspconfig/util")
 
 -- require("neodev").setup({
-  -- add any options here, or leave empty to use the default settings
+-- add any options here, or leave empty to use the default settings
 -- })
 
 local custom_attach = function(client, bufnr)
@@ -114,16 +114,11 @@ lspconfig.rust_analyzer.setup {
   settings = {
     ["rust-analyzer"] = {
       cargo = {
-        allFeatures = true,
+        allTargets = false,
         loadOutDirsFromCheck = true,
         runBuildScripts = true,
       },
-      -- Add clippy lints for Rust.
-      checkOnSave = {
-        allFeatures = true,
-        command = "clippy",
-        extraArgs = { "--no-deps" },
-      },
+      checkOnSave = true,
       procMacro = {
         enable = true,
         ignored = {
