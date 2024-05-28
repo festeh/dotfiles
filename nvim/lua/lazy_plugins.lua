@@ -10,6 +10,7 @@ local function req(mod)
 end
 
 local plugins = {
+  { 'folke/neodev.nvim', config=req("neodev") },
   {
     "nvim-tree/nvim-tree.lua",
     version = "*",
@@ -56,7 +57,6 @@ local plugins = {
     tag = "legacy",
     config = req("fidget")
   },
-  -- { 'folke/neodev.nvim' },
   { "szw/vim-maximizer" },
   { 'sindrets/diffview.nvim',              dependencies = { 'nvim-lua/plenary.nvim' } },
   { 'tpope/vim-fugitive' },
