@@ -38,4 +38,4 @@ end
 -- require("plugins")
 require("lazy_plugins")
 
-vim.cmd("colorscheme catppuccin-mocha")
+local ok, res = pcall(vim.cmd, "colorscheme catppuccin-mocha")

@@ -10,7 +10,7 @@ local function req(mod)
 end
 
 local plugins = {
-  { 'folke/neodev.nvim', config=req("neodev") },
+  { 'folke/neodev.nvim',           config = req("neodev") },
   {
     "nvim-tree/nvim-tree.lua",
     version = "*",
@@ -224,11 +224,13 @@ local plugins = {
     dependencies = {
       'nvim-lua/plenary.nvim',
       'muniftanjim/nui.nvim',
-    }
+    },
+    dev = true,
   },
-  -- {
-  --   'festeh/dllm.nvim',
-  -- },
+  {
+    'festeh/dllm.nvim',
+    dev = true,
+  },
   {
     "pmizio/typescript-tools.nvim",
     dependencies = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
@@ -239,7 +241,7 @@ local plugins = {
     branch = "canary",
     dependencies = {
       { "zbirenbaum/copilot.lua" }, -- or github/copilot.vim
-      { "nvim-lua/plenary.nvim" }, -- for curl, log wrapper
+      { "nvim-lua/plenary.nvim" },  -- for curl, log wrapper
     },
     opts = {
       debug = true, -- Enable debugging
@@ -269,6 +271,10 @@ local plugins = {
   -- -- })
   --
 }
-local opts = {}
+local opts = {
+  dev = {
+    path = "~/projects/",
+  }
+}
 
 require("lazy").setup(plugins, opts)
