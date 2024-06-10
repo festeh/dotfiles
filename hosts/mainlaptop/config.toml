@@ -7,6 +7,7 @@ target = "hyprland/hyprland_template.conf"
 name = "~/.config/hypr/hyprland.conf"
 SCALING = "1"
 USER = "dima"
+GTK_THEME = "catppuccin-mocha-mauve-standard+default"
 
 [symlinks.kitty]
 target = "kitty"
@@ -15,3 +16,8 @@ name = "~/.config/kitty"
 [symlinks.ags]
 target = "ags"
 name = "~/.config/ags"
+
+
+[symlinks.zathura]
+target = "zathura"
+name = "~/.config/zathura"
