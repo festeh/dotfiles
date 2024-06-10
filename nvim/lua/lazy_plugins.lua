@@ -249,6 +249,18 @@ local plugins = {
     },
     -- See Commands section for default commands if you want to lazy load on them
   },
+  {
+    "supermaven-inc/supermaven-nvim",
+    config = function()
+      require("supermaven-nvim").setup({
+        keymaps = {
+          accept_suggestion = "<C-l>",
+          clear_suggestion = "<C-k>",
+          accept_word = "<C-j>",
+        },
+      })
+    end,
+  },
 
   -- % themes
   { "catppuccin/nvim",      priority = 1000 },
