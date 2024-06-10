@@ -17,3 +17,7 @@ name = "~/.config/hypr/scripts"
 [symlinks.ags]
 target = "ags"
 name = "~/.config/ags"
+
+[symlinks.zathura]
+target = "zathura"
+name = "~/.config/zathura"

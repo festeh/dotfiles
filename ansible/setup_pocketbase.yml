@@ -1,0 +1,43 @@
+- name: Setup remote pocketbase
+  hosts: "{{ target }}"
+  gather_facts: no
+  vars:
+    db_dir: /opt/pocketbase
+    pocketbase_version: 0.22.13
+    pocketbase_release_name : pocketbase_{{ pocketbase_version }}_linux_amd64.zip
+    pocketbase_download_filename: pocketbase_{{ pocketbase_version }}_linux_amd64.zip
+    pocketbase_url: "https://github.com/pocketbase/pocketbase/releases/download/v{{ pocketbase_version }}/{{ pocketbase_release_name }}"
+
+  tasks:
+    - name: Install needed packages
+      become: yes
+      ansible.builtin.package:
+        name:
+          - unzip
+          - python3
+          - python3-pip
+        state: present
+    - name: Create a db directory
+      file:
+        path: "{{ db_dir }}"
+        state: directory
+    - name: Download Pocketbase Realse {{ pocketbase_version }}
+      ansible.builtin.get_url:
+        url: "{{ pocketbase_url }}"
+        dest: "{{ db_dir }}/{{ pocketbase_download_filename }}"
+        owner: root
+        group: root
+    - name: Unzip pocketbase
+      unarchive:
+        src: "{{ db_dir }}/{{ pocketbase_download_filename }}"
+        dest: "{{ db_dir }}"
+        remote_src: yes
+        owner: root
+        group: root
+    - name: Install Pocketbase systemd units
+      ansible.builtin.template:
+        src: ./templates/pocketbase_daemon.j2
+        dest: "/usr/lib/systemd/system/pocketbase.service"
+        owner: root
+        group: root
+        mode: '644'

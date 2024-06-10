@@ -1,3 +1,5 @@
-set continuous-hist-save true
-set adjust-window width
 set selection-clipboard clipboard
+set continuous-hist-save true
+set adjust-open width
+set font "inconsolata 19"
+set database sqlite

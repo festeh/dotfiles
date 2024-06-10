@@ -28,3 +28,6 @@ ansible-playbook setup_asdf.yml -i ~/.ansible/hosts -e target=contabo --key-file
 Use pm2 start SERVER_FILE to run
 
 # Caddy
+...
+
+# Pocketbase
