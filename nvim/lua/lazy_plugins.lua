@@ -102,12 +102,12 @@ local plugins = {
     event = "VeryLazy"
   },
   { 'Civitasv/cmake-tools.nvim', config = req('cmake') },
-  {
-    "zbirenbaum/copilot.lua",
-    cmd = "Copilot",
-    event = "InsertEnter",
-    config = req('copilot'),
-  },
+  -- {
+  --   "zbirenbaum/copilot.lua",
+  --   cmd = "Copilot",
+  --   event = "InsertEnter",
+  --   config = req('copilot'),
+  -- },
   {
     'Robitx/gp.nvim', config = req('gp'),
   },
