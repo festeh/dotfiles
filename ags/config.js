@@ -1,4 +1,7 @@
-const hyprland = await Service.import("hyprland")
+import { Motivator } from "./modules/motivator.js"
+import { Workspaces } from "./modules/workspaces.js"
+import { Pomo } from "./modules/pomo.js"
+
 const systemtray = await Service.import("systemtray")
 const audio = await Service.import("audio")
 const battery = await Service.import("battery")
@@ -9,17 +12,6 @@ const date = Variable("", {
   poll: [1000, 'date "+%H:%M"'],
 })
 
-function Workspaces() {
-  const activeId = hyprland.active.workspace.bind("id").as(i => i.toString())
-  const workspaces = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
-  // return Widget.Box({
-  //   children: 
-  // })
-  const widget = Widget.Label({
-    label: activeId
-  })
-  return widget
-}
 
 function Left() {
   return Widget.Box({
@@ -27,48 +19,11 @@ function Left() {
   })
 }
 
-function isOk(data) {
-  // try to deserialize the data to json
-  try {
-    const json = JSON.parse(data)
-    const res = json.DmnOn
-    if (res === undefined) {
-      return false
-    }
-    return res
-  } catch (e) {
-    return false
-  }
-}
-
-function Motivator() {
-  const goodIcon = "emblem-favorite-symbolic"
-  const badIcon = "face-sad-symbolic"
-
-  const icon = Variable(goodIcon)
-
-  const myLabel = Widget.Icon({
-    icon: icon.bind(),
-  })
-
-  setInterval(() => {
-    try {
-      const res = Utils.exec("motivator")
-      icon.setValue(isOk(res) ? goodIcon : badIcon)
-      myLabel.toggleClassName("blink", !isOk(res))
-    } catch (e) {
-      icon.setValue(badIcon)
-      myLabel.toggleClassName("blink", true)
-    }
-  }, 3000)
-
-  return myLabel
-
-}
 
 function Center() {
   return Widget.Box({
     children: [
+      Pomo(),
       Motivator(),
     ],
   })
@@ -222,26 +177,6 @@ App.config({
   ],
 })
 
-
-hyprland.connect("monitor-added", (_hypr, monitor) => {
-  var id = -1
-  for (var mt of hyprland.monitors) {
-    if (mt.name == monitor)
-      id = mt.id
-    break;
-  }
-  id = id == -1 ? 0 : id
-
-  var flag = true
-  for (var wd of App.windows) {
-    if (wd.name == `bar-${id}`)
-      flag = false
-    break;
-  }
-
-  if (flag)
-    App.addWindow(Bar())
-})
 
 export { }
 
