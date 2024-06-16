@@ -23,7 +23,7 @@ export function Motivator() {
     icon: icon.bind(),
   })
 
-  setInterval(() => {
+  setInterval(async () => {
     try {
       const res = Utils.exec("motivator")
       icon.setValue(isOk(res) ? goodIcon : badIcon)

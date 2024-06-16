@@ -17,6 +17,9 @@ name = "~/.config/kitty"
 target = "ags"
 name = "~/.config/ags"
 
+[symlinks.ags_daemon]
+target = "systemd/ags.service"
+name = "~/.config/systemd/user/ags.service"
 
 [symlinks.zathura]
 target = "zathura"

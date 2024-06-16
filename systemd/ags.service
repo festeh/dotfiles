@@ -1,0 +1,13 @@
+   [Unit]
+   Description=Launch ags on startup
+
+   [Service]
+   ExecStart=ags
+   Restart=always
+   Environment=XDG_CURRENT_DESKTOP=Hyprland
+   Environment=XDG_CONFIG_HOME=%h/.config
+   Environment=XDG_DATA_HOME=%h/.local/share
+   Environment=PATH=%h/.local/bin:/usr/bin:$PATH
+
+   [Install]
+   WantedBy=default.target
