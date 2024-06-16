@@ -34,8 +34,5 @@ export function Motivator() {
     }
   }, 3000)
 
-  print("Motivator() called")
-
   return myLabel
-
 }

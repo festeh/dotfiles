@@ -102,12 +102,12 @@ local plugins = {
     event = "VeryLazy"
   },
   { 'Civitasv/cmake-tools.nvim', config = req('cmake') },
-  {
-    "zbirenbaum/copilot.lua",
-    cmd = "Copilot",
-    event = "InsertEnter",
-    config = req('copilot'),
-  },
+  -- {
+  --   "zbirenbaum/copilot.lua",
+  --   cmd = "Copilot",
+  --   event = "InsertEnter",
+  --   config = req('copilot'),
+  -- },
   {
     'Robitx/gp.nvim', config = req('gp'),
   },
@@ -261,6 +261,18 @@ local plugins = {
   {
     "MagicDuck/grug-far.nvim",
     config = function() require("grug-far").setup() end
+  },
+  {
+    "supermaven-inc/supermaven-nvim",
+    config = function()
+      require("supermaven-nvim").setup({
+        keymaps = {
+          accept_suggestion = "<C-l>",
+          clear_suggestion = "<C-k>",
+          accept_word = "<C-j>",
+        },
+      })
+    end,
   },
 
   -- % themes

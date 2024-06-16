@@ -1,5 +1,5 @@
 require("copilot").setup({
- panel = {
+  panel = {
     enabled = true,
     auto_refresh = false,
     keymap = {
@@ -7,7 +7,7 @@ require("copilot").setup({
       jump_next = "]]",
       accept = "<CR>",
       refresh = "gr",
-      open = "<M-CR>"
+      open = "<leader>co",
     },
     layout = {
       position = "bottom", -- | top | left | right
