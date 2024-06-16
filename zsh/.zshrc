@@ -97,5 +97,5 @@ esac
 # pnpm end
 #
 if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]; then
-  exec tmux
+  tmux attach -t projects || tmux new -s projects
 fi
