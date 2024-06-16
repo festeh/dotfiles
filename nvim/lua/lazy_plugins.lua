@@ -258,6 +258,10 @@ local plugins = {
     -- dev = true,
     -- See Commands section for default commands if you want to lazy load on them
   },
+  {
+    "MagicDuck/grug-far.nvim",
+    config = function() require("grug-far").setup() end
+  },
 
   -- % themes
   { "catppuccin/nvim",      priority = 1000 },
