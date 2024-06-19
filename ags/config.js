@@ -8,6 +8,9 @@ import { Battery } from "./modules/battery.js"
 import { Clock } from "./modules/clock.js"
 import { SysTray } from "./modules/tray.js"
 
+import PopupNotification from "./modules/notifications.js"
+
+import Notifications from "resource:///com/github/Aylur/ags/service/notifications.js";
 
 function Left() {
   return Widget.Box({
@@ -51,19 +54,21 @@ const Bar = () => Widget.Window({
     endWidget: Right(),
   }),
 })
+Notifications.popupTimeout = 500000000;
+Notifications.forceTimeout = false;
 
 try {
   App.config({
     style: "./style.css",
     windows: [
       Bar(),
+      PopupNotification(),
     ],
   })
 } catch (e) {
   console.error(e)
   App.quit()
 }
-
 
 export { }
 
