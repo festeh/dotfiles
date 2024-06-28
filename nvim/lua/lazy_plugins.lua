@@ -244,17 +244,7 @@ local plugins = {
       { "nvim-lua/plenary.nvim" },  -- for curl, log wrapper
     },
     branch = "canary",
-    opts = {
-      -- debug = true, -- Enable debugging
-      -- See Configuration section for rest
-      window = {
-        layout = 'float',
-        relative = 'cursor',
-        width = 1.0,
-        height = 0.9,
-        row = 1
-      }
-    },
+    config = req('copilot_chat'),
     -- dev = true,
     -- See Commands section for default commands if you want to lazy load on them
   },
