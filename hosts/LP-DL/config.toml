@@ -21,3 +21,7 @@ name = "~/.config/ags"
 [symlinks.zathura]
 target = "zathura"
 name = "~/.config/zathura"
+
+[symlinks.ags_daemon]
+target = "systemd/ags.service"
+name = "~/.config/systemd/user/ags.service"
