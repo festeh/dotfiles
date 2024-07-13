@@ -18,19 +18,25 @@ export function Motivator() {
   const badIcon = "face-sad-symbolic"
 
   const icon = Variable(goodIcon)
+  const className = Variable("")
 
   const myLabel = Widget.Icon({
     icon: icon.bind(),
+    className: className.bind()
   })
 
   setInterval(async () => {
     try {
       const res = Utils.exec("motivator")
       icon.setValue(isOk(res) ? goodIcon : badIcon)
-      myLabel.toggleClassName("blink", !isOk(res))
+      if (isOk(res)) {
+        className.setValue("")
+      } else {
+        className.setValue("blink")
+      }
     } catch (e) {
       icon.setValue(badIcon)
-      myLabel.toggleClassName("blink", true)
+      className.setValue("blink")
     }
   }, 3000)
 
