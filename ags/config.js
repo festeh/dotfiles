@@ -11,10 +11,9 @@ import { SysTray } from "./modules/tray.js"
 import PopupNotification from "./modules/notifications.js"
 
 import Notifications from "resource:///com/github/Aylur/ags/service/notifications.js";
-import { idle, monitorFile } from "resource:///com/github/Aylur/ags/utils.js";
+import { idle } from "resource:///com/github/Aylur/ags/utils.js";
 import Gdk from "gi://Gdk";
 
-globalThis.monitorCounter = 0;
 
 function Left() {
   return Widget.Box({
@@ -69,19 +68,29 @@ function addMonitorWindows(monitor) {
   addWindows([
     Bar(),
   ]);
-  monitorCounter++;
+}
+
+async function findMonitor() {
+  const hyprland = await Service.import("hyprland")
+  let mons = hyprland._monitors
+  let allMons = [...mons.values()]
+  // find a monitor with DP-3
+  let monId = 0
+  let eDPMon = allMons.find(mon => mon.name.toLowerCase().includes("dp-3"))
+  if (eDPMon) {
+    monId = eDPMon.id
+    console.log(monId)
+  }
+  return mons.get(monId)
 }
 
 idle(async () => {
   addWindows([
     PopupNotification(),
   ]);
-
+  let monitor = await findMonitor()
+  addMonitorWindows(monitor);
   const display = Gdk.Display.get_default();
-  for (let m = 0; m < display?.get_n_monitors(); m++) {
-    const monitor = display?.get_monitor(m);
-    addMonitorWindows(monitor);
-  }
 
   display?.connect("monitor-added", (disp, monitor) => {
     addMonitorWindows(monitor);
@@ -89,7 +98,7 @@ idle(async () => {
 
   display?.connect("monitor-removed", (disp, monitor) => {
     App.windows.forEach(win => {
-      if (win.gdkmonitor === monitor) App.removeWindow(win);
+      App.removeWindow(win);
     });
   });
 
