@@ -47,7 +47,8 @@ function Right() {
 }
 
 
-const Bar = () => Widget.Window({
+const Bar = (gdkmonitor) => Widget.Window({
+  gdkmonitor,
   name: `bar`,
   anchor: ['top', 'left', 'right'],
   exclusivity: 'exclusive',
@@ -57,6 +58,7 @@ const Bar = () => Widget.Window({
     endWidget: Right(),
   }),
 })
+
 Notifications.popupTimeout = 500000000;
 Notifications.forceTimeout = false;
 
@@ -66,7 +68,7 @@ function addWindows(windows) {
 
 function addMonitorWindows(monitor) {
   addWindows([
-    Bar(),
+    Bar(monitor),
   ]);
 }
 
@@ -81,15 +83,17 @@ async function findMonitor() {
     monId = eDPMon.id
     console.log(monId)
   }
-  return mons.get(monId)
+  const hyprMon = mons.get(monId)
+  const gdkMon = Gdk.Display.get_default()?.get_monitor_at_point(hyprMon.x, hyprMon.y) || null;
+  return gdkMon
 }
 
 idle(async () => {
-  addWindows([
-    PopupNotification(),
-  ]);
   let monitor = await findMonitor()
   addMonitorWindows(monitor);
+  addWindows([
+    PopupNotification(monitor),
+  ]);
   const display = Gdk.Display.get_default();
 
   display?.connect("monitor-added", (disp, monitor) => {

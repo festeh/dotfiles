@@ -89,7 +89,7 @@ function Notification(n) {
     )
 }
 
-export default function NotificationPopups(monitor = 0) {
+export default function NotificationPopups(gdkmonitor) {
     const list = Widget.Box({
         vertical: true,
         children: notifications.popups.map(Notification),
@@ -109,8 +109,8 @@ export default function NotificationPopups(monitor = 0) {
         .hook(notifications, onDismissed, "dismissed")
 
     return Widget.Window({
-        monitor,
-        name: `notifications${monitor}`,
+        gdkmonitor,
+        name: `notifications${gdkmonitor}`,
         class_name: "notification-popups",
         anchor: ["top", "right"],
         child: Widget.Box({
