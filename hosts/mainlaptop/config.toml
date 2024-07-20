@@ -9,6 +9,11 @@ SCALING = "1"
 USER = "dima"
 GTK_THEME = "catppuccin-mocha-mauve-standard+default"
 
+[templates.ags_daemon]
+target = "systemd/ags_template.service"
+name = "~/.config/systemd/user/ags.service"
+GTK_THEME = "catppuccin-mocha-mauve-standard+default"
+
 [symlinks.kitty]
 target = "kitty"
 name = "~/.config/kitty"
@@ -16,10 +21,6 @@ name = "~/.config/kitty"
 [symlinks.ags]
 target = "ags"
 name = "~/.config/ags"
-
-[symlinks.ags_daemon]
-target = "systemd/ags.service"
-name = "~/.config/systemd/user/ags.service"
 
 [symlinks.zathura]
 target = "zathura"

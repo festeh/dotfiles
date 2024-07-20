@@ -8,6 +8,10 @@ name = "~/.config/hypr/hyprland.conf"
 USER = "dlipin"
 SCALING = "2"
 
+[templates.ags_daemon]
+name = "~/.config/systemd/user/ags.service"
+target = "systemd/ags_template.service"
+GTK_THEME = "Catppuccin-Mocha-Standard-Mauve-Dark"
 
 [symlinks.hyprland_scripts]
 target = "hyprland/scripts"
@@ -22,6 +26,3 @@ name = "~/.config/ags"
 target = "zathura"
 name = "~/.config/zathura"
 
-[symlinks.ags_daemon]
-target = "systemd/ags.service"
-name = "~/.config/systemd/user/ags.service"
