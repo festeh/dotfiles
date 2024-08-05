@@ -1,6 +1,6 @@
 require("copilot").setup({
   panel = {
-    enabled = true,
+    enabled = false,
     auto_refresh = false,
     keymap = {
       jump_prev = "[[",
@@ -17,11 +17,11 @@ require("copilot").setup({
   suggestion = {
     enabled = true,
     auto_trigger = true,
-    debounce = 75,
+    debounce = 30,
     keymap = {
-      accept = "<M-l>",
-      accept_word = false,
-      accept_line = false,
+      accept = "<c-l>",
+      accept_word = '<c-j>',
+      accept_line = '<c-k>',
       next = "<M-]>",
       prev = "<M-[>",
       dismiss = "<C-]>",

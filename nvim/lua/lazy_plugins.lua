@@ -1,5 +1,7 @@
 require("lazy_install")
 
+
+
 local function req(mod)
   local full_path = "config." .. mod
   local function lazy_loader()
@@ -102,12 +104,12 @@ local plugins = {
     event = "VeryLazy"
   },
   { 'Civitasv/cmake-tools.nvim', config = req('cmake') },
-  -- {
-  --   "zbirenbaum/copilot.lua",
-  --   cmd = "Copilot",
-  --   event = "InsertEnter",
-  --   config = req('copilot'),
-  -- },
+  {
+    "zbirenbaum/copilot.lua",
+    cmd = "Copilot",
+    event = "InsertEnter",
+    config = req('copilot'),
+  },
   {
     'Robitx/gp.nvim', config = req('gp'),
   },
@@ -256,6 +258,7 @@ local plugins = {
     "supermaven-inc/supermaven-nvim",
     config = function()
       require("supermaven-nvim").setup({
+        disable_inline_completion = true,
         keymaps = {
           accept_suggestion = "<C-l>",
           clear_suggestion = "<C-k>",
@@ -274,6 +277,7 @@ local plugins = {
       vim.api.nvim_create_user_command("PeekClose", require("peek").close, {})
     end,
   },
+  { "b0o/schemastore.nvim" },
 
   -- % themes
   { "catppuccin/nvim",      priority = 1000 },
