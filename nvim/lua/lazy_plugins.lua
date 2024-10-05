@@ -92,11 +92,9 @@ local plugins = {
   { 'declancm/cinnamon.nvim',          config = req('cinnamon') },
   { "smartpde/telescope-recent-files" },
   { 'ray-x/go.nvim',                   config = req('go') },
-  -- {'folke/noice.nvim', config = [[require('config.noice')]] },
   { "mrjones2014/legendary.nvim",      config = req('legendary') },
-  -- { 'Exafunction/codeium.vim', event = "VeryLazy", enabled = (vim.g.codeium_enabled == true) },
+  { 'Exafunction/codeium.vim', event = "VeryLazy" },
   { 'neomake/neomake' },
-  -- { 'tpope/vim-sleuth' },
   { "windwp/nvim-ts-autotag",          config = req("autotag") },
   {
     'theHamsta/nvim-dap-virtual-text',
@@ -104,15 +102,12 @@ local plugins = {
     event = "VeryLazy"
   },
   { 'Civitasv/cmake-tools.nvim', config = req('cmake') },
-  {
-    "zbirenbaum/copilot.lua",
-    cmd = "Copilot",
-    event = "InsertEnter",
-    config = req('copilot'),
-  },
-  {
-    'Robitx/gp.nvim', config = req('gp'),
-  },
+  -- {
+  --   "zbirenbaum/copilot.lua",
+  --   cmd = "Copilot",
+  --   event = "InsertEnter",
+  --   config = req('copilot'),
+  -- },
   {
     "tomasky/bookmarks.nvim",
     config = req("bookmarks"),
@@ -239,34 +234,34 @@ local plugins = {
     dependencies = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
     opts = {},
   },
-  {
-    "CopilotC-Nvim/CopilotChat.nvim",
-    dependencies = {
-      { "zbirenbaum/copilot.lua" }, -- or github/copilot.vim
-      { "nvim-lua/plenary.nvim" },  -- for curl, log wrapper
-    },
-    branch = "canary",
-    config = req('copilot_chat'),
-    -- dev = true,
-    -- See Commands section for default commands if you want to lazy load on them
-  },
+  -- {
+  --   "CopilotC-Nvim/CopilotChat.nvim",
+  --   dependencies = {
+  --     { "zbirenbaum/copilot.lua" }, -- or github/copilot.vim
+  --     { "nvim-lua/plenary.nvim" },  -- for curl, log wrapper
+  --   },
+  --   branch = "canary",
+  --   config = req('copilot_chat'),
+  --   -- dev = true,
+  --   -- See Commands section for default commands if you want to lazy load on them
+  -- },
   {
     "MagicDuck/grug-far.nvim",
     config = function() require("grug-far").setup() end
   },
-  {
-    "supermaven-inc/supermaven-nvim",
-    config = function()
-      require("supermaven-nvim").setup({
-        disable_inline_completion = true,
-        keymaps = {
-          accept_suggestion = "<C-l>",
-          clear_suggestion = "<C-k>",
-          accept_word = "<C-j>",
-        },
-      })
-    end
-  },
+  -- {
+  --   "supermaven-inc/supermaven-nvim",
+  --   config = function()
+  --     require("supermaven-nvim").setup({
+  --       disable_inline_completion = true,
+  --       keymaps = {
+  --         accept_suggestion = "<C-l>",
+  --         clear_suggestion = "<C-k>",
+  --         accept_word = "<C-j>",
+  --       },
+  --     })
+  --   end
+  -- },
   {
     "toppair/peek.nvim",
     event = { "VeryLazy" },
