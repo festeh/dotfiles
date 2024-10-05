@@ -52,7 +52,7 @@ local plugins = {
   { "nvim-pack/nvim-spectre",                      config = req("spectre") },
   { "kevinhwang91/nvim-bqf",                       config = req("bqf") },
   { 'nvim-treesitter/nvim-treesitter-textobjects', config = req('treesitter-textobjects') },
-  { 'stevearc/aerial.nvim',                        config = req('aerial') },
+  -- { 'stevearc/aerial.nvim',                        config = req('aerial') },
   { "festeh/wilder.nvim",                          config = req("wilder") },
   {
     "j-hui/fidget.nvim",
@@ -70,7 +70,7 @@ local plugins = {
   { 'DNLHC/glance.nvim',                   config = req('glance') },
   { 'NoahTheDuke/vim-just' },
   { 'mfussenegger/nvim-dap',               config = req("dap"),                               event = "VeryLazy" },
-  { 'rcarriga/nvim-dap-ui',                config = req("dapui"),                             event = "VeryLazy" },
+  -- { 'rcarriga/nvim-dap-ui',                config = req("dapui"),                             event = "VeryLazy" },
   { "nvim-telescope/telescope-dap.nvim" },
   { "jbyuki/one-small-step-for-vimkind" },
   { 'stevearc/dressing.nvim',              config = req('dressing') },
@@ -91,7 +91,8 @@ local plugins = {
   { 'ggandor/leap.nvim',               config = req("leap") },
   { 'declancm/cinnamon.nvim',          config = req('cinnamon') },
   { "smartpde/telescope-recent-files" },
-  { 'ray-x/go.nvim',                   config = req('go') },
+  -- { 'ray-x/go.nvim',                   config = req('go') },
+  -- {'folke/noice.nvim', config = [[require('config.noice')]] },
   { "mrjones2014/legendary.nvim",      config = req('legendary') },
   { 'Exafunction/codeium.vim', event = "VeryLazy" },
   { 'neomake/neomake' },
@@ -197,14 +198,14 @@ local plugins = {
       leader_key = '<c-;>',
     }
   },
-  {
-    'akinsho/flutter-tools.nvim',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      'stevearc/dressing.nvim',
-    },
-    config = req('flutter-tools')
-  },
+  -- {
+  --   'akinsho/flutter-tools.nvim',
+  --   dependencies = {
+  --     'nvim-lua/plenary.nvim',
+  --     'stevearc/dressing.nvim',
+  --   },
+  --   config = req('flutter-tools')
+  -- },
   {
     "harrisoncramer/gitlab.nvim",
     config = function()

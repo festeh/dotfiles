@@ -1,4 +1,15 @@
-require("nvim-tree").setup()
+require("nvim-tree").setup(
+  {
+    filesystem_watchers = {
+      ignore_dirs = {
+        "node_modules",
+        ".bazel-cache",
+        ".cache",
+        ".cargo",
+      },
+    },
+  }
+)
 
 local function smart_focus()
   if vim.api.nvim_buf_get_option(0, "buftype") ~= "" or vim.api.nvim_buf_get_name(0) == "" then

@@ -1,0 +1,5 @@
+#!/bin/bash
+W_ID=$(hyprctl activeworkspace -j | jq .id)
+echo "Activeworkspace ID: $W_ID"
+hyprctl dispatch movetoworkspace "$W_ID,yappy2"
+
