@@ -117,15 +117,16 @@ lspconfig.rust_analyzer.setup {
         allTargets = false,
         loadOutDirsFromCheck = true,
         runBuildScripts = true,
+        features = "all",
       },
-      checkOnSave = true,
+      checkOnSave = false,
       procMacro = {
         enable = true,
-        ignored = {
-          ["async-trait"] = { "async_trait" },
-          ["napi-derive"] = { "napi" },
-          ["async-recursion"] = { "async_recursion" },
-        },
+        -- ignored = {
+        --   ["async-trait"] = { "async_trait" },
+        --   ["napi-derive"] = { "napi" },
+        --   ["async-recursion"] = { "async_recursion" },
+        -- },
       },
     },
   }
