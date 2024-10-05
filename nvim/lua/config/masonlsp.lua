@@ -172,8 +172,25 @@ lspconfig.html.setup {
   capabilities = capabilities,
 }
 
-
 lspconfig.tailwindcss.setup {
   on_attach = custom_attach,
   capabilities = capabilities,
+}
+
+lspconfig.jsonls.setup {
+  on_attach = custom_attach,
+  capabilities = capabilities,
+  settings = {
+    json = {
+      schemas = require('schemastore').json.schemas(
+      {
+        select = {
+          "package.json",
+          "Chrome Extension",
+        }
+      }
+      ),
+      validate = { enable = true },
+    },
+  },
 }
