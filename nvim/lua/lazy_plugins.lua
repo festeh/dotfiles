@@ -274,6 +274,7 @@ local plugins = {
     end,
   },
   { "b0o/schemastore.nvim" },
+  {'akinsho/toggleterm.nvim', version = "*", config = true},
 
   -- % themes
   { "catppuccin/nvim",      priority = 1000 },
