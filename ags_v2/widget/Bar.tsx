@@ -1,11 +1,17 @@
-import { App, Variable, Astal, Gtk } from "astal"
+import { App, Astal, Gtk } from "astal/gtk3"
+import { Variable } from "astal"
 import Hyprland from "gi://AstalHyprland"
-const time = Variable<string>("").poll(1000, "date")
+const time = Variable<string>("").poll(1000, "date +%H:%M")
 
-export default function Bar(monitor: number) {
+const hypr = Hyprland.get_default()
+const monitors = hypr.get_monitors()
+let id = 0
+
+
+export default function Bar() {
     return <window
         className="Bar"
-        monitor={monitor}
+        // monitor={monitor}
         exclusivity={Astal.Exclusivity.EXCLUSIVE}
         anchor={Astal.WindowAnchor.TOP
             | Astal.WindowAnchor.LEFT
