@@ -2,6 +2,19 @@
 target = "waybar"
 name = "~/.config/waybar/"
 
+[symlinks.hyprland_scripts]
+target = "hyprland/scripts"
+name = "~/.config/hypr/scripts"
+
+[symlinks.ags]
+target = "ags"
+name = "~/.config/ags"
+
+[symlinks.zathura]
+target = "zathura"
+name = "~/.config/zathura"
+
+
 [templates.hyprland]
 target = "hyprland/hyprland_template.conf"
 name = "~/.config/hypr/hyprland.conf"
@@ -12,17 +25,3 @@ SCALING = "2"
 name = "~/.config/systemd/user/ags.service"
 target = "systemd/ags_template.service"
 GTK_THEME = "Catppuccin-Mocha-Standard-Mauve-Dark"
-
-[symlinks.hyprland_scripts]
-target = "hyprland/scripts"
-name = "~/.config/hypr/scripts"
-
-
-[symlinks.ags]
-target = "ags"
-name = "~/.config/ags"
-
-[symlinks.zathura]
-target = "zathura"
-name = "~/.config/zathura"
-
