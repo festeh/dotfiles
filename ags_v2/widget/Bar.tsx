@@ -8,7 +8,7 @@ const monitors = hypr.get_monitors()
 let id = 0
 
 
-export default function Bar() {
+export default function Bar(calendarVisible: Variable<boolean>) {
     return <window
         className="Bar"
         // monitor={monitor}
@@ -25,7 +25,10 @@ export default function Bar() {
             </button>
             <box />
             <button
-                onClick={() => print("hello")}
+                onClick={() => {
+                  const value = calendarVisible.get()
+                  calendarVisible.set(!value)
+                }}
                 halign={Gtk.Align.CENTER} >
                 <label label={time()} />
             </button>
