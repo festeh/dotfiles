@@ -31,6 +31,12 @@ const css = `
   margin-bottom: 10px;
   color: #F5C2E7;
 }
+
+.weekday-header {
+  font-weight: bold;
+  color: #89DCEB;
+  padding: 0.5em;
+}
 `
 
 const styleProvider = new Gtk.CssProvider()
@@ -77,6 +83,7 @@ export default function Calendar(visible: Variable<boolean>) {
       >
         <label className="month-label" label={monthName} />
         <box className="calendar-container" orientation={Gtk.Orientation.VERTICAL}>
+          {makeWeekdayHeader()}
           {makeRow(1, 7, currentDay)}
           {makeRow(8, 14, currentDay)}
           {makeRow(15, 21, currentDay)}
