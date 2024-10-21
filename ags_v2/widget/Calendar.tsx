@@ -64,6 +64,23 @@ function makeRow(from, to, currentDay) {
   </box>
 }
 
+function makeWeekdayHeader() {
+  const weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
+  return <box
+    hexpand={true}
+    halign={Gtk.Align.FILL}
+    homogeneous={true}
+    className="calendar-row"
+  >
+    {weekdays.map((day: string) => (
+      <label 
+        className="weekday-header"
+        label={day}
+      />
+    ))}
+  </box>
+}
+
 export default function Calendar(visible: Variable<boolean>) {
   const currentDate = new Date()
   const currentDay = currentDate.getDate()
