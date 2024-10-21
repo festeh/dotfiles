@@ -47,22 +47,22 @@ Gtk.StyleContext.add_provider_for_screen(
   Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )
 
-function makeWeekdayHeader() {
-  const weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
-  return <box
-    hexpand={true}
-    halign={Gtk.Align.FILL}
-    homogeneous={true}
-    className="calendar-row"
-  >
-    {weekdays.map((day: string) => (
-      <label 
-        className="weekday-header"
-        label={day}
-      />
-    ))}
-  </box>
-}
+// function makeWeekdayHeader() {
+//   const weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
+//   return <box
+//     hexpand={true}
+//     halign={Gtk.Align.FILL}
+//     homogeneous={true}
+//     className="calendar-row"
+//   >
+//     {weekdays.map((day: string) => (
+//       <label 
+//         className="weekday-header"
+//         label={day}
+//       />
+//     ))}
+//   </box>
+// }
 
 function generateCalendarDays(year: number, month: number, currentDay: number) {
   const firstDay = new Date(year, month, 1).getDay()
