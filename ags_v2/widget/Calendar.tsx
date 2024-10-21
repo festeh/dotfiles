@@ -3,21 +3,18 @@ import { Variable, bind } from "astal"
 
 function makeRow(from, to) {
   const range = Array.from({ length: to - from + 1 }, (_, i) => i + from)
-  return <grid
+  return <box
     hexpand={true}
     halign={Gtk.Align.FILL}
-    column_homogeneous={true}
-    row_homogeneous={true}
-    column_spacing={0}
-    row_spacing={0}
+    css="display: flex; flex-direction: row;"
   >
     {range.map((label: number) => (
       <label 
-        css="padding: 1em; border: 1px solid black; background-color: lightblue; color: blue;"
+        css="flex: 1; text-align: center; padding: 1em; border: 1px solid black; background-color: lightblue; color: blue;"
         label={label.toString()}
       />
     ))}
-  </grid>
+  </box>
 }
 
 export default function Calendar(visible: Variable<boolean>) {
@@ -37,7 +34,7 @@ export default function Calendar(visible: Variable<boolean>) {
         vertical={true}
       >
         <label css="font-weight: bold; font-size: 16px; margin-bottom: 10px;" label={monthName} />
-        <box css="border: 1px solid black;">
+        <box css="border: 1px solid black; display: flex; flex-direction: column;">
           {makeRow(1, 7)}
           {makeRow(8, 14)}
           {makeRow(15, 21)}
