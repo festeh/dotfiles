@@ -70,6 +70,11 @@ function generateCalendarDays(year: number, month: number, currentDay: number) {
   const days = Array(firstDay === 0 ? 6 : firstDay - 1).fill(null)
     .concat(Array.from({ length: daysInMonth }, (_, i) => i + 1))
 
+  // Pad the array to ensure it's divisible by 7
+  while (days.length % 7 !== 0) {
+    days.push(null)
+  }
+
   const rows = []
   for (let i = 0; i < days.length; i += 7) {
     const weekDays = days.slice(i, i + 7)
