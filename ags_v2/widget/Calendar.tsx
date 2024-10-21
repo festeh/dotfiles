@@ -9,19 +9,21 @@ const css = `
 
 .calendar-cell {
   padding: 1em;
-  border: 1px solid black;
-  background-color: lightblue;
-  color: blue;
+  border: 1px solid #6E6C7E;
+  background-color: #302D41;
+  color: #D9E0EE;
 }
 
 .calendar-container {
-  border: 1px solid black;
+  border: 1px solid #6E6C7E;
+  background-color: #1E1E2E;
 }
 
 .month-label {
   font-weight: bold;
   font-size: 16px;
   margin-bottom: 10px;
+  color: #F5C2E7;
 }
 `
 
