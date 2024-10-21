@@ -2,6 +2,13 @@ import { App, Astal, Gdk, Gtk } from "astal/gtk3"
 import { Variable, bind } from "astal"
 
 const css = `
+.calendar-widget {
+  background-color: #1E1E2E;
+  padding: 10px;
+  margin-right: 10px;
+  border-radius: 10px;
+}
+
 .calendar-row {
   margin: 0;
   padding: 0;
@@ -127,9 +134,9 @@ export default function Calendar(visible: Variable<boolean>) {
       anchor={Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT}
       application={App}>
       <box
+        className="calendar-widget"
         spacing={5}
         valign={Gtk.Align.FILL}
-        margin={10}
         orientation={Gtk.Orientation.VERTICAL}
       >
         <label className="month-label" label={monthName} />
