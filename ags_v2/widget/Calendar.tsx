@@ -1,4 +1,4 @@
-import { App, Astal, Gtk } from "astal/gtk3"
+import { App, Astal, Gdk, Gtk } from "astal/gtk3"
 import { Variable, bind } from "astal"
 
 const css = `
