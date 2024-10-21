@@ -5,15 +5,20 @@ function makeRow(from, to) {
   const range = Array.from({ length: to - from + 1 }, (_, i) => i + from)
   return <box
     hexpand={true}
-    css="color: blue; background-color: lightblue; padding: 1em;"
+    halign={Gtk.Align.FILL}
+
+    css="color: blue; background-color: lightblue; padding: 2em;"
   >
     {range.map((label: number) => (
-      <label label={label.toString()} xpad={2}/>
+      <label css="padding: 1em; border: 1px solid black" label={label.toString()} />
     ))}
   </box>
 }
 
 export default function Calendar(visible: Variable<boolean>) {
+  const currentDate = new Date()
+  const currentMonth = currentDate.getMonth()
+  const monthName = currentDate.toLocaleString('default', { month: 'long' })
   return (
     <window
       className="Calendar"
@@ -32,9 +37,10 @@ export default function Calendar(visible: Variable<boolean>) {
         valign={Gtk.Align.FILL}
         vertical={true}
       >
-      {makeRow(1, 7)}
-      {makeRow(8, 15)}
-    </box>
+        {monthName}
+        {makeRow(1, 7)}
+        {makeRow(8, 15)}
+      </box>
     </window >
   )
 }
