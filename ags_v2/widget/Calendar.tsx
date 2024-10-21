@@ -3,16 +3,21 @@ import { Variable, bind } from "astal"
 
 function makeRow(from, to) {
   const range = Array.from({ length: to - from + 1 }, (_, i) => i + from)
-  return <box
+  return <grid
     hexpand={true}
     halign={Gtk.Align.FILL}
-
-    css="color: blue; background-color: lightblue; padding: 2em;"
+    column_homogeneous={true}
+    row_homogeneous={true}
+    column_spacing={0}
+    row_spacing={0}
   >
     {range.map((label: number) => (
-      <label css="padding: 1em; border: 1px solid black" label={label.toString()} />
+      <label 
+        css="padding: 1em; border: 1px solid black; background-color: lightblue; color: blue;"
+        label={label.toString()}
+      />
     ))}
-  </box>
+  </grid>
 }
 
 export default function Calendar(visible: Variable<boolean>) {
@@ -22,14 +27,8 @@ export default function Calendar(visible: Variable<boolean>) {
   return (
     <window
       className="Calendar"
-
       visible={bind(visible)}
-      // monitor={monitor}
-      // exclusivity={Astal.Exclusivity.EXCLUSIVE}
-      anchor={Astal.WindowAnchor.TOP
-        // | Astal.WindowAnchor.LEFT
-        | Astal.WindowAnchor.RIGHT
-      }
+      anchor={Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT}
       application={App}>
       <box
         css="padding: 1em;"
@@ -37,10 +36,15 @@ export default function Calendar(visible: Variable<boolean>) {
         valign={Gtk.Align.FILL}
         vertical={true}
       >
-        {monthName}
-        {makeRow(1, 7)}
-        {makeRow(8, 15)}
+        <label css="font-weight: bold; font-size: 16px; margin-bottom: 10px;" label={monthName} />
+        <box css="border: 1px solid black;">
+          {makeRow(1, 7)}
+          {makeRow(8, 14)}
+          {makeRow(15, 21)}
+          {makeRow(22, 28)}
+          {makeRow(29, 31)}
+        </box>
       </box>
-    </window >
+    </window>
   )
 }
