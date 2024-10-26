@@ -25,7 +25,6 @@ cmp.setup {
   },
   sources = {
     { name = "nvim_lsp" }, -- For nvim-lsp
-    { name = "luasnip" },
     { name = "path",
       option = {
         get_cwd = function()
@@ -34,11 +33,15 @@ cmp.setup {
       }
     },                                       -- for path completion
     { name = "buffer", keyword_length = 2 }, -- for buffer word completion
+    { name = "luasnip" },
   },
   snippet = {
     expand = function(args)
       require('luasnip').lsp_expand(args.body)
     end,
+  },
+  completion = {
+    autocomplete = false
   },
   window = {
     completion = cmp.config.window.bordered(),
