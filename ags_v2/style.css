@@ -5,7 +5,8 @@ window.Bar {
 }
 
 .bar-container {
-    padding: 4px 8px;
+    padding: 4px 6px;
+    max-width: 120px;
 }
 
 
