@@ -43,3 +43,15 @@ window.Bar button {
 .idle-widget-inactive {
     background-color: #f38ba8;  /* Catppuccin Mocha Red */
 }
+
+.volume-widget {
+    background-color: #94e2d5;  /* Catppuccin Mocha Teal */
+    border-radius: 8px;
+    padding: 4px 8px;
+    margin: 2px;
+}
+
+.volume-widget button {
+    padding: 0 4px;
+    margin-right: 4px;
+}
