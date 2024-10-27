@@ -22,6 +22,7 @@ export default function Idle() {
       icon: bind(isIdleRunning).as(running => 
         running ? "face-plain-symbolic" : "face-surprise-symbolic"
       ),
+      size: 16,
     }),
     onClicked: () => {
       const running = isIdleRunning.get()
