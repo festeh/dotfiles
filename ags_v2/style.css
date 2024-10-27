@@ -39,3 +39,7 @@ window.Bar button {
     padding: 4px 8px;
     margin: 2px;
 }
+
+.idle-widget-inactive {
+    background-color: #f38ba8;  /* Catppuccin Mocha Red */
+}
