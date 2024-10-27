@@ -22,7 +22,12 @@ export default function Volume() {
       }),
       new Widget.Slider({
         value: bind(speaker, "volume"),
-        onDragged: (value) => speaker.volume = value,
+        hexpand: true,
+        onDragged: (slider) => {
+          const value = slider.value
+          console.log(value)
+          speaker.volume = value
+        },
       }),
     ],
   })
