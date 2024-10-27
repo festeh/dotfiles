@@ -56,3 +56,17 @@ window.Bar button {
     padding: 0 4px;
     margin-right: 4px;
 }
+
+.volume-widget scale {
+    min-width: 100px;
+}
+
+.volume-widget scale trough {
+    min-width: 100px;
+    min-height: 10px;
+}
+
+.volume-widget scale slider {
+    min-width: 16px;
+    min-height: 16px;
+}
