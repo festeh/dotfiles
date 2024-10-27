@@ -1,6 +1,6 @@
 window.Bar {
     background: transparent;
-    color: @theme_fg_color;
+    color: #ffffff;
     font-weight: bold;
 }
 
