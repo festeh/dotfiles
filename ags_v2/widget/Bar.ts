@@ -21,14 +21,14 @@ export default function Bar(calendarVisible: Variable<boolean>, currentDate: Var
     },
     new Widget.Box({
       className: "bar-container",
-      homogeneous: true,
       children: [
         new Widget.Box({
-          hpack: "start",
+          hexpand: true,
+          halign: "start",
           children: [HyprlandStatus()]
         }),
         new Widget.Box({
-          hpack: "end",
+          halign: "end",
           children: [Battery(), TimeDate(currentDate, calendarVisible), Tray()]
         })
       ]
