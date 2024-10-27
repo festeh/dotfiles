@@ -38,13 +38,13 @@ export default function Volume() {
           GLib.spawn_command_line_async("pamixer -t")
         },
       }),
-      new Widget.Slider({
-        hexpand: true,
-        value: bind(volume).as(v => v / 100),
-        onChange: ({ value }) => {
-          GLib.spawn_command_line_async(`pamixer --set-volume ${Math.round(value * 100)}`)
-        },
-      }),
+      // new Widget.Slider({
+      //   hexpand: true,
+      //   value: bind(volume).as(v => v / 100),
+      //   onChange: ({ value }) => {
+      //     GLib.spawn_command_line_async(`pamixer --set-volume ${Math.round(value * 100)}`)
+      //   },
+      // }),
     ],
   })
 }
