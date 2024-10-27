@@ -62,6 +62,22 @@ window.Bar button {
     background-color: #f38ba8;  /* Catppuccin Mocha Red */
 }
 
+.focusing-widget {
+    background-color: #89b4fa;  /* Catppuccin Mocha Blue */
+    border: 2px solid #b4befe;  /* Catppuccin Mocha Lavender */
+    border-radius: 8px;
+    padding: 4px 8px;
+    margin: 2px;
+}
+
+.pomodoro-widget {
+    background-color: #fab387;  /* Catppuccin Mocha Peach */
+    border: 2px solid #f9e2af;  /* Catppuccin Mocha Yellow */
+    border-radius: 8px;
+    padding: 4px 8px;
+    margin: 2px;
+}
+
 .volume-widget scale trough {
     min-width: 120px;
     min-height: 6px;
