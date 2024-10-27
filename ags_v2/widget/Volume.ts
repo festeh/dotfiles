@@ -20,6 +20,7 @@ export default function Volume() {
   const muted = bind(speaker, "mute")
   return new Widget.Box({
     className: "volume-widget",
+    width: 120,
     children: [
       new Widget.Button({
         child: new Widget.Icon({
