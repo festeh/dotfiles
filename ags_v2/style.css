@@ -2,7 +2,8 @@ window.Bar {
     /* background: transparent; */
     color: #ffffff;
     /* background-color: #999999; */
-    font-weight: bold;
+    font-weight: 900;
+    font-size: 1rem;
 }
 
 .bar-container {
