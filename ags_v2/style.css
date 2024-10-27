@@ -25,3 +25,10 @@ window.Bar button {
     background-color: #7287fd;  /* Darker Lavender */
     padding: 4px 8px;
 }
+
+.workspace-widget {
+    background-color: #8839ef;  /* Catppuccin Mocha Mauve */
+    border-radius: 8px;
+    padding: 4px 8px;
+    margin: 2px;
+}

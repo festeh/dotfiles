@@ -7,5 +7,8 @@ import { bind } from "astal"
 export default function HyprlandStatus() {
   const hypr = Hyprland.get_default()
   const workspace = bind(hypr, "focusedWorkspace").as((ws) => ws.get_name())
-  return new Widget.Label({ label: workspace })
+  return new Widget.Label({ 
+    className: "workspace-widget",
+    label: workspace 
+  })
 }
