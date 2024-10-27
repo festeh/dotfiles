@@ -71,36 +71,57 @@ Gtk.StyleContext.add_provider_for_screen(
 //   </box>
 // }
 
-function generateCalendarDays(year: number, month: number, currentDay: number) {
-  const firstDay = new Date(year, month, 1).getDay()
-  const daysInMonth = new Date(year, month + 1, 0).getDate()
-  const days = Array(firstDay === 0 ? 6 : firstDay - 1).fill(null)
-    .concat(Array.from({ length: daysInMonth }, (_, i) => i + 1))
+function generateCalendarDays(currentDate: Variable<Date>) {
+  const currentDay = bind(currentDate).as((date: Date) => date.getDate())
+  const month = bind(currentDate).as((date: Date) => date.getMonth()).get()
+  const year = bind(currentDate).as((date: Date) => date.getFullYear()).get()
+  const firstDay = bind(currentDate).as((date: Date) => {
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    return new Date(year, month, 1).getDay()
+  })
 
-  // Pad the array to ensure it's divisible by 7
-  while (days.length % 7 !== 0) {
-    days.push(null)
-  }
+  const daysInMonth = bind(currentDate).as((date: Date) => {
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    return new Date(year, month + 1, 0).getDate()
+  })
 
-  const rows = []
-  for (let i = 0; i < days.length; i += 7) {
-    const weekDays = days.slice(i, i + 7)
-    rows.push(
-      <box
-        hexpand={true}
-        halign={Gtk.Align.FILL}
-        homogeneous={true}
-        className="calendar-row"
-      >
-        {weekDays.map((day: number | null) => (
-          <label 
-            className={`calendar-cell${day === currentDay ? ' current-day' : ''}`}
-            label={day ? day.toString() : ''}
-          />
-        ))}
-      </box>
-    )
-  }
+  const days = Variable.derive(
+    [firstDay, daysInMonth],
+    (firstDay, daysInMonth) => {
+      const d = Array(firstDay === 0 ? 6 : firstDay - 1).fill(null)
+        .concat(Array.from({ length: daysInMonth }, (_, i) => i + 1))
+      // Pad the array to ensure it's divisible by 7
+      while (d.length % 7 !== 0) {
+        d.push(null)
+      }
+      return d
+    }
+  )
+  const rows = bind(days).as((d: number[]) => {
+    const r = []
+    for (let i = 0; i < d.length; i += 7) {
+      const weekDays = d.slice(i, i + 7)
+      r.push(
+        <box
+          hexpand={true}
+          halign={Gtk.Align.FILL}
+          homogeneous={true}
+          className="calendar-row"
+        >
+          {weekDays.map((day: number | null) => (
+            <label
+              label={day ? day.toString() : ''}
+              className={bind(currentDay).as((cDay: number) => cDay === day ? 'calendar-cell current-day' : 'calendar-cell')}
+            />
+          ))}
+        </box>
+      )
+    }
+    return r
+  })
+
   return rows
 }
 
@@ -113,7 +134,7 @@ function makeWeekdayHeader() {
     className="calendar-row"
   >
     {weekdays.map((day: string) => (
-      <label 
+      <label
         className="weekday-header"
         label={day}
       />
@@ -121,12 +142,8 @@ function makeWeekdayHeader() {
   </box>
 }
 
-export default function Calendar(visible: Variable<boolean>) {
-  const currentDate = new Date()
-  const currentDay = currentDate.getDate()
-  const currentMonth = currentDate.getMonth()
-  const currentYear = currentDate.getFullYear()
-  const monthName = currentDate.toLocaleString('default', { month: 'long' })
+export default function Calendar(visible: Variable<boolean>, currentDate: Variable<Date>) {
+  const monthName = bind(currentDate).as((date: Date) => date.toLocaleString('default', { month: 'long' }))
   return (
     <window
       className="Calendar"
@@ -142,7 +159,7 @@ export default function Calendar(visible: Variable<boolean>) {
         <label className="month-label" label={monthName} />
         <box className="calendar-container" orientation={Gtk.Orientation.VERTICAL}>
           {makeWeekdayHeader()}
-          {generateCalendarDays(currentYear, currentMonth, currentDay)}
+          {generateCalendarDays(currentDate)}
         </box>
       </box>
     </window>

@@ -1,6 +1,7 @@
 import { App, Astal, Gtk } from "astal/gtk3"
 import { Variable } from "astal"
 import Battery from "./Battery"
+import Tray from "./Tray"
 import Hyprland from "gi://AstalHyprland"
 const time = Variable<string>("").poll(1000, "date +%H:%M")
 
@@ -35,6 +36,7 @@ export default function Bar(calendarVisible: Variable<boolean>, currentDate: Var
         <label label={time()} />
       </button>
       {Battery()}
+      {Tray()}
     </box>
   </window>
 }
