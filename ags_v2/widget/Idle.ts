@@ -15,14 +15,16 @@ const isIdleRunning = Variable<boolean>(checkSwayidle()).poll(1000, () => checkS
 
 export default function Idle() {
   return new Widget.Button({
-    className: bind(isIdleRunning).as(running => 
+    className: bind(isIdleRunning).as(running =>
       running ? "idle-widget" : "idle-widget idle-widget-inactive"
     ),
+    margin: 0,
     child: new Widget.Icon({
-      icon: bind(isIdleRunning).as(running => 
+      icon: bind(isIdleRunning).as(running =>
         running ? "face-plain-symbolic" : "face-surprise-symbolic"
       ),
-      size: 16,
+      css: "font-size: 18",
+      margin: 0
     }),
     onClicked: () => {
       const running = isIdleRunning.get()
