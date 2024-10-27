@@ -15,13 +15,13 @@ window.Bar button {
 }
 
 .battery-widget {
-    background-color: #585b70;  /* Catppuccin Mocha Overlay0 */
+    background-color: #cba6f7;  /* Catppuccin Mocha Mauve */
     border-radius: 8px;
     padding: 4px 8px;
     margin: 2px;
 }
 
 .time-widget {
-    background-color: #585b70;  /* Catppuccin Mocha Surface2 */
+    background-color: #b4befe;  /* Catppuccin Mocha Lavender */
     padding: 4px 8px;
 }
