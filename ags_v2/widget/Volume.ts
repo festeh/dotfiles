@@ -4,8 +4,9 @@ import GLib from "gi://GLib"
 
 function getVolume(): number {
   try {
-    const [success, stdout, stderr] = GLib.spawn_command_line_sync("pamixer --get-volume")
-    return parseInt(stdout.toString())
+    const [success, stdout, stderr] = GLib.spawn_command_line_sync("wpctl get-volume @DEFAULT_AUDIO_SINK@")
+    const match = stdout.toString().match(/\d+\.\d+/)
+    return match ? Math.round(parseFloat(match[0]) * 100) : 0
   } catch (error) {
     return 0
   }
@@ -13,8 +14,8 @@ function getVolume(): number {
 
 function isMuted(): boolean {
   try {
-    const [success, stdout, stderr] = GLib.spawn_command_line_sync("pamixer --get-mute")
-    return stdout.toString().trim() === "true"
+    const [success, stdout, stderr] = GLib.spawn_command_line_sync("wpctl get-volume @DEFAULT_AUDIO_SINK@")
+    return stdout.toString().includes("MUTED")
   } catch (error) {
     return false
   }
@@ -35,14 +36,14 @@ export default function Volume() {
           size: 16,
         }),
         onClicked: () => {
-          GLib.spawn_command_line_async("pamixer -t")
+          GLib.spawn_command_line_async("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle")
         },
       }),
       // new Widget.Slider({
       //   hexpand: true,
       //   value: bind(volume).as(v => v / 100),
       //   onChange: ({ value }) => {
-      //     GLib.spawn_command_line_async(`pamixer --set-volume ${Math.round(value * 100)}`)
+      //     GLib.spawn_command_line_async(`wpctl set-volume @DEFAULT_AUDIO_SINK@ ${value.toFixed(2)}`)
       //   },
       // }),
     ],
