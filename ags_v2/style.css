@@ -57,6 +57,10 @@ window.Bar button {
     margin-right: 4px;
 }
 
+.volume-widget button.muted {
+    background-color: #f38ba8;  /* Catppuccin Mocha Red */
+}
+
 .volume-widget scale trough {
     min-width: 120px;
     min-height: 6px;

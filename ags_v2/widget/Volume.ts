@@ -11,6 +11,7 @@ export default function Volume() {
     className: "volume-widget",
     children: [
       new Widget.Button({
+        className: bind(muted).as(m => m ? "muted" : ""),
         child: new Widget.Icon({
           icon: bind(muted).as(m =>
             m ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic"
