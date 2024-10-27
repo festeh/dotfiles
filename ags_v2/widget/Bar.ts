@@ -6,6 +6,7 @@ import Tray from "./Tray"
 import Hyprland from "gi://AstalHyprland"
 import HyprlandStatus from "./HyprlandStatus"
 import TimeDate from "./TimeDate"
+import Volume from "./Volume"
 
 const hypr = Hyprland.get_default()
 const monitors = hypr.get_monitors()

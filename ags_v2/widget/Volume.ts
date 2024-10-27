@@ -1,6 +1,7 @@
 import { Widget } from "astal/gtk3"
 import { Variable, bind } from "astal"
 import GLib from "gi://GLib"
+import Wp from "gi://AstalWp"
 
 function getVolume(): number {
   try {
@@ -12,40 +13,30 @@ function getVolume(): number {
   }
 }
 
-function isMuted(): boolean {
-  try {
-    const [success, stdout, stderr] = GLib.spawn_command_line_sync("wpctl get-volume @DEFAULT_AUDIO_SINK@")
-    return stdout.toString().includes("MUTED")
-  } catch (error) {
-    return false
-  }
-}
-
 const volume = Variable<number>(getVolume()).poll(1000, () => getVolume())
-const muted = Variable<boolean>(isMuted()).poll(1000, () => isMuted())
 
 export default function Volume() {
+  const speaker = Wp.get_default()?.audio.defaultSpeaker!
+  const muted = bind(speaker, "mute")
   return new Widget.Box({
     className: "volume-widget",
     children: [
       new Widget.Button({
         child: new Widget.Icon({
-          icon: bind(muted).as(m => 
+          icon: bind(muted).as(m =>
             m ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic"
           ),
           size: 16,
         }),
         onClicked: () => {
-          GLib.spawn_command_line_async("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle")
+          speaker.mute = !speaker.mute
         },
       }),
-      // new Widget.Slider({
-      //   hexpand: true,
-      //   value: bind(volume).as(v => v / 100),
-      //   onChange: ({ value }) => {
-      //     GLib.spawn_command_line_async(`wpctl set-volume @DEFAULT_AUDIO_SINK@ ${value.toFixed(2)}`)
-      //   },
-      // }),
+      new Widget.Slider({
+        hexpand: true,
+        value: bind(speaker, "volume"),
+        onDragged: (value) => speaker.volume = value,
+      }),
     ],
   })
 }
