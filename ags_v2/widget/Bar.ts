@@ -7,6 +7,8 @@ import Hyprland from "gi://AstalHyprland"
 import HyprlandStatus from "./HyprlandStatus"
 import TimeDate from "./TimeDate"
 import Volume from "./Volume"
+import Focusing from "./Focusing"
+import Pomodoro from "./Pomodoro"
 
 const hypr = Hyprland.get_default()
 const monitors = hypr.get_monitors()
@@ -26,7 +28,11 @@ export default function Bar(calendarVisible: Variable<boolean>, currentDate: Var
       children: [
         new Widget.Box({
           hexpand: true,
-          children: [HyprlandStatus()]
+          children: [
+            HyprlandStatus(),
+            Focusing(),
+            Pomodoro()
+          ]
         }),
         new Widget.Box({
           children: [

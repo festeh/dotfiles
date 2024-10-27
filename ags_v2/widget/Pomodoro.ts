@@ -1,7 +1,7 @@
 import { Widget } from "astal/gtk3"
 
-export default function Focusing() {
+export default function Pomodoro() {
   return new Widget.Label(
-    { label: "Not focusing" }
+    { label: "Pomodoro" }
   )
 }
