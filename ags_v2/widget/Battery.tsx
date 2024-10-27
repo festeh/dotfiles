@@ -5,11 +5,16 @@ import { bind } from "astal"
 
 export default function Battery() {
   const bat = AstalBattery.get_default()
-  return new Widget.Icon({
-    icon: bind(bat, "icon-name"),
-    tooltipText: bind(bat, "percentage").as((p) => {
-      return (p * 100).toString()
-    })
+  return new Widget.Box({
+    children: [
+      new Widget.Icon({
+        icon: bind(bat, "icon-name"),
+      }),
+      new Widget.Label({
+        label: bind(bat, "percentage").as((p) => {
+          return `${Math.round(p * 100)}%`
+        }),
+      }),
+    ],
   })
-
 }
