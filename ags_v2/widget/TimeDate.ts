@@ -6,6 +6,7 @@ const time = Variable<string>("").poll(1000, "date +%H:%M")
 
 export default function DateWidget(currentDate, calendarVisible) {
   return new Widget.Button({
+    className: "time-widget",
     label: bind(time),
     // halign: Gtk.Align.CENTER,
     onClicked: () => {
