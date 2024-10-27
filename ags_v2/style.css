@@ -50,6 +50,7 @@ window.Bar button {
     padding: 4px 8px;
     margin: 2px;
     min-width: 110px;
+    box-sizing: border-box;
 }
 
 .volume-widget button {
