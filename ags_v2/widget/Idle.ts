@@ -18,7 +18,7 @@ export default function Idle() {
     className: "idle-widget",
     child: new Widget.Icon({
       icon: bind(isIdleRunning).as(running => 
-        running ? "system-suspend-symbolic" : "weather-clear-symbolic"
+        running ? "face-plain-symbolic" : "face-surprise-symbolic"
       ),
     }),
     onClicked: () => {
