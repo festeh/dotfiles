@@ -22,6 +22,10 @@ export default function Volume() {
       }),
       new Widget.Slider({
         value: bind(speaker, "volume"),
+        drawValue: false,
+        min: 0,
+        max: 1,
+        step: 0.01,
         onDragged: (slider) => {
           const value = slider.value
           console.log(value)
