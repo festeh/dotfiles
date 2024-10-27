@@ -1,6 +1,6 @@
 import AstalBattery from "gi://AstalBattery?version=0.1"
 
-import { Gtk, Gdk, Widget, astalify, type ConstructProps } from "astal/gtk3"
+import { Widget } from "astal/gtk3"
 import { bind } from "astal"
 
 export default function Battery() {

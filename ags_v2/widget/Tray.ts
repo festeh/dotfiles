@@ -11,21 +11,21 @@ export default function Tray() {
         App.add_icons(item.icon_theme_path)
       }
       let gicon = item.gicon
-      if (item.title === "yappy2") {
-        const theme = new Gtk.IconTheme()
-        theme.set_search_path([item.iconName, item.icon_theme_path])
-        console.log(theme.get_example_icon_name())
-        const size = theme.get_icon_sizes(item.icon_theme_path);
-        console.log(size, size.length)
-      }
+      // if (item.title === "yappy2") {
+      //   const theme = new Gtk.IconTheme()
+      //   theme.set_search_path([item.iconName, item.icon_theme_path])
+      //   console.log(theme.get_example_icon_name())
+      //   const size = theme.get_icon_sizes(item.icon_theme_path);
+      //   // console.log(size, size.length)
+      // }
 
       const menu = item.create_menu()
-      console.log(">", item.title)
-      console.log("name", item.iconName)
-      console.log("path", item.icon_theme_path)
+      // console.log(">", item.title)
+      // console.log("name", item.iconName)
+      // console.log("path", item.icon_theme_path)
       // console.log("gicon", item.gicon)
       // console.log(item.tooltipMarkup)
-      console.log("----------------------")
+      // console.log("----------------------")
       return new Widget.Button({
         tooltipMarkup: bind(item, "tooltipMarkup"),
       }, new Widget.Icon(
@@ -36,6 +36,6 @@ export default function Tray() {
     })
   })
   return new Widget.Box({
-    spacing: 5
+    spacing: 0
   }, children)
 }
