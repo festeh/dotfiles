@@ -19,9 +19,19 @@ export default function Bar(calendarVisible: Variable<boolean>, currentDate: Var
       anchor: Astal.WindowAnchor.TOP | Astal.WindowAnchor.LEFT | Astal.WindowAnchor.RIGHT,
       application: App
     },
-    new Widget.Box({},
-      HyprlandStatus(),
-      Battery(), TimeDate(currentDate, calendarVisible), Tray(),
-    )
+    new Widget.Box({
+      className: "bar-container",
+      homogeneous: true,
+      children: [
+        new Widget.Box({
+          hpack: "start",
+          children: [HyprlandStatus()]
+        }),
+        new Widget.Box({
+          hpack: "end",
+          children: [Battery(), TimeDate(currentDate, calendarVisible), Tray()]
+        })
+      ]
+    })
   )
 }
