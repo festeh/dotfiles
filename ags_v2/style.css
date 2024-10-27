@@ -1,6 +1,7 @@
 window.Bar {
-    background: transparent;
+    /* background: transparent; */
     color: #ffffff;
+    /* background-color: #999999; */
     font-weight: bold;
 }
 
@@ -27,14 +28,14 @@ window.Bar button {
 }
 
 .workspace-widget {
-    background-color: #8839ef;  /* Catppuccin Mocha Mauve */
+    background-color: #9d7cd8;  /* Darker Mauve */
     border-radius: 8px;
     padding: 4px 8px;
     margin: 2px;
 }
 
 .idle-widget {
-    background-color: #89b4fa;  /* Catppuccin Mocha Blue */
+    background-color: #7287fd;  /* Darker Lavender */
     border-radius: 8px;
     padding: 4px 8px;
     margin: 2px;
