@@ -25,7 +25,7 @@ export default function Volume() {
         drawValue: false,
         min: 0,
         max: 1,
-        step: 0.02,
+        step: 0.1,
         digits: 3,
         onDragged: (slider) => {
           const value = slider.value
