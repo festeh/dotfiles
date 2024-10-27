@@ -23,7 +23,7 @@ export default function Idle() {
       icon: bind(isIdleRunning).as(running =>
         running ? "face-plain-symbolic" : "face-surprise-symbolic"
       ),
-      css: "font-size: 18",
+      css: "font-size: 18px",
       margin: 0
     }),
     onClicked: () => {

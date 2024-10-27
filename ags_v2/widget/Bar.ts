@@ -29,7 +29,13 @@ export default function Bar(calendarVisible: Variable<boolean>, currentDate: Var
           children: [HyprlandStatus()]
         }),
         new Widget.Box({
-          children: [Idle(), Volume(), Battery(), TimeDate(currentDate, calendarVisible), Tray()]
+          children: [
+            Idle(),
+            Volume(),
+            Battery(),
+            TimeDate(currentDate, calendarVisible),
+            Tray()
+          ]
         })
       ]
     })

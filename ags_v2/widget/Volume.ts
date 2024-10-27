@@ -1,6 +1,5 @@
 import { Widget } from "astal/gtk3"
 import { Variable, bind } from "astal"
-import GLib from "gi://GLib"
 import Wp from "gi://AstalWp"
 
 
