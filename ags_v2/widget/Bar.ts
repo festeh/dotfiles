@@ -15,7 +15,7 @@ const monitors = hypr.get_monitors()
 let id = 0
 
 
-export default function Bar(calendarVisible: Variable<boolean>, currentDate: Variable<Date>) {
+export default function Bar(calendarVisible: Variable<boolean>, currentDate: Variable<Date>, focusing: Variable<string>) {
   return new Widget.Window(
     {
       className: "Bar",
@@ -30,7 +30,7 @@ export default function Bar(calendarVisible: Variable<boolean>, currentDate: Var
           hexpand: true,
           children: [
             HyprlandStatus(),
-            Focusing(),
+            Focusing(focusing),
             Pomodoro()
           ]
         }),

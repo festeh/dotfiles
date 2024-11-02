@@ -2,6 +2,19 @@
 target = "hyprland/scripts"
 name = "~/.config/hypr/scripts"
 
+[symlinks.kitty]
+target = "kitty"
+name = "~/.config/kitty"
+
+[symlinks.ags]
+target = "ags_v2"
+name = "~/.config/ags_v2"
+
+[symlinks.zathura]
+target = "zathura"
+name = "~/.config/zathura"
+
+
 [templates.hyprland]
 target = "hyprland/hyprland_template.conf"
 name = "~/.config/hypr/hyprland.conf"
@@ -13,15 +26,3 @@ GTK_THEME = "catppuccin-mocha-mauve-standard+default"
 target = "systemd/ags_template.service"
 name = "~/.config/systemd/user/ags.service"
 GTK_THEME = "catppuccin-mocha-mauve-standard+default"
-
-[symlinks.kitty]
-target = "kitty"
-name = "~/.config/kitty"
-
-[symlinks.ags]
-target = "ags"
-name = "~/.config/ags"
-
-[symlinks.zathura]
-target = "zathura"
-name = "~/.config/zathura"

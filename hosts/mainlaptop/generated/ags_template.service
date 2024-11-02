@@ -2,12 +2,14 @@
    Description=Launch ags on startup
 
    [Service]
-   ExecStart=ags
+   ExecStart=%h/.local/bin/ags -c ${XDG_CONFIG_HOME}/ags_v2
    Restart=always
+   TimeoutSec=3
    Environment=XDG_CURRENT_DESKTOP=Hyprland
    Environment=XDG_CONFIG_HOME=%h/.config
    Environment=XDG_DATA_HOME=%h/.local/share
    Environment=PATH=%h/.local/bin:/usr/bin:$PATH
+   Environment=DISPLAY=:1
    Environment=GTK_THEME=catppuccin-mocha-mauve-standard+default
 
    [Install]
