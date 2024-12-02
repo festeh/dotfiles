@@ -2,9 +2,10 @@
    Description=Launch ags on startup
 
    [Service]
-   ExecStart=%h/.local/bin/ags -c ${XDG_CONFIG_HOME}/ags_v2
+   ExecStart=%h/.local/bin/ags run -d ${XDG_CONFIG_HOME}/ags_v2
    Restart=always
    TimeoutSec=3
+   WorkingDirectory=%h/.config/ags_v2
    Environment=XDG_CURRENT_DESKTOP=Hyprland
    Environment=XDG_CONFIG_HOME=%h/.config
    Environment=XDG_DATA_HOME=%h/.local/share

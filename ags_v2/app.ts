@@ -6,20 +6,25 @@ import { Variable } from "astal"
 
 const calendarVisible = Variable(false)
 const currentDate = Variable(new Date())
-const pomodoro = Variable("Not focusing")
+const focusing = Variable("Not focusing")
+const pomodoro = Variable("No pomodoro")
 
 App.start({
   css: style,
   main() {
-    Bar(calendarVisible, currentDate, pomodoro)
+    Bar(calendarVisible, currentDate, focusing, pomodoro)
     Calendar(calendarVisible, currentDate)
   },
   requestHandler(request: string, res: (response: any) => void) {
     try {
       const data = JSON.parse(request)
       if (data.focusing) {
-        pomodoro.set(data.focusing)
+        focusing.set(data.focusing)
       }
+      if (data.pomodoro) {
+        pomodoro.set(data.pomodoro)
+      }
+
     } catch (error) {
       res("fail to parse: " + request)
     }
