@@ -1,37 +1,87 @@
-* {
-    font-weight: bold;
-    font-size: 20px;
+window.Bar {
+    /* background: transparent; */
+    color: #ffffff;
+    /* background-color: #999999; */
+    font-weight: 900;
+    font-size: 1rem;
 }
 
-window.bar {
-    background-color: @theme_bg_color;
-    color: @theme_fg_color;
+.bar-container {
+    padding: 4px 6px;
 }
 
-label {
-    font-weight: bold;
+
+window.Bar button {
+    border-radius: 8px;
+    margin: 2px;
 }
 
-.network {
-    margin-right: 15px;
+.battery-widget {
+    background-color: #9d7cd8;  /* Darker Mauve */
+    border-radius: 8px;
+    padding: 4px 8px;
+    margin: 2px;
 }
 
-.blink {
-  animation: blinker 0.5s linear infinite;
-  color: red;
+.time-widget {
+    background-color: #7287fd;  /* Darker Lavender */
+    padding: 4px 8px;
 }
 
-@keyframes blinker {
-  50% {
-    opacity: 0;
-  }
+.workspace-widget {
+    background-color: #9d7cd8;  /* Darker Mauve */
+    border-radius: 8px;
+    padding: 4px 8px;
+    margin: 2px;
 }
 
-.notification {
-    min-width: 350px;
-    border-radius: 11px;
-    padding: 1em;
-    margin: .5em;
-    border: 1px solid @wm_borders_edge;
-    background-color: @theme_bg_color;
+.idle-widget {
+    background-color: #7287fd;  /* Darker Lavender */
+    border-radius: 8px;
+    padding: 4px 8px;
+    margin: 2px;
 }
+
+.idle-widget-inactive {
+    background-color: #f38ba8;  /* Catppuccin Mocha Red */
+}
+
+.volume-widget {
+    background-color: #1e9e8e;  /* Darker Teal */
+    border-radius: 8px;
+    padding: 4px 8px;
+    margin: 2px;
+    min-width: 130px;
+}
+
+.volume-widget button {
+    padding: 0 4px;
+    margin-right: 4px;
+}
+
+.volume-widget button.muted {
+    background-color: #f38ba8;  /* Catppuccin Mocha Red */
+}
+
+.focusing-widget {
+    background-color: #89b4fa;  /* Catppuccin Mocha Blue */
+    border: 2px solid #b4befe;  /* Catppuccin Mocha Lavender */
+    border-radius: 8px;
+    padding: 4px 8px;
+    margin: 2px;
+}
+
+.pomodoro-widget {
+    background-color: #fab387;  /* Catppuccin Mocha Peach */
+    border: 2px solid #f9e2af;  /* Catppuccin Mocha Yellow */
+    border-radius: 8px;
+    padding: 4px 8px;
+    margin: 2px;
+}
+
+.volume-widget scale trough {
+    min-width: 120px;
+    min-height: 6px;
+}
+
+

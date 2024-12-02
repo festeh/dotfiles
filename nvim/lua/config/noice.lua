@@ -30,23 +30,23 @@ require("noice").setup({
     },
   },
   messages = {
-    enabled = false,
+    enabled = true,
   },
   notify = {
-    enabled = false,
+    enabled = true,
   },
   lsp = {
     progress = {
-      enabled = false,
+      enabled = true,
     },
     hover = {
-      enabled = false,
+      enabled = true,
     },
     signature = {
-      enabled = false,
+      enabled = true,
     },
     message = {
-      enabled = false,
+      enabled = true,
     },
   }
 })

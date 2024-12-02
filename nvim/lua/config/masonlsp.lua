@@ -38,7 +38,7 @@ local capabilities = require('cmp_nvim_lsp').default_capabilities()
 
 local lspconfig = require("lspconfig")
 
-lspconfig.ruff_lsp.setup {
+lspconfig.ruff.setup {
   init_options = {
     settings = {
       -- Any extra CLI arguments for `ruff` go here.
@@ -146,7 +146,7 @@ lspconfig.clangd.setup {
   filetypes = { "c", "cpp", "objc", "objcpp", "cuda", }
 }
 
-lspconfig.bufls.setup {
+lspconfig.buf_ls.setup {
   on_attach = custom_attach,
   capabilities = capabilities
 }
