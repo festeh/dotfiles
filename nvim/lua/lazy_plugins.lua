@@ -54,11 +54,11 @@ local plugins = {
   { 'nvim-treesitter/nvim-treesitter-textobjects', config = req('treesitter-textobjects') },
   -- { 'stevearc/aerial.nvim',                        config = req('aerial') },
   { "festeh/wilder.nvim",                          config = req("wilder") },
-  {
-    "j-hui/fidget.nvim",
-    tag = "legacy",
-    config = req("fidget")
-  },
+  -- {
+  --   "j-hui/fidget.nvim",
+  --   tag = "legacy",
+  --   config = req("fidget")
+  -- },
   { "szw/vim-maximizer" },
   { 'sindrets/diffview.nvim',              dependencies = { 'nvim-lua/plenary.nvim' } },
   { 'tpope/vim-fugitive' },
@@ -83,7 +83,7 @@ local plugins = {
     config = req('navigator')
   },
   { 'echasnovski/mini.nvim',           config = req('mini') },
-  { 'rcarriga/nvim-notify',            config = req('notify') },
+  -- { 'rcarriga/nvim-notify',            config = req('notify') },
   { 'drybalka/tree-climber.nvim',      config = req('treeclimber') },
   { 'ziontee113/syntax-tree-surfer',   config = req('syntax_tree_surfer') },
   -- { 'themercorp/themer.lua',           config = req('themer') },
@@ -92,7 +92,7 @@ local plugins = {
   { 'declancm/cinnamon.nvim',          config = req('cinnamon') },
   { "smartpde/telescope-recent-files" },
   -- { 'ray-x/go.nvim',                   config = req('go') },
-  -- {'folke/noice.nvim', config = [[require('config.noice')]] },
+  {'folke/noice.nvim', config = [[require('config.noice')]] },
   { "mrjones2014/legendary.nvim",      config = req('legendary') },
   -- { 'Exafunction/codeium.vim',         event = "VeryLazy",                config = req('codeium') },
   { 'neomake/neomake' },
@@ -168,14 +168,14 @@ local plugins = {
   -- { "theRealCarneiro/hyprland-vim-syntax", event = "VeryLazy" },
   { "luckasRanarison/tree-sitter-hypr" },
   { "williamboman/mason-lspconfig.nvim" },
-  {
-    'OscarCreator/rsync.nvim',
-    build = 'make',
-    dependencies = 'nvim-lua/plenary.nvim',
-    config = function()
-      require("rsync").setup({})
-    end,
-  },
+  -- {
+  --   'OscarCreator/rsync.nvim',
+  --   build = 'make',
+  --   dependencies = 'nvim-lua/plenary.nvim',
+  --   config = function()
+  --     require("rsync").setup({})
+  --   end,
+  -- },
   {
     "benlubas/molten-nvim",
     build = ":UpdateRemotePlugins",

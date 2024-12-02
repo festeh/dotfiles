@@ -2,6 +2,7 @@ import { App } from "astal/gtk3"
 import style from "inline:./style.css"
 import Bar from "./widget/Bar"
 import Calendar from "./widget/Calendar"
+import Notifications from "./widget/Notifications"
 import { Variable } from "astal"
 
 const calendarVisible = Variable(false)
@@ -14,6 +15,7 @@ App.start({
   main() {
     Bar(calendarVisible, currentDate, focusing, pomodoro)
     Calendar(calendarVisible, currentDate)
+    Notifications()
   },
   requestHandler(request: string, res: (response: any) => void) {
     try {
