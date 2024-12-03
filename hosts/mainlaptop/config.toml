@@ -7,8 +7,8 @@ target = "kitty"
 name = "~/.config/kitty"
 
 [symlinks.ags]
-target = "ags_v2"
-name = "~/.config/ags_v2"
+target = "ags"
+name = "~/.config/ags"
 
 [symlinks.zathura]
 target = "zathura"
@@ -26,3 +26,4 @@ GTK_THEME = "catppuccin-mocha-mauve-standard+default"
 target = "systemd/ags_template.service"
 name = "~/.config/systemd/user/ags.service"
 GTK_THEME = "catppuccin-mocha-mauve-standard+default"
+AGS_PATH = "/home/dima/.local/bin"
