@@ -47,4 +47,6 @@ pathadd "$HOME/Android/Sdk/cmdline-tools/latest/bin"
 pathadd "$HOME/Downloads/swift-5.7.3-RELEASE-ubuntu22.04"
 export GOENV_ROOT="$HOME/.goenv"
 export PATH="$GOENV_ROOT/bin:$PATH"
-. "$HOME/.cargo/env"
+if [ -e "$HOME/.cargo/env" ]; then
+  . "$HOME/.cargo/env"
+fi

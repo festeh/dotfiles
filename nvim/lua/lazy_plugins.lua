@@ -94,7 +94,7 @@ local plugins = {
   -- { 'ray-x/go.nvim',                   config = req('go') },
   {'folke/noice.nvim', config = [[require('config.noice')]] },
   { "mrjones2014/legendary.nvim",      config = req('legendary') },
-  -- { 'Exafunction/codeium.vim',         event = "VeryLazy",                config = req('codeium') },
+  { 'Exafunction/codeium.vim',         event = "VeryLazy",                config = req('codeium') },
   { 'neomake/neomake' },
   { "windwp/nvim-ts-autotag",          config = req("autotag") },
   {
@@ -278,10 +278,10 @@ local plugins = {
 
   -- % themes
   { "catppuccin/nvim",         priority = 1000 },
-  {
-    'festeh/llm_flow.nvim',
-    dev = true,
-  },
+  -- {
+  --   'festeh/llm_flow.nvim',
+  --   dev = true,
+  -- },
 
   -- -- %Next goes here
   -- --
