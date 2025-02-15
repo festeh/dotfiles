@@ -94,7 +94,7 @@ local plugins = {
   -- { 'ray-x/go.nvim',                   config = req('go') },
   {'folke/noice.nvim', config = [[require('config.noice')]] },
   { "mrjones2014/legendary.nvim",      config = req('legendary') },
-  { 'Exafunction/codeium.vim',         event = "VeryLazy",                config = req('codeium') },
+  -- { 'Exafunction/codeium.vim',         event = "VeryLazy",                config = req('codeium') },
   { 'neomake/neomake' },
   { "windwp/nvim-ts-autotag",          config = req("autotag") },
   {
@@ -103,12 +103,12 @@ local plugins = {
     event = "VeryLazy"
   },
   { 'Civitasv/cmake-tools.nvim', config = req('cmake') },
-  -- {
-  --   "zbirenbaum/copilot.lua",
-  --   cmd = "Copilot",
-  --   event = "InsertEnter",
-  --   config = req('copilot'),
-  -- },
+  {
+    "zbirenbaum/copilot.lua",
+    cmd = "Copilot",
+    event = "InsertEnter",
+    config = req('copilot'),
+  },
   {
     "tomasky/bookmarks.nvim",
     config = req("bookmarks"),
@@ -206,46 +206,40 @@ local plugins = {
   --   },
   --   config = req('flutter-tools')
   -- },
-  {
-    "harrisoncramer/gitlab.nvim",
-    config = function()
-      require("gitlab").setup()
-    end,
-  },
+  -- {
+  --   "harrisoncramer/gitlab.nvim",
+  --   config = function()
+  --     require("gitlab").setup()
+  --   end,
+  -- },
   { "nvim-neotest/nvim-nio" },
   {
     'stevearc/overseer.nvim',
     config = req('overseer'),
   },
-  {
-    'festeh/todoist.lua',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      'muniftanjim/nui.nvim',
-    },
-    dev = true,
-  },
-  {
-    'festeh/dllm.nvim',
-    dev = true,
-    config = true,
-  },
+  -- {
+  --   'festeh/todoist.lua',
+  --   dependencies = {
+  --     'nvim-lua/plenary.nvim',
+  --     'muniftanjim/nui.nvim',
+  --   },
+  --   dev = true,
+  -- },
+  -- {
+  --   'festeh/dllm.nvim',
+  --   dev = true,
+  --   config = true,
+  -- },
   {
     "pmizio/typescript-tools.nvim",
     dependencies = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
     opts = {},
   },
-  -- {
-  --   "CopilotC-Nvim/CopilotChat.nvim",
-  --   dependencies = {
-  --     { "zbirenbaum/copilot.lua" }, -- or github/copilot.vim
-  --     { "nvim-lua/plenary.nvim" },  -- for curl, log wrapper
-  --   },
-  --   branch = "canary",
-  --   config = req('copilot_chat'),
-  --   -- dev = true,
-  --   -- See Commands section for default commands if you want to lazy load on them
-  -- },
+  {
+    "CopilotC-Nvim/CopilotChat.nvim",
+    config = req('copilot_chat'),
+    -- dev = true,
+ },
   {
     "MagicDuck/grug-far.nvim",
     config = function() require("grug-far").setup() end
