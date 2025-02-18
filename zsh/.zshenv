@@ -30,11 +30,20 @@ export CHROME_EXECUTABLE=google-chrome-stable
 export OPPO_BUDS_MAC="2C:FD:B3:75:E4:F7"
 
 export ANDROID_HOME=$HOME/Android/sdk
+export GOENV_ROOT="$HOME/.goenv"
 
 
 pathadd() {
     if [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]]; then
         PATH="${PATH:+"$PATH:"}$1"
+    fi
+}
+
+try-source() {
+    if [ -f "$1" ]; then
+        source "$1"
+    else
+        echo "Couldn't source $1 - not found"
     fi
 }
 
@@ -45,6 +54,7 @@ pathadd "$HOME/go/bin"
 pathadd "$HOME/Android/Sdk/cmdline-tools/latest/bin"
 # TODO: only work pc
 pathadd "$HOME/Downloads/swift-5.7.3-RELEASE-ubuntu22.04"
-export GOENV_ROOT="$HOME/.goenv"
-export PATH="$GOENV_ROOT/bin:$PATH"
-. "$HOME/.cargo/env"
+pathadd PATH="$GOENV_ROOT/bin:$PATH"
+
+try-source "$HOME/.cargo/env"
+try-source "$HOME/dotfiles/.env"
