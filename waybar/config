@@ -17,9 +17,9 @@
             "deactivated": ""
         }
     },
-    "custom/pomo": {
-        "exec": "~/.local/bin/pomo st",
-        "interval": 1,
+    // "custom/pomo": {
+    //    "exec": "~/.local/bin/pomo st",
+    //    "interval": 1,
     },
     "tray": {
         // "icon-size": 21,

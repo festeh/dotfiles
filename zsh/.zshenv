@@ -54,7 +54,7 @@ pathadd "$HOME/go/bin"
 pathadd "$HOME/Android/Sdk/cmdline-tools/latest/bin"
 # TODO: only work pc
 pathadd "$HOME/Downloads/swift-5.7.3-RELEASE-ubuntu22.04"
-pathadd PATH="$GOENV_ROOT/bin:$PATH"
+pathadd "$GOENV_ROOT/bin"
 
 try-source "$HOME/.cargo/env"
 try-source "$HOME/dotfiles/.env"
