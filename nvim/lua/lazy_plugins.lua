@@ -45,7 +45,7 @@ local plugins = {
   { "tpope/vim-unimpaired" },
   { "numToStr/Comment.nvim",                       config = true },
   { "kylechui/nvim-surround",                      config = true },
-  { "nvim-lualine/lualine.nvim",                   config = req("lualine") },
+  -- { "nvim-lualine/lualine.nvim",                   config = req("lualine") },
   { "akinsho/bufferline.nvim",                     config = req("bufferline") },
   { 'nvim-telescope/telescope.nvim',               config = req("telescope") },
   { 'nvim-lua/plenary.nvim' },
@@ -94,7 +94,7 @@ local plugins = {
   -- { 'ray-x/go.nvim',                   config = req('go') },
   {'folke/noice.nvim', config = [[require('config.noice')]] },
   { "mrjones2014/legendary.nvim",      config = req('legendary') },
-  -- { 'Exafunction/codeium.vim',         event = "VeryLazy",                config = req('codeium') },
+  { 'Exafunction/codeium.vim',         event = "VeryLazy",                config = req('codeium') },
   { 'neomake/neomake' },
   { "windwp/nvim-ts-autotag",          config = req("autotag") },
   {
@@ -206,12 +206,12 @@ local plugins = {
   --   },
   --   config = req('flutter-tools')
   -- },
-  {
-    "harrisoncramer/gitlab.nvim",
-    config = function()
-      require("gitlab").setup()
-    end,
-  },
+  -- {
+  --   "harrisoncramer/gitlab.nvim",
+  --   config = function()
+  --     require("gitlab").setup()
+  --   end,
+  -- },
   { "nvim-neotest/nvim-nio" },
   {
     'stevearc/overseer.nvim',
@@ -225,10 +225,13 @@ local plugins = {
     },
     dev = true,
   },
+  -- {
+  --   'festeh/dllm.nvim',
+  --   dev = true,
+  --   config = true,
+  -- },
   {
-    'festeh/dllm.nvim',
-    dev = true,
-    config = true,
+    "stevearc/profile.nvim"
   },
   {
     "pmizio/typescript-tools.nvim",
@@ -278,10 +281,10 @@ local plugins = {
 
   -- % themes
   { "catppuccin/nvim",         priority = 1000 },
-  {
-    'festeh/llm_flow.nvim',
-    dev = true,
-  },
+  -- {
+  --   'festeh/llm_flow.nvim',
+  --   dev = true,
+  -- },
 
   -- -- %Next goes here
   -- --
