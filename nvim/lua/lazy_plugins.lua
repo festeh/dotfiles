@@ -45,7 +45,7 @@ local plugins = {
   { "tpope/vim-unimpaired" },
   { "numToStr/Comment.nvim",                       config = true },
   { "kylechui/nvim-surround",                      config = true },
-  -- { "nvim-lualine/lualine.nvim",                   config = req("lualine") },
+  { "nvim-lualine/lualine.nvim",                   config = req("lualine") },
   { "akinsho/bufferline.nvim",                     config = req("bufferline") },
   { 'nvim-telescope/telescope.nvim',               config = req("telescope") },
   { 'nvim-lua/plenary.nvim' },
@@ -76,12 +76,12 @@ local plugins = {
   { 'stevearc/dressing.nvim',              config = req('dressing') },
   -- use { 'MunifTanjim/exrc.nvim', config = [[require('config.exrc')]] }
   { 'lakshayg/vim-bazel' },
-  {
-    'ray-x/navigator.lua',
-    event = "VeryLazy",
-    dependencies = { { 'ray-x/guihua.lua' }, { 'neovim/nvim-lspconfig' } },
-    config = req('navigator')
-  },
+  -- {
+  --   'ray-x/navigator.lua',
+  --   event = "VeryLazy",
+  --   dependencies = { { 'ray-x/guihua.lua' }, { 'neovim/nvim-lspconfig' } },
+  --   config = req('navigator')
+  -- },
   { 'echasnovski/mini.nvim',           config = req('mini') },
   -- { 'rcarriga/nvim-notify',            config = req('notify') },
   { 'drybalka/tree-climber.nvim',      config = req('treeclimber') },
