@@ -25,5 +25,6 @@ o.splitbelow = true
 o.updatetime = 100
 
 o.signcolumn = "yes"
+o.jumpoptions = "stack"
 
 o.exrc = true
