@@ -6,9 +6,13 @@ name = "~/.config/hypr/scripts"
 target = "kitty"
 name = "~/.config/kitty"
 
-# [symlinks.ags]
-# target = "ags"
-# name = "~/.config/ags"
+[symlinks.ags]
+target = "ags"
+name = "~/.config/ags"
+
+[symlinks.gammastep]
+target = "gammastep"
+name = "~/.config/gammastep"
 
 [symlinks.waybar]
 target = "waybar"
