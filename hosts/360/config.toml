@@ -6,6 +6,10 @@ name = "~/.config/hypr/scripts"
 target = "kitty"
 name = "~/.config/kitty"
 
+[symlinks.uwsm]
+target = "uwsm"
+name = "~/.config/uwsm"
+
 # [symlinks.ags]
 # target = "ags"
 # name = "~/.config/ags"

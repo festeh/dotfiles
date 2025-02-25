@@ -2,6 +2,10 @@
 target = "waybar"
 name = "~/.config/waybar/"
 
+[symlinks.uwsm]
+target = "uwsm"
+name = "~/.config/uwsm"
+
 [symlinks.hyprland_scripts]
 target = "hyprland/scripts"
 name = "~/.config/hypr/scripts"

@@ -194,3 +194,5 @@ lspconfig.jsonls.setup {
     },
   },
 }
+
+lspconfig.dartls.setup{}

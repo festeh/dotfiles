@@ -1,5 +1,3 @@
-killall -9 fluxgui mattermost-desktop pcloud
-
-mattermost-desktop &
-pcloud &
-gammastep-indicator &
+uswm app -- mattermost-desktop --hidden
+uwsm app -- pcloud
+uwsm app -- gammastep-indicator
