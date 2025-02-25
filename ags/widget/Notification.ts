@@ -2,7 +2,7 @@ import { GLib } from "astal"
 import { Astal, Gtk, Widget } from "astal/gtk3"
 import { EventBox } from "astal/gtk3/widget"
 import Notifd from "gi://AstalNotifd"
-import "./NotificationStyle.css"
+// CSS styles are loaded from style.css
 
 const time = (time: number, format = "%H:%M") => GLib.DateTime
   .new_from_unix_local(time)

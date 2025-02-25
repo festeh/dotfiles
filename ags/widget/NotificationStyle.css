@@ -1,4 +1,7 @@
-/* Catppuccin Mocha color palette */
+/* Catppuccin Mocha color palette 
+ * This file should be imported in your main style.css with:
+ * @import "widget/NotificationStyle.css";
+ */
 :root {
   --rosewater: #f5e0dc;
   --flamingo: #f2cdcd;
