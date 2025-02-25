@@ -2,6 +2,7 @@ import { GLib } from "astal"
 import { Astal, Gtk, Widget } from "astal/gtk3"
 import { EventBox } from "astal/gtk3/widget"
 import Notifd from "gi://AstalNotifd"
+import "./NotificationStyle.css"
 
 const time = (time: number, format = "%H:%M") => GLib.DateTime
   .new_from_unix_local(time)
@@ -110,6 +111,7 @@ export default function Notification(props: Props) {
   const eb = new EventBox({
     setup,
     onHoverLost,
+    className: "notification-widget",
   }, new Widget.Box({ vertical: true },
     headerBox(n),
     new Gtk.Separator({ visible: true }),

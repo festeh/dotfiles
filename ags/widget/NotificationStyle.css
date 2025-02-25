@@ -1,0 +1,142 @@
+/* Catppuccin Mocha color palette */
+:root {
+  --rosewater: #f5e0dc;
+  --flamingo: #f2cdcd;
+  --pink: #f5c2e7;
+  --mauve: #cba6f7;
+  --red: #f38ba8;
+  --maroon: #eba0ac;
+  --peach: #fab387;
+  --yellow: #f9e2af;
+  --green: #a6e3a1;
+  --teal: #94e2d5;
+  --sky: #89dceb;
+  --sapphire: #74c7ec;
+  --blue: #89b4fa;
+  --lavender: #b4befe;
+  --text: #cdd6f4;
+  --subtext1: #bac2de;
+  --subtext0: #a6adc8;
+  --overlay2: #9399b2;
+  --overlay1: #7f849c;
+  --overlay0: #6c7086;
+  --surface2: #585b70;
+  --surface1: #45475a;
+  --surface0: #313244;
+  --base: #1e1e2e;
+  --mantle: #181825;
+  --crust: #11111b;
+}
+
+/* Notification styling */
+.notification-widget {
+  background-color: var(--base);
+  border: 1px solid var(--surface0);
+  border-radius: 12px;
+  padding: 12px;
+  margin: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.notification-widget:hover {
+  background-color: var(--surface0);
+  border-color: var(--lavender);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+.notification-widget .app-icon {
+  margin-right: 10px;
+  color: var(--lavender);
+  font-size: 18px;
+}
+
+.notification-widget .app-name {
+  color: var(--blue);
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.notification-widget .time {
+  color: var(--overlay1);
+  font-size: 12px;
+  font-style: italic;
+}
+
+.notification-widget .dismiss-button {
+  background: transparent;
+  border: none;
+  color: var(--overlay1);
+  border-radius: 50%;
+  padding: 4px;
+  transition: all 150ms ease;
+}
+
+.notification-widget .dismiss-button:hover {
+  background-color: var(--surface1);
+  color: var(--red);
+  transform: rotate(90deg);
+}
+
+.notification-widget .image {
+  border-radius: 8px;
+  margin-right: 12px;
+  min-width: 60px;
+  min-height: 60px;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.notification-widget .icon-image {
+  margin-right: 12px;
+  min-width: 48px;
+  min-height: 48px;
+}
+
+.notification-widget .summary {
+  color: var(--text);
+  font-weight: bold;
+  font-size: 15px;
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+
+.notification-widget .body {
+  color: var(--subtext0);
+  font-size: 13px;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.notification-widget .action-button {
+  background-color: var(--surface0);
+  border: 1px solid var(--surface1);
+  border-radius: 8px;
+  color: var(--text);
+  margin-top: 10px;
+  margin-right: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.notification-widget .action-button:hover {
+  background-color: var(--surface1);
+  border-color: var(--lavender);
+  transform: translateY(-1px);
+}
+
+.notification-widget .action-button:active {
+  background-color: var(--surface2);
+  transform: translateY(1px);
+}
+
+/* Separator styling */
+.notification-widget separator {
+  margin: 8px 0;
+  background-color: var(--surface0);
+}
