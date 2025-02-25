@@ -1,7 +1,13 @@
-import { App, Widget, Gtk } from "astal/gtk3";
+import { App, Widget, Gdk, Gtk } from "astal/gtk3";
 import AstalTray from "gi://AstalTray?version=0.1";
-import { GLib, bind } from "astal";
+import { GLib, Variable, bind } from "astal";
 
+
+const createMenu = (menuModel, actionGroup): Gtk.Menu => {
+    const menu = Gtk.Menu.new_from_model(menuModel);
+    menu.insert_action_group('dbusmenu', actionGroup);
+    return menu;
+};
 
 export default function Tray() {
   const tray = AstalTray.get_default()
@@ -10,27 +16,37 @@ export default function Tray() {
       if (item.icon_theme_path !== null) {
         App.add_icons(item.icon_theme_path)
       }
-      let gicon = item.gicon
-      // if (item.title === "yappy2") {
-      //   const theme = new Gtk.IconTheme()
-      //   theme.set_search_path([item.iconName, item.icon_theme_path])
-      //   console.log(theme.get_example_icon_name())
-      //   const size = theme.get_icon_sizes(item.icon_theme_path);
-      //   // console.log(size, size.length)
-      // }
+      let menu: Gtk.Menu;
 
-      const menu = item.create_menu()
-      // console.log(">", item.title)
-      // console.log("name", item.iconName)
-      // console.log("path", item.icon_theme_path)
-      // console.log("gicon", item.gicon)
-      // console.log(item.tooltipMarkup)
-      // console.log("----------------------")
+      const entryBinding = Variable.derive(
+        [bind(item, 'menuModel'), bind(item, 'actionGroup')],
+        (menuModel, actionGroup) => {
+          if (!menuModel) {
+            return console.error(`Menu Model not found for ${item.id}`);
+          }
+          if (!actionGroup) {
+            return console.error(`Action Group not found for ${item.id}`);
+          }
+
+          menu = createMenu(menuModel, actionGroup);
+        },
+      );
+
       return new Widget.Button({
         tooltipMarkup: bind(item, "tooltipMarkup"),
+        onClick: (self, event) => {
+          if (event.button === Gdk.BUTTON_PRIMARY) {
+            console.log("click")
+            item.activate(0, 0);
+          }
+          if (event.button === Gdk.BUTTON_SECONDARY) {
+            menu?.popup_at_widget(self, Gdk.Gravity.NORTH, Gdk.Gravity.SOUTH, null);
+          }
+        },
+
       }, new Widget.Icon(
         {
-          gIcon: gicon
+          gicon: bind(item, "gicon"),
         }
       ))
     })
