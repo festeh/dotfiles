@@ -10,9 +10,13 @@ name = "~/.config/kitty"
 target = "uwsm"
 name = "~/.config/uwsm"
 
-# [symlinks.ags]
-# target = "ags"
-# name = "~/.config/ags"
+[symlinks.ags]
+target = "ags"
+name = "~/.config/ags"
+
+[symlinks.gammastep]
+target = "gammastep"
+name = "~/.config/gammastep"
 
 [symlinks.waybar]
 target = "waybar"
