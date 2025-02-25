@@ -76,14 +76,12 @@
   font-weight: bold;
   font-size: 15px;
   margin-bottom: 6px;
-  letter-spacing: 0.3px;
 }
 
 .notification-widget .body {
   color: #a6adc8; /* subtext0 */
   font-size: 13px;
   margin-top: 4px;
-  line-height: 1.4;
 }
 
 .notification-widget .action-button {
