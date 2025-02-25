@@ -22,14 +22,14 @@ export default function Volume() {
       }),
       new Widget.Slider({
         value: bind(speaker, "volume"),
-        drawValue: false,
-        min: 0,
-        max: 1,
-        step: 0.1,
-        digits: 3,
+        // hexpand: true,
+        // drawValue: false,
+        // min: 0,
+        // max: 1,
+        // step: 0.1,
+        // digits: 3,
         onDragged: (slider) => {
           const value = slider.value
-          console.log(value)
           speaker.volume = value
         },
       }),
