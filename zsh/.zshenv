@@ -29,7 +29,7 @@ export CHROME_EXECUTABLE=google-chrome-stable
 
 export OPPO_BUDS_MAC="2C:FD:B3:75:E4:F7"
 
-export ANDROID_HOME=$HOME/Android/sdk
+export ANDROID_HOME=$HOME/Android/Sdk
 export GOENV_ROOT="$HOME/.goenv"
 
 
