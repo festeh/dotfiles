@@ -1,0 +1,12 @@
+- name: openrouter/anthropic/claude-3.7-sonnet
+  extra_params:
+    extra_body:
+      provider:
+        order: ["Google", "Amazon Bedrock"]
+        allow_fallbacks: true
+- name: openrouter/qwen/qwen-2.5-coder-32b-instruct
+  extra_params:
+    extra_body:
+      provider:
+        order: ["Lambda", "DeepInfra"]
+        allow_fallbacks: true
