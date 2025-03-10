@@ -1,48 +1,11 @@
-[symlinks.hyprland_scripts]
-target = "hyprland/scripts"
-name = "~/.config/hypr/scripts"
+[commands.yappy3]
+name = "🍅"
+run = "/exec yappy3"
+key = "a"
 
-[symlinks.kitty]
-target = "kitty"
-name = "~/.config/kitty"
 
-[symlinks.uwsm]
-target = "uwsm"
-name = "~/.config/uwsm"
+[commands.books]
+name = "📖"
+run = "/route books"
+key = "z"
 
-[symlinks.ags]
-target = "ags"
-name = "~/.config/ags"
-
-[symlinks.gammastep]
-target = "gammastep"
-name = "~/.config/gammastep"
-
-[symlinks.waybar]
-target = "waybar"
-name = "~/.config/waybar"
-
-[symlinks.zathura]
-target = "zathura"
-name = "~/.config/zathura"
-
-[symlinks.aiderconfig]
-target = "aider/.aider.conf.yml"
-name = "~/.aider.conf.yml"
-
-[symlinks.aidermodel]
-target = "aider/.aider.model.settings.yml"
-name = "~/.aider.model.settings.yml"
-
-[templates.hyprland]
-target = "hyprland/hyprland_template.conf"
-name = "~/.config/hypr/hyprland.conf"
-SCALING = "1"
-USER = "dima"
-GTK_THEME = "catppuccin-mocha-mauve-standard+default"
-
-[templates.ags_daemon]
-target = "systemd/ags_template.service"
-name = "~/.config/systemd/user/ags.service"
-GTK_THEME = "catppuccin-mocha-mauve-standard+default"
-AGS_PATH = "/home/dima/.local/bin"
