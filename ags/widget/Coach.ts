@@ -7,7 +7,7 @@ import Gio from "gi://Gio"
 // Handle WebSocket connection result
 function handleWebSocketConnection(session, result, coachUrl) {
   try {
-    const connection = Soup.Session.websocket_connect_finish(session, result)
+    const connection = session.websocket_connect_finish(result)
     console.log("WebSocket connected to", coachUrl)
     
     // Handle incoming messages
@@ -61,8 +61,7 @@ async function init() {
     })
     
     // Setup WebSocket connection
-    Soup.Session.websocket_connect_async(
-      session,
+    session.websocket_connect_async(
       message,
       null, // origin
       ["coach"], // protocols
