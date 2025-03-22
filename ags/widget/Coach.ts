@@ -1,5 +1,6 @@
 import { Widget } from "astal/gtk3"
 import { Variable, bind } from "astal"
+import { focusingState } from "../app"
 import GLib from "gi://GLib"
 import Soup from "gi://Soup?version=3.0"
 import Gio from "gi://Gio"
@@ -25,13 +26,40 @@ function handleWebSocketConnection(session, result, coachUrl) {
   }
 }
 
+// Handle not focusing state
+function handleNotFocused(message) {
+  if (!message.since_last_change) return
+  
+  // Calculate minutes not focusing
+  const minutesNotFocusing = Math.floor(message.since_last_change / 60)
+  
+  // Update the focusing label
+  const focusingLabel = `Not focusing for ${minutesNotFocusing} minutes`
+  console.log(focusingLabel)
+  
+  // Update the focusing state variable to update the UI
+  if (typeof focusingState !== 'undefined' && focusingState.set) {
+    focusingState.set(focusingLabel)
+  }
+}
+
 // Handle incoming WebSocket messages
 function handleWebSocketMessage(_, type, message) {
   if (type !== Soup.WebsocketDataType.TEXT) return
 
   const data = new TextDecoder().decode(message.get_data())
   console.log("Received message:", data)
-  // Process the message here
+  
+  try {
+    const parsedMessage = JSON.parse(data)
+    
+    // Check if the message contains focusing status
+    if (parsedMessage.focusing === false) {
+      handleNotFocused(parsedMessage)
+    }
+  } catch (error) {
+    console.error("Error parsing message:", error)
+  }
 }
 
 // Send a message through WebSocket
@@ -74,11 +102,11 @@ async function init() {
   }
 }
 
-export default function Coach() {
+export default function Coach(focusing) {
   init();
 
   return new Widget.Label({
     className: "focusing-widget",
-    label: "SOSAT"
+    label: bind(focusing)
   })
 }
