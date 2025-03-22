@@ -6,6 +6,6 @@ key = "a"
 
 [commands.books]
 name = "📖"
-run = "/route books"
+run = "/route /books"
 key = "z"
 
