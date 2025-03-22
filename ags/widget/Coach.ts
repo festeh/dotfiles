@@ -1,62 +1,62 @@
 import { Widget } from "astal/gtk3"
 import { Variable, bind } from "astal"
-import { focusingState } from "../app"
 import GLib from "gi://GLib"
 import Soup from "gi://Soup?version=3.0"
 import Gio from "gi://Gio"
 
-// Handle WebSocket connection result
+const focusingState = Variable("Initializing")
+const changedState = Variable(new Date())
+
 function handleWebSocketConnection(session, result, coachUrl) {
   try {
     const connection = session.websocket_connect_finish(result)
     console.log("WebSocket connected to", coachUrl)
 
-    // Handle incoming messages
     connection.connect("message", handleWebSocketMessage)
 
-    // Handle connection close
     connection.connect("closed", () => {
       console.log("WebSocket connection closed")
     })
 
-    // Send initial hello message
-    sendWebSocketMessage(connection, { type: "hello" })
+    sendWebSocketMessage(connection, { type: "health" })
   } catch (error) {
     console.error("WebSocket connection error:", error)
   }
 }
 
-// Handle not focusing state
-function handleNotFocused(message) {
-  if (!message.since_last_change) return
-  
-  // Calculate minutes not focusing
+function handleNotFocused(message: object) {
   const minutesNotFocusing = Math.floor(message.since_last_change / 60)
-  
-  // Update the focusing label
+
   const focusingLabel = `Not focusing for ${minutesNotFocusing} minutes`
   console.log(focusingLabel)
-  
-  // Update the focusing state variable to update the UI
-  if (typeof focusingState !== 'undefined' && focusingState.set) {
-    focusingState.set(focusingLabel)
-  }
+
+  focusingState.set(focusingLabel)
+  changedState.set(new Date())
 }
 
-// Handle incoming WebSocket messages
-function handleWebSocketMessage(_, type, message) {
+function handleFocused(message) {
+  const focusingLabel = `Focusing`
+  focusingState.set(focusingLabel)
+  changedState.set(new Date())
+}
+
+function handleWebSocketMessage(_, type: Soup.WebsocketDataType, message: object) {
   if (type !== Soup.WebsocketDataType.TEXT) return
 
   const data = new TextDecoder().decode(message.get_data())
   console.log("Received message:", data)
-  
+
   try {
     const parsedMessage = JSON.parse(data)
-    
-    // Check if the message contains focusing status
+
     if (parsedMessage.focusing === false) {
       handleNotFocused(parsedMessage)
     }
+
+    if (parsedMessage.focusing === true) {
+      handleFocused(parsedMessage)
+    }
+
   } catch (error) {
     console.error("Error parsing message:", error)
   }
@@ -81,14 +81,12 @@ async function init() {
   }
 
   try {
-    // Create a WebSocket connection
     const session = new Soup.Session()
     const message = new Soup.Message({
       method: "GET",
       uri: GLib.Uri.parse(coachUrl, GLib.UriFlags.NONE)
     })
 
-    // Setup WebSocket connection
     session.websocket_connect_async(
       message,
       null, // origin
@@ -102,11 +100,11 @@ async function init() {
   }
 }
 
-export default function Coach(focusing) {
+export default function Coach() {
   init();
 
   return new Widget.Label({
     className: "focusing-widget",
-    label: bind(focusing)
+    label: bind(focusingState)
   })
 }
