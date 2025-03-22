@@ -29,7 +29,16 @@ function setFocusingState(focusing: bool, duration: int) {
   }
   focusingState.set(`${focusingString} ${durationString}`)
   changedState.set(new Date())
+}
 
+function updateFocusingState() {
+  const now = new Date()
+  const duration = Math.floor((now.getTime() - changedState.get().getTime()) / 1000)
+  let focusing = true
+  if (focusingState.get().includes("Not focusing")) {
+    focusing = false
+  }
+  setFocusingState(focusing, duration)
 }
 
 function setupHeartbeat() {
@@ -40,33 +49,34 @@ function setupHeartbeat() {
 
   // Set up a new heartbeat
   heartbeatSource = GLib.timeout_add(GLib.PRIORITY_DEFAULT, HEARTBEAT_INTERVAL, () => {
+    updateFocusingState()
     if (connection && connectionState.get() === "connected") {
       sendWebSocketMessage(connection, { type: "health" })
     } else {
       reconnect()
     }
-    return GLib.SOURCE_CONTINUE 
+    return GLib.SOURCE_CONTINUE
   })
 }
 
 function reconnect() {
   if (connectionState.get() === "connecting") {
-    return 
+    return
   }
-  
+
   if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
     console.error("Maximum reconnection attempts reached")
     focusingState.set("Connection failed")
     return
   }
-  
+
   // Exponential backoff for reconnection attempts
   const delay = BASE_RECONNECT_DELAY * Math.pow(1.5, reconnectAttempts)
   reconnectAttempts++
-  
-  console.log(`Attempting to reconnect in ${delay/1000} seconds (attempt ${reconnectAttempts})`)
+
+  console.log(`Attempting to reconnect in ${delay / 1000} seconds (attempt ${reconnectAttempts})`)
   connectionState.set("connecting")
-  
+
   GLib.timeout_add(GLib.PRIORITY_DEFAULT, delay, () => {
     console.log("Reconnecting...")
     init()
@@ -87,7 +97,7 @@ function handleWebSocketConnection(session, result, coachUrl) {
       console.log("WebSocket connection closed")
       connectionState.set("disconnected")
       connection = null
-      
+
       reconnect()
     })
 
@@ -98,7 +108,7 @@ function handleWebSocketConnection(session, result, coachUrl) {
     console.error("WebSocket connection error:", error)
     connectionState.set("disconnected")
     connection = null
-    
+
     // Try to reconnect on connection error
     reconnect()
   }
@@ -146,7 +156,7 @@ function sendWebSocketMessage(connection, messageObj) {
     console.warn("Cannot send message: WebSocket not connected")
     return
   }
-  
+
   try {
     const data = JSON.stringify(messageObj)
     connection.send_message(
@@ -200,7 +210,7 @@ export default function Coach() {
 
   // Return a widget that shows both the focusing state and connection state
   return new Widget.Box({
-    className: bind(connectionState).as(state => 
+    className: bind(connectionState).as(state =>
       `focusing-widget ${state !== "connected" ? "disconnected" : ""}`
     ),
     children: [
