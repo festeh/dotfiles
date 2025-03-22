@@ -43,7 +43,7 @@ function sendWebSocketMessage(connection, messageObj) {
   )
 }
 
-async function loadCoachUrl() {
+async function init() {
   const coachUrl = GLib.getenv("COACH_URL")
   console.log("COACH_URL:", coachUrl)
   
@@ -75,8 +75,7 @@ async function loadCoachUrl() {
 }
 
 export default function Coach() {
-  // Start the async loading process
-  loadCoachUrl();
+  init();
   
   return new Widget.Label({
     className: "focusing-widget",
