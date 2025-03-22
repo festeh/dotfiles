@@ -2,7 +2,6 @@ import { Widget } from "astal/gtk3"
 import { Variable, bind } from "astal"
 import GLib from "gi://GLib"
 import Soup from "gi://Soup?version=3.0"
-import Gio from "gi://Gio"
 
 const focusingState = Variable("Initializing")
 const changedState = Variable(new Date())
@@ -14,10 +13,26 @@ let reconnectAttempts = 0
 const MAX_RECONNECT_ATTEMPTS = 10
 const BASE_RECONNECT_DELAY = 1000 // 1 second
 let heartbeatSource = null
-const HEARTBEAT_INTERVAL = 30000 // 30 seconds
+const HEARTBEAT_INTERVAL = 60000 // 30 seconds
+
+function setFocusingState(focusing: bool, duration: int) {
+  const durationMinutes = Math.floor(duration / 60)
+  let durationString = ""
+  if (durationMinutes == 1) {
+    durationString = "for 1 minute"
+  } else if (durationMinutes > 1) {
+    durationString = `for ${durationMinutes} minutes`
+  }
+  let focusingString = "Focusing"
+  if (!focusing) {
+    focusingString = "Not focusing"
+  }
+  focusingState.set(`${focusingString} ${durationString}`)
+  changedState.set(new Date())
+
+}
 
 function setupHeartbeat() {
-  // Clear any existing heartbeat
   if (heartbeatSource !== null) {
     GLib.source_remove(heartbeatSource)
     heartbeatSource = null
@@ -26,19 +41,17 @@ function setupHeartbeat() {
   // Set up a new heartbeat
   heartbeatSource = GLib.timeout_add(GLib.PRIORITY_DEFAULT, HEARTBEAT_INTERVAL, () => {
     if (connection && connectionState.get() === "connected") {
-      console.log("Sending heartbeat ping")
-      sendWebSocketMessage(connection, { type: "ping" })
+      sendWebSocketMessage(connection, { type: "health" })
     } else {
-      // If we're not connected, try to reconnect
       reconnect()
     }
-    return GLib.SOURCE_CONTINUE // Keep the timeout active
+    return GLib.SOURCE_CONTINUE 
   })
 }
 
 function reconnect() {
   if (connectionState.get() === "connecting") {
-    return // Already trying to reconnect
+    return 
   }
   
   if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
@@ -75,14 +88,11 @@ function handleWebSocketConnection(session, result, coachUrl) {
       connectionState.set("disconnected")
       connection = null
       
-      // Try to reconnect when the connection is closed
       reconnect()
     })
 
-    // Setup heartbeat after successful connection
     setupHeartbeat()
 
-    // Initial message to server
     sendWebSocketMessage(connection, { type: "health" })
   } catch (error) {
     console.error("WebSocket connection error:", error)
@@ -95,19 +105,11 @@ function handleWebSocketConnection(session, result, coachUrl) {
 }
 
 function handleNotFocused(message: object) {
-  const minutesNotFocusing = Math.floor(message.since_last_change / 60)
-
-  const focusingLabel = `Not focusing for ${minutesNotFocusing} minutes`
-  console.log(focusingLabel)
-
-  focusingState.set(focusingLabel)
-  changedState.set(new Date())
+  setFocusingState(false, message.since_last_change)
 }
 
 function handleFocused(message) {
-  const focusingLabel = `Focusing`
-  focusingState.set(focusingLabel)
-  changedState.set(new Date())
+  setFocusingState(true, message.since_last_change)
 }
 
 function handleWebSocketMessage(_, type: Soup.WebsocketDataType, message: object) {
