@@ -9,15 +9,15 @@ function handleWebSocketConnection(session, result, coachUrl) {
   try {
     const connection = session.websocket_connect_finish(result)
     console.log("WebSocket connected to", coachUrl)
-    
+
     // Handle incoming messages
     connection.connect("message", handleWebSocketMessage)
-    
+
     // Handle connection close
     connection.connect("closed", () => {
       console.log("WebSocket connection closed")
     })
-    
+
     // Send initial hello message
     sendWebSocketMessage(connection, { type: "hello" })
   } catch (error) {
@@ -28,7 +28,7 @@ function handleWebSocketConnection(session, result, coachUrl) {
 // Handle incoming WebSocket messages
 function handleWebSocketMessage(_, type, message) {
   if (type !== Soup.WebsocketDataType.TEXT) return
-  
+
   const data = new TextDecoder().decode(message.get_data())
   console.log("Received message:", data)
   // Process the message here
@@ -44,14 +44,14 @@ function sendWebSocketMessage(connection, messageObj) {
 }
 
 async function init() {
-  const coachUrl = GLib.getenv("COACH_URL")
+  const coachUrl = GLib.getenv("COACH_URL") + "/connect"
   console.log("COACH_URL:", coachUrl)
-  
+
   if (!coachUrl) {
     console.log("COACH_URL environment variable not set")
     return
   }
-  
+
   try {
     // Create a WebSocket connection
     const session = new Soup.Session()
@@ -59,12 +59,13 @@ async function init() {
       method: "GET",
       uri: GLib.Uri.parse(coachUrl, GLib.UriFlags.NONE)
     })
-    
+
     // Setup WebSocket connection
     session.websocket_connect_async(
       message,
       null, // origin
-      ["coach"], // protocols
+      null,
+      1,
       null, // cancellable
       (self, result) => handleWebSocketConnection(session, result, coachUrl)
     )
@@ -75,7 +76,7 @@ async function init() {
 
 export default function Coach() {
   init();
-  
+
   return new Widget.Label({
     className: "focusing-widget",
     label: "SOSAT"
