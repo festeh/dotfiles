@@ -1,21 +1,26 @@
 import { Widget } from "astal/gtk3"
-import { Variable, bind } from "astal"
+import { Gio, Variable, bind } from "astal"
 import GLib from "gi://GLib"
 import Soup from "gi://Soup?version=3.0"
 
+
 const focusingState = Variable("Initializing")
 const changedState = Variable(new Date())
+const durationState = Variable(0)
 const connectionState = Variable("disconnected")
+const numFocusesState = Variable(0)
 
 // Connection management variables
-let connection = null
+let connection: Soup.WebsocketConnection | null = null
 let reconnectAttempts = 0
 const MAX_RECONNECT_ATTEMPTS = 10
 const BASE_RECONNECT_DELAY = 1000 // 1 second
-let heartbeatSource = null
+let heartbeatSource: number | null = null
 const HEARTBEAT_INTERVAL = 60000 // 30 seconds
 
-function setFocusingState(focusing: bool, duration: int) {
+function setFocusingState(focusing: boolean, duration: number, numFocuses: number) {
+  durationState.set(duration)
+  numFocusesState.set(numFocuses)
   const durationMinutes = Math.floor(duration / 60)
   let durationString = ""
   if (durationMinutes == 1) {
@@ -27,18 +32,20 @@ function setFocusingState(focusing: bool, duration: int) {
   if (!focusing) {
     focusingString = "Not focusing"
   }
-  focusingState.set(`${focusingString} ${durationString}`)
+  focusingState.set(`${focusingString} ${durationString} [${numFocuses}]`)
   changedState.set(new Date())
 }
 
 function updateFocusingState() {
   const now = new Date()
-  const duration = Math.floor((now.getTime() - changedState.get().getTime()) / 1000)
+  const delta = Math.floor((now.getTime() - changedState.get().getTime()) / 1000)
+  const duration = durationState.get() + delta
   let focusing = true
   if (focusingState.get().includes("Not focusing")) {
     focusing = false
   }
-  setFocusingState(focusing, duration)
+  const numFocuses = numFocusesState.get()
+  setFocusingState(focusing, duration, numFocuses)
 }
 
 function setupHeartbeat() {
@@ -84,10 +91,9 @@ function reconnect() {
   })
 }
 
-function handleWebSocketConnection(session, result, coachUrl) {
+function handleWebSocketConnection(session: Soup.Session, result: Gio.AsyncResult) {
   try {
     connection = session.websocket_connect_finish(result)
-    console.log("WebSocket connected to", coachUrl)
     connectionState.set("connected")
     reconnectAttempts = 0 // Reset reconnect attempts on successful connection
 
@@ -109,40 +115,21 @@ function handleWebSocketConnection(session, result, coachUrl) {
     connectionState.set("disconnected")
     connection = null
 
-    // Try to reconnect on connection error
     reconnect()
   }
 }
 
-function handleNotFocused(message: object) {
-  setFocusingState(false, message.since_last_change)
-}
-
-function handleFocused(message) {
-  setFocusingState(true, message.since_last_change)
-}
-
-function handleWebSocketMessage(_, type: Soup.WebsocketDataType, message: object) {
+function handleWebSocketMessage(_: any, type: Soup.WebsocketDataType, message: any) {
   if (type !== Soup.WebsocketDataType.TEXT) return
 
   const data = new TextDecoder().decode(message.get_data())
   console.log("Received message:", data)
 
   try {
-    const parsedMessage = JSON.parse(data)
+    const parsed = JSON.parse(data)
 
-    // Handle ping-pong for heartbeat
-    if (parsedMessage.type === "pong") {
-      console.log("Received pong from server")
-      return
-    }
-
-    if (parsedMessage.focusing === false) {
-      handleNotFocused(parsedMessage)
-    }
-
-    if (parsedMessage.focusing === true) {
-      handleFocused(parsedMessage)
+    if (parsed.focusing !== null) {
+      setFocusingState(parsed.focusing, parsed.since_last_change, parsed.num_focuses)
     }
 
   } catch (error) {
@@ -151,7 +138,7 @@ function handleWebSocketMessage(_, type: Soup.WebsocketDataType, message: object
 }
 
 // Send a message through WebSocket
-function sendWebSocketMessage(connection, messageObj) {
+function sendWebSocketMessage(connection: Soup.WebsocketConnection, messageObj: object) {
   if (!connection || connectionState.get() !== "connected") {
     console.warn("Cannot send message: WebSocket not connected")
     return
@@ -194,7 +181,7 @@ async function init() {
       null,
       1,
       null, // cancellable
-      (self, result) => handleWebSocketConnection(session, result, coachUrl)
+      (_, result) => handleWebSocketConnection(session, result)
     )
   } catch (error) {
     console.error("Error setting up WebSocket:", error)
