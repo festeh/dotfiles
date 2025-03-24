@@ -208,7 +208,7 @@ export default function Coach() {
       `focusing-widget ${state !== "connected" ? "disconnected" : ""}`
     ),
     onClicked: toggleFocus,
-    css: "background-color: #89b4fa;",
+    css: "background-color: #89b4fa !important;",
     child: new Widget.Label({
       label: bind(focusingState)
     })

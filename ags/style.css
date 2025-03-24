@@ -66,7 +66,7 @@ window.Bar button {
 }
 
 .focusing-widget {
-    background-color: #89b4fa;  /* Catppuccin Mocha Blue */
+    background-color: #89b4fa !important;  /* Catppuccin Mocha Blue */
     border: 2px solid #b4befe;  /* Catppuccin Mocha Lavender */
     border-radius: 8px;
     padding: 4px 8px;
@@ -74,15 +74,15 @@ window.Bar button {
 }
 
 .focusing-widget.disconnected {
-    background-color: #585b70;  /* Darker shade for disconnected state */
+    background-color: #585b70 !important;  /* Darker shade for disconnected state */
 }
 
 window.Bar button.focusing-widget {
-    background-color: #89b4fa;  /* Catppuccin Mocha Blue */
+    background-color: #89b4fa !important;  /* Catppuccin Mocha Blue */
 }
 
 window.Bar button.focusing-widget.disconnected {
-    background-color: #585b70;  /* Darker shade for disconnected state */
+    background-color: #585b70 !important;  /* Darker shade for disconnected state */
 }
 
 .pomodoro-widget {
