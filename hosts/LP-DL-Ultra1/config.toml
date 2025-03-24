@@ -19,6 +19,15 @@ target = "zathura"
 name = "~/.config/zathura"
 
 
+[symlinks.aiderconf]
+target = "aider/.aider.conf.yml"
+name = "~/.aider.conf.yml"
+
+[symlinks.aider_model_settings]
+target = "aider/.aider.model.settings.yml"
+name = "~/.aider.model.settings.yml"
+
+
 [templates.hyprland]
 target = "hyprland/hyprland_template.conf"
 name = "~/.config/hypr/hyprland.conf"
