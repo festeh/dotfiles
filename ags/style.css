@@ -1,58 +1,105 @@
 @import "NotificationStyle.css";
 
+/* Base bar styling */
 window.Bar {
-    /* background: transparent; */
-    color: #ffffff;
-    /* background-color: #999999; */
-    font-weight: 900;
+    color: #cdd6f4; /* Catppuccin text color */
+    font-weight: 600;
     font-size: 1rem;
 }
 
 .bar-container {
+    background-color: #1e1e2e; /* Catppuccin base color */
     padding: 4px 6px;
 }
 
-
+/* Global button styling - removes white backgrounds */
 window.Bar button {
+    background-color: transparent; /* Remove default white backgrounds */
+    border: none;
+    box-shadow: none;
     border-radius: 8px;
+    margin: 2px;
+    min-height: 28px;
+    padding: 4px 8px;
+    transition: all 200ms ease;
+}
+
+window.Bar button:hover {
+    background-color: rgba(166, 173, 200, 0.1); /* Subtext0 with transparency */
+}
+
+/* General widget styling */
+.workspace-widget,
+.battery-widget,
+.volume-widget,
+.idle-widget,
+.time-widget,
+.focusing-widget {
+    background-color: #313244; /* surface0 */
+    border-radius: 8px;
+    padding: 4px 8px;
     margin: 2px;
 }
 
+/* Focusing widget (Coach) */
+.focusing-widget {
+    background-color: #89b4fa; /* blue */
+}
+
+.focusing-widget .focusing-label,
+.focusing-widget label {
+    font-weight: 500;
+    color: #1e1e2e; /* dark text on blue background */
+}
+
+.focusing-widget button {
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
+
+/* Battery widget */
 .battery-widget {
-    background-color: #9d7cd8;  /* Darker Mauve */
-    border-radius: 8px;
-    padding: 4px 8px;
-    margin: 2px;
+    background-color: #cba6f7; /* mauve */
+    color: #1e1e2e; /* dark text on mauve background */
 }
 
+/* Time widget */
 .time-widget {
-    background-color: #7287fd;  /* Darker Lavender */
+    background-color: #74c7ec; /* sapphire - darker than lavender */
+    color: #1e1e2e; /* dark text on sapphire background */
+    font-weight: 600; /* slightly bolder for better readability */
     padding: 4px 8px;
 }
 
+.time-widget button {
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
+
+/* Workspace widget */
 .workspace-widget {
-    background-color: #9d7cd8;  /* Darker Mauve */
-    border-radius: 8px;
-    padding: 4px 8px;
-    margin: 2px;
+    background-color: #cba6f7; /* mauve */
+    color: #1e1e2e; /* dark text on mauve background */
 }
 
+/* Idle widget */
 .idle-widget {
-    background-color: #7287fd;  /* Darker Lavender */
-    border-radius: 8px;
-    padding: 4px 8px;
-    margin: 2px;
+    background-color: #7287fd; /* deeper blue - more visible */
+    color: #1e1e2e; /* dark text on blue background */
 }
 
 .idle-widget-inactive {
-    background-color: #f38ba8;  /* Catppuccin Mocha Red */
+    background-color: #f38ba8; /* red - keeping this the same */
 }
 
+/* Volume widget */
 .volume-widget {
-    background-color: #1e9e8e;  /* Darker Teal */
-    border-radius: 8px;
-    padding: 4px 8px;
-    margin: 2px;
+    background-color: #94e2d5; /* teal */
+    color: #1e1e2e; /* dark text on teal background */
     min-width: 130px;
 }
 
@@ -62,31 +109,26 @@ window.Bar button {
 }
 
 .volume-widget button.muted {
-    background-color: #f38ba8;  /* Catppuccin Mocha Red */
-}
-
-.focusing-widget {
-    background-color: #89b4fa;  /* Catppuccin Mocha Blue */
-    border-radius: 8px;
-    padding: 4px 8px;
-    margin: 2px;
-}
-
-.focusing-widget.disconnected {
-    background-color: #585b70;  /* Darker shade for disconnected state */
-}
-
-.pomodoro-widget {
-    background-color: #fab387;  /* Catppuccin Mocha Peach */
-    border: 2px solid #f9e2af;  /* Catppuccin Mocha Yellow */
-    border-radius: 8px;
-    padding: 4px 8px;
-    margin: 2px;
+    background-color: #f38ba8; /* red */
 }
 
 .volume-widget scale trough {
     min-width: 120px;
     min-height: 6px;
+    background-color: rgba(30, 30, 46, 0.3); /* base with transparency */
+}
+
+.volume-widget scale highlight {
+    background-color: #1e1e2e; /* base */
+}
+
+/* Tray icons - fix white background */
+window.Bar box > button > image {
+    color: #cdd6f4; /* text */
 }
 
 
+/* Specific styling for icons */
+window.Bar icon {
+    font-size: 16px;
+}

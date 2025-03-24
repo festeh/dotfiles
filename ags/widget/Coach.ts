@@ -203,13 +203,18 @@ function toggleFocus() {
 export default function Coach() {
   init();
 
-  return new Widget.Button({
+  const button = new Widget.Button({
+    // className: "focusing-button",
+    onClicked: toggleFocus,
+    child: new Widget.Label({
+      // className: "focusing-label",
+      label: bind(focusingState),
+    })
+  });
+  return new Widget.Box({
     className: bind(connectionState).as(state =>
       `focusing-widget ${state !== "connected" ? "disconnected" : ""}`
     ),
-    onClicked: toggleFocus,
-    child: new Widget.Label({
-      label: bind(focusingState)
-    })
-  });
+    children: [button]
+  })
 }
