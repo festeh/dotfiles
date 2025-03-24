@@ -1,8 +1,8 @@
 import { bind, timeout, Variable } from "astal";
 import { Subscribable } from "astal/binding";
-import { Astal, Gtk, Widget } from "astal/gtk3";
+import { Astal, Gdk, Gtk, Widget } from "astal/gtk3";
 import Notifd from "gi://AstalNotifd"
-import  Notification  from "./Notification";
+import Notification from "./Notification";
 
 const TIMEOUT_DELAY = 5000
 
@@ -15,7 +15,6 @@ class NotificationHistory implements Subscribable {
   }
 
   constructor() {
-    console.log("notifications")
     const notifd = Notifd.get_default()
 
     /**
@@ -65,9 +64,10 @@ class NotificationHistory implements Subscribable {
     return this.subs.subscribe(callback)
   }
 }
-export default function Notifications() {
+export default function Notifications(monitor: Gdk.Monitor) {
   const history = new NotificationHistory()
   return new Widget.Window({
+    gdkmonitor: monitor,
     exclusivity: Astal.Exclusivity.EXCLUSIVE,
     anchor: Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT,
   }, new Widget.Box({

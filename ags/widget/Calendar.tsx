@@ -142,10 +142,11 @@ function makeWeekdayHeader() {
   </box>
 }
 
-export default function Calendar(visible: Variable<boolean>, currentDate: Variable<Date>) {
+export default function Calendar(monitor: Gdk.Monitor, visible: Variable<boolean>, currentDate: Variable<Date>) {
   const monthName = bind(currentDate).as((date: Date) => date.toLocaleString('default', { month: 'long' }))
   return (
     <window
+      gdkmonitor={monitor}
       className="Calendar"
       visible={bind(visible)}
       anchor={Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT}
