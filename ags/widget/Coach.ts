@@ -192,10 +192,8 @@ async function init() {
 }
 
 export default function Coach() {
-  // Initialize the connection when the widget is created
   init();
 
-  // Return a widget that shows both the focusing state and connection state
   return new Widget.Box({
     className: bind(connectionState).as(state =>
       `focusing-widget ${state !== "connected" ? "disconnected" : ""}`
