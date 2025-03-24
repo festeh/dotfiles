@@ -3,3 +3,6 @@ nvim/core/local.lua
 zsh/local.sh
 ags/types
 .env
+node_modules
+ags/@girs
+.aider*

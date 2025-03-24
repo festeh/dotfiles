@@ -103,12 +103,12 @@ local plugins = {
     event = "VeryLazy"
   },
   { 'Civitasv/cmake-tools.nvim', config = req('cmake') },
-  {
-    "zbirenbaum/copilot.lua",
-    cmd = "Copilot",
-    event = "InsertEnter",
-    config = req('copilot'),
-  },
+  -- {
+  --   "zbirenbaum/copilot.lua",
+  --   cmd = "Copilot",
+  --   event = "InsertEnter",
+  --   config = req('copilot'),
+  -- },
   {
     "tomasky/bookmarks.nvim",
     config = req("bookmarks"),
@@ -199,14 +199,6 @@ local plugins = {
     }
   },
   -- {
-  --   'akinsho/flutter-tools.nvim',
-  --   dependencies = {
-  --     'nvim-lua/plenary.nvim',
-  --     'stevearc/dressing.nvim',
-  --   },
-  --   config = req('flutter-tools')
-  -- },
-  -- {
   --   "harrisoncramer/gitlab.nvim",
   --   config = function()
   --     require("gitlab").setup()
@@ -236,7 +228,7 @@ local plugins = {
   {
     "pmizio/typescript-tools.nvim",
     dependencies = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
-    opts = {},
+    config = req('typescript-tools'),
   },
   {
     "CopilotC-Nvim/CopilotChat.nvim",
@@ -272,6 +264,15 @@ local plugins = {
   },
   { "b0o/schemastore.nvim" },
   { 'akinsho/toggleterm.nvim', version = "*",  config = true },
+  {
+      'nvim-flutter/flutter-tools.nvim',
+      lazy = false,
+      dependencies = {
+          'nvim-lua/plenary.nvim',
+          'stevearc/dressing.nvim', -- optional for vim.ui.select
+      },
+      config = true,
+  },
 
   -- % themes
   { "catppuccin/nvim",         priority = 1000 },
