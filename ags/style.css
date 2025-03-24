@@ -77,11 +77,11 @@ window.Bar button {
     background-color: #585b70;  /* Darker shade for disconnected state */
 }
 
-button.focusing-widget {
+window.Bar button.focusing-widget {
     background-color: #89b4fa;  /* Catppuccin Mocha Blue */
 }
 
-button.focusing-widget.disconnected {
+window.Bar button.focusing-widget.disconnected {
     background-color: #585b70;  /* Darker shade for disconnected state */
 }
 
