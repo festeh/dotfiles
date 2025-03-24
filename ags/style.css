@@ -68,11 +68,10 @@ window.Bar button {
 .focusing-widget {
     background-color: #89b4fa;  /* Catppuccin Mocha Blue */
     border: 2px solid #b4befe;  /* Catppuccin Mocha Lavender */
-    /* border-radius: 8px; */
-    /* padding: 4px 8px; */
-    /* margin: 2px; */
+    border-radius: 8px;
+    padding: 4px 8px;
+    margin: 2px;
 }
-
 
 .focusing-widget.disconnected {
     background-color: #585b70;  /* Darker shade for disconnected state */

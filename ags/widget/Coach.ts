@@ -204,11 +204,11 @@ export default function Coach() {
   init();
 
   return new Widget.Button({
+    className: bind(connectionState).as(state =>
+      `focusing-widget ${state !== "connected" ? "disconnected" : ""}`
+    ),
     onClicked: toggleFocus,
     child: new Widget.Label({
-      className: bind(connectionState).as(state =>
-        `focusing-widget ${state !== "connected" ? "disconnected" : ""}`
-      ),
       label: bind(focusingState)
     })
   });
