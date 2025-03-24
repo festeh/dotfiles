@@ -1,5 +1,9 @@
 @import "NotificationStyle.css";
 
+* {
+    text-shadow: none;
+ }
+
 /* Base bar styling */
 window.Bar {
     color: #cdd6f4; /* Catppuccin text color */
@@ -48,7 +52,7 @@ window.Bar button:hover {
 
 .focusing-widget .focusing-label,
 .focusing-widget label {
-    font-weight: 600;
+    font-weight: 500;
     color: #1e1e2e; /* dark text on blue background */
 }
 
