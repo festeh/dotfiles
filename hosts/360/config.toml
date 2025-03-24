@@ -26,6 +26,17 @@ name = "~/.config/waybar"
 target = "zathura"
 name = "~/.config/zathura"
 
+[symlinks.aiderconfig]
+target = "aider/.aider.conf.yml"
+name = "~/.aider.conf.yml"
+
+[symlinks.aidermodel]
+target = "aider/.aider.model.settings.yml"
+name = "~/.aider.model.settings.yml"
+
+[symlinks.switcher]
+target = "switcher"
+name = "~/.config/switcher"
 
 [templates.hyprland]
 target = "hyprland/hyprland_template.conf"

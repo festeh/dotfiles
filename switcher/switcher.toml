@@ -1,0 +1,11 @@
+[commands.yappy3]
+name = "🍅"
+run = "/exec yappy3"
+key = "a"
+
+
+[commands.books]
+name = "📖"
+run = "/route /books"
+key = "z"
+

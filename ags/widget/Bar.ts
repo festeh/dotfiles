@@ -7,8 +7,8 @@ import Hyprland from "gi://AstalHyprland"
 import HyprlandStatus from "./HyprlandStatus"
 import TimeDate from "./TimeDate"
 import Volume from "./Volume"
-import Focusing from "./Focusing"
 import Pomodoro from "./Pomodoro"
+import Coach from "./Coach"
 
 const hypr = Hyprland.get_default()
 const monitors = hypr.get_monitors()
@@ -17,7 +17,6 @@ let id = 0
 
 export default function Bar(calendarVisible: Variable<boolean>, 
                             currentDate: Variable<Date>,
-                            focusing: Variable<string>,
                             pomodoro: Variable<string>,
                            ) {
   return new Widget.Window(
@@ -34,7 +33,7 @@ export default function Bar(calendarVisible: Variable<boolean>,
           hexpand: true,
           children: [
             HyprlandStatus(),
-            Focusing(focusing),
+            Coach(),
             Pomodoro(pomodoro)
           ]
         }),

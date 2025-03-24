@@ -87,7 +87,7 @@ local plugins = {
   { 'drybalka/tree-climber.nvim',      config = req('treeclimber') },
   { 'ziontee113/syntax-tree-surfer',   config = req('syntax_tree_surfer') },
   -- { 'themercorp/themer.lua',           config = req('themer') },
-  { 'LeonHeidelbach/trailblazer.nvim', config = req('trailblazer') },
+  -- { 'LeonHeidelbach/trailblazer.nvim', config = req('trailblazer') },
   { 'ggandor/leap.nvim',               config = req("leap") },
   { 'declancm/cinnamon.nvim',          config = req('cinnamon') },
   { "smartpde/telescope-recent-files" },
