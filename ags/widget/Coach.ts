@@ -191,17 +191,25 @@ async function init() {
   }
 }
 
+function toggleFocus() {
+  if (connection && connectionState.get() === "connected") {
+    sendWebSocketMessage(connection, { type: "focus" });
+    console.log("Sent focus toggle message");
+  } else {
+    console.warn("Cannot toggle focus: WebSocket not connected");
+  }
+}
+
 export default function Coach() {
   init();
 
-  return new Widget.Box({
+  return new Widget.Button({
     className: bind(connectionState).as(state =>
       `focusing-widget ${state !== "connected" ? "disconnected" : ""}`
     ),
-    children: [
-      new Widget.Label({
-        label: bind(focusingState)
-      })
-    ]
-  })
+    onClicked: toggleFocus,
+    child: new Widget.Label({
+      label: bind(focusingState)
+    })
+  });
 }
