@@ -73,6 +73,14 @@ window.Bar button {
     margin: 2px;
 }
 
+button.focusing-widget {
+    background-color: #89b4fa;  /* Catppuccin Mocha Blue */
+}
+
+button.focusing-widget.disconnected {
+    background-color: #585b70;  /* Darker shade for disconnected state */
+}
+
 .pomodoro-widget {
     background-color: #fab387;  /* Catppuccin Mocha Peach */
     border: 2px solid #f9e2af;  /* Catppuccin Mocha Yellow */
