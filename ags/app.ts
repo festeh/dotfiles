@@ -11,7 +11,7 @@ const currentDate = Variable(new Date())
 
 const display = Gdk.Display.get_default()!
 
-function getMonitor() {
+function getBestMonitor() {
   let monitor: Gdk.Monitor | null = null
   let width = -1
   for (let idx = 0; idx < display.get_n_monitors(); idx++) {
@@ -24,19 +24,18 @@ function getMonitor() {
   return monitor
 }
 
-let monitor = getMonitor()
+let monitor = getBestMonitor()
 if (monitor === null) {
   console.error("No monitor found")
   throw new Error("No monitor found")
 }
 
-function initWidgets(monitor) {
+function initWidgets(monitor: Gdk.Monitor) {
   return [
     Bar(monitor, calendarVisible, currentDate),
     Calendar(monitor, calendarVisible, currentDate),
     Notifications(monitor)
   ]
-
 }
 
 App.start({
@@ -45,7 +44,7 @@ App.start({
     let widgets = initWidgets(monitor)
 
     App.connect("monitor-added", (_, gdkmonitor) => {
-      if (getMonitor() === gdkmonitor) {
+      if (getBestMonitor() === gdkmonitor) {
         widgets.forEach(w => w.destroy())
         widgets = initWidgets(gdkmonitor)
       }
@@ -53,7 +52,7 @@ App.start({
 
     App.connect("monitor-removed", (_, _gdkmonitor) => {
       widgets.forEach(w => w.destroy())
-      const mon = getMonitor()
+      const mon = getBestMonitor()
       if (mon !== null) {
         widgets = initWidgets(mon)
       }
