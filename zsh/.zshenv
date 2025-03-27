@@ -30,6 +30,8 @@ export CHROME_EXECUTABLE=google-chrome-stable
 export OPPO_BUDS_MAC="2C:FD:B3:75:E4:F7"
 
 export ANDROID_HOME=$HOME/Android/Sdk
+export ANDROID_SDK_ROOT=$ANDROID_HOME
+export ANDROID_AVD_HOME=$XDG_CONFIG_HOME/.android/avd
 export GOENV_ROOT="$HOME/.goenv"
 
 
@@ -51,7 +53,8 @@ try-source() {
 pathadd "$HOME/.local/bin"
 pathadd "$HOME/.cargo/bin"
 pathadd "$HOME/go/bin"
-pathadd "$HOME/Android/Sdk/cmdline-tools/latest/bin"
+pathadd "$ANDROID_HOME/cmdline-tools/latest/bin"
+pathadd "$ANDROID_HOME/platform-tools"
 # TODO: only work pc
 pathadd "$HOME/Downloads/swift-5.7.3-RELEASE-ubuntu22.04"
 pathadd "$GOENV_ROOT/bin"

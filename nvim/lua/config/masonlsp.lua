@@ -177,6 +177,11 @@ lspconfig.tailwindcss.setup {
   capabilities = capabilities,
 }
 
+lspconfig.kotlin_language_server.setup {
+  on_attach = custom_attach,
+  capabilities = capabilities,
+}
+
 lspconfig.jsonls.setup {
   on_attach = custom_attach,
   capabilities = capabilities,
