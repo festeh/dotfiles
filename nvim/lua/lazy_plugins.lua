@@ -54,49 +54,45 @@ local plugins = {
   { 'nvim-treesitter/nvim-treesitter-textobjects', config = req('treesitter-textobjects') },
   -- { 'stevearc/aerial.nvim',                        config = req('aerial') },
   { "festeh/wilder.nvim",                          config = req("wilder") },
-  -- {
-  --   "j-hui/fidget.nvim",
-  --   tag = "legacy",
-  --   config = req("fidget")
-  -- },
   { "szw/vim-maximizer" },
-  { 'sindrets/diffview.nvim',              dependencies = { 'nvim-lua/plenary.nvim' } },
+  { 'sindrets/diffview.nvim',                      dependencies = { 'nvim-lua/plenary.nvim' } },
   { 'tpope/vim-fugitive' },
-  { "lukas-reineke/indent-blankline.nvim", config = req("indent") },
-  { "iamcco/markdown-preview.nvim",        run = function() vim.fn["mkdp#util#install"]() end },
-  { 'nvim-neotest/neotest',                config = req("neotest") },
+  { "lukas-reineke/indent-blankline.nvim",         config = req("indent") },
+  { "iamcco/markdown-preview.nvim",                run = function() vim.fn["mkdp#util#install"]() end },
+  { 'nvim-neotest/neotest',                        config = req("neotest") },
   { 'nvim-neotest/neotest-python' },
-  { 'sbdchd/neoformat',                    config = req("neoformat") },
-  { 'DNLHC/glance.nvim',                   config = req('glance') },
+  { 'sbdchd/neoformat',                            config = req("neoformat") },
+  { 'DNLHC/glance.nvim',                           config = req('glance') },
   { 'NoahTheDuke/vim-just' },
-  { 'mfussenegger/nvim-dap',               config = req("dap"),                               event = "VeryLazy" },
-  -- { 'rcarriga/nvim-dap-ui',                config = req("dapui"),                             event = "VeryLazy" },
+  {
+    'mfussenegger/nvim-dap',
+    config = req("dap"),
+    dependencies = {
+      -- { "festeh/nvim-dap-view", opts = {}, dev = true },
+      { "igorlfs/nvim-dap-view", opts = {} },
+    },
+    event = "VeryLazy"
+  },
+  { 'mfussenegger/nvim-dap-python',     config = req("dap-python"),          event = "VeryLazy" },
   { "nvim-telescope/telescope-dap.nvim" },
   { "jbyuki/one-small-step-for-vimkind" },
-  { 'stevearc/dressing.nvim',              config = req('dressing') },
+  { 'stevearc/dressing.nvim',           config = req('dressing') },
   -- use { 'MunifTanjim/exrc.nvim', config = [[require('config.exrc')]] }
   { 'lakshayg/vim-bazel' },
-  -- {
-  --   'ray-x/navigator.lua',
-  --   event = "VeryLazy",
-  --   dependencies = { { 'ray-x/guihua.lua' }, { 'neovim/nvim-lspconfig' } },
-  --   config = req('navigator')
-  -- },
-  { 'echasnovski/mini.nvim',           config = req('mini') },
-  -- { 'rcarriga/nvim-notify',            config = req('notify') },
-  { 'drybalka/tree-climber.nvim',      config = req('treeclimber') },
-  { 'ziontee113/syntax-tree-surfer',   config = req('syntax_tree_surfer') },
+  { 'echasnovski/mini.nvim',            config = req('mini') },
+  { 'drybalka/tree-climber.nvim',       config = req('treeclimber') },
+  { 'ziontee113/syntax-tree-surfer',    config = req('syntax_tree_surfer') },
   -- { 'themercorp/themer.lua',           config = req('themer') },
   -- { 'LeonHeidelbach/trailblazer.nvim', config = req('trailblazer') },
-  { 'ggandor/leap.nvim',               config = req("leap") },
-  { 'declancm/cinnamon.nvim',          config = req('cinnamon') },
+  { 'ggandor/leap.nvim',                config = req("leap") },
+  { 'declancm/cinnamon.nvim',           config = req('cinnamon') },
   { "smartpde/telescope-recent-files" },
   -- { 'ray-x/go.nvim',                   config = req('go') },
-  {'folke/noice.nvim', config = [[require('config.noice')]] },
-  { "mrjones2014/legendary.nvim",      config = req('legendary') },
-  { 'Exafunction/codeium.vim',         event = "VeryLazy",                config = req('codeium') },
+  { 'folke/noice.nvim',                 config = [[require('config.noice')]] },
+  { "mrjones2014/legendary.nvim",       config = req('legendary') },
+  { 'Exafunction/codeium.vim',          event = "VeryLazy",                  config = req('codeium') },
   { 'neomake/neomake' },
-  { "windwp/nvim-ts-autotag",          config = req("autotag") },
+  { "windwp/nvim-ts-autotag",           config = req("autotag") },
   {
     'theHamsta/nvim-dap-virtual-text',
     config = req("dap_virtual_text"),
@@ -234,7 +230,7 @@ local plugins = {
     "CopilotC-Nvim/CopilotChat.nvim",
     config = req('copilot_chat'),
     -- dev = true,
- },
+  },
   {
     "MagicDuck/grug-far.nvim",
     config = function() require("grug-far").setup() end
@@ -263,19 +259,19 @@ local plugins = {
     end,
   },
   { "b0o/schemastore.nvim" },
-  { 'akinsho/toggleterm.nvim', version = "*",  config = true },
+  { 'akinsho/toggleterm.nvim', version = "*", config = true },
   {
-      'nvim-flutter/flutter-tools.nvim',
-      lazy = false,
-      dependencies = {
-          'nvim-lua/plenary.nvim',
-          'stevearc/dressing.nvim', -- optional for vim.ui.select
-      },
-      config = req('flutter-tools'),
+    'nvim-flutter/flutter-tools.nvim',
+    lazy = false,
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'stevearc/dressing.nvim', -- optional for vim.ui.select
+    },
+    config = req('flutter-tools'),
   },
 
   -- % themes
-  { "catppuccin/nvim",         priority = 1000 },
+  { "catppuccin/nvim",     priority = 1000 },
   -- {
   --   'festeh/llm_flow.nvim',
   --   dev = true,
