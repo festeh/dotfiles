@@ -104,7 +104,6 @@ window.Bar button:hover {
 .volume-widget {
     background-color: #94e2d5; /* teal */
     color: #1e1e2e; /* dark text on teal background */
-    min-width: 130px;
 }
 
 .volume-widget button {
