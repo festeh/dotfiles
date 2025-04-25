@@ -29,12 +29,12 @@ export default function Volume() {
           speaker.volume = Math.max(0, speaker.volume - 0.05); // Decrease by 5%
         },
       }),
-      new Widget.Button({
-        child: new Widget.Icon("audio-volume-high-symbolic"), // Or use a "+" icon if available
-        onClicked: () => {
-          speaker.volume = Math.min(1, speaker.volume + 0.05); // Increase by 5%
-        },
-      }),
+      // new Widget.Button({
+      //   child: new Widget.Icon("audio-volume-high-symbolic"), // Or use a "+" icon if available
+      //   onClicked: () => {
+      //     speaker.volume = Math.min(1, speaker.volume + 0.05); // Increase by 5%
+      //   },
+      // }),
     ],
   })
 }
