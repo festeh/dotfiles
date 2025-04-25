@@ -24,7 +24,7 @@ export default function Volume() {
         label: bind(speaker, "volume").as(v => `${Math.round(v * 100)}%`),
       }),
       new Widget.Button({
-        child: new Widget.Icon({ icon: "audio-volume-low-symbolic" }), // Pass icon name in an object
+        child: new Widget.Icon({ icon: "list-remove-symbolic" }), // Use minus icon
         onClicked: () => {
           speaker.volume = Math.max(0, speaker.volume - 0.05); // Decrease by 5%
         },
