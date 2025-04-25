@@ -49,30 +49,35 @@ lspconfig.ruff.setup {
 }
 
 
-lspconfig.jedi_language_server.setup {
-  on_attach = custom_attach,
-  capabilities = capabilities,
-}
+-- lspconfig.jedi_language_server.setup {
+--   on_attach = custom_attach,
+--   capabilities = capabilities,
+-- }
 
-lspconfig.pyright.setup {
+-- lspconfig.pyright.setup {
+--   on_attach = custom_attach,
+--   capabilities = capabilities,
+--   single_file_support = false,
+--   settings = {
+--     python = {
+--       analysis = {
+--         autoSearchPaths = true,
+--         useLibraryCodeForTypes = true,
+--         diagnosticMode = "workspace",
+--         autoImportCompletions = true,
+--         indexing = true,
+--         packageIndexDepth = {
+--           name = "",
+--           depth = 3,
+--         }
+--       },
+--     },
+--   },
+-- }
+lspconfig.basedpyright.setup {
   on_attach = custom_attach,
   capabilities = capabilities,
   single_file_support = false,
-  settings = {
-    python = {
-      analysis = {
-        autoSearchPaths = true,
-        useLibraryCodeForTypes = true,
-        diagnosticMode = "workspace",
-        autoImportCompletions = true,
-        indexing = true,
-        packageIndexDepth = {
-          name = "",
-          depth = 3,
-        }
-      },
-    },
-  },
 }
 
 lspconfig.lua_ls.setup {
