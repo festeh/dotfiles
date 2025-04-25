@@ -20,12 +20,19 @@ export default function Volume() {
           speaker.mute = !speaker.mute
         },
       }),
-      new Widget.Slider({
-        value: bind(speaker, "volume"),
-        // hexpand: true,
-        onDragged: (slider) => {
-          const value = slider.value
-          speaker.volume = value
+      new Widget.Label({
+        label: bind(speaker, "volume").as(v => `${Math.round(v * 100)}%`),
+      }),
+      new Widget.Button({
+        child: new Widget.Icon("audio-volume-low-symbolic"), // Or use a "-" icon if available
+        onClicked: () => {
+          speaker.volume = Math.max(0, speaker.volume - 0.05); // Decrease by 5%
+        },
+      }),
+      new Widget.Button({
+        child: new Widget.Icon("audio-volume-high-symbolic"), // Or use a "+" icon if available
+        onClicked: () => {
+          speaker.volume = Math.min(1, speaker.volume + 0.05); // Increase by 5%
         },
       }),
     ],
