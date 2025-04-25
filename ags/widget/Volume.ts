@@ -24,17 +24,17 @@ export default function Volume() {
         label: bind(speaker, "volume").as(v => `${Math.round(v * 100)}%`),
       }),
       new Widget.Button({
-        child: new Widget.Icon("audio-volume-low-symbolic"), // Or use a "-" icon if available
+        child: new Widget.Icon({ icon: "audio-volume-low-symbolic" }), // Pass icon name in an object
         onClicked: () => {
           speaker.volume = Math.max(0, speaker.volume - 0.05); // Decrease by 5%
         },
       }),
-      // new Widget.Button({
-      //   child: new Widget.Icon("audio-volume-high-symbolic"), // Or use a "+" icon if available
-      //   onClicked: () => {
-      //     speaker.volume = Math.min(1, speaker.volume + 0.05); // Increase by 5%
-      //   },
-      // }),
+      new Widget.Button({
+        child: new Widget.Icon({ icon: "audio-volume-high-symbolic" }), // Pass icon name in an object
+        onClicked: () => {
+          speaker.volume = Math.min(1, speaker.volume + 0.05); // Increase by 5%
+        },
+      }),
     ],
   })
 }
