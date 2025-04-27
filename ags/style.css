@@ -104,7 +104,6 @@ window.Bar button:hover {
 .volume-widget {
     background-color: #94e2d5; /* teal */
     color: #1e1e2e; /* dark text on teal background */
-    min-width: 130px;
 }
 
 .volume-widget button {
@@ -114,6 +113,12 @@ window.Bar button:hover {
 
 .volume-widget button.muted {
     background-color: #f38ba8; /* red */
+}
+
+/* Highlight for + and - buttons on hover */
+.volume-widget .volume-button-minus:hover,
+.volume-widget .volume-button-plus:hover {
+    background-color: rgba(30, 30, 46, 0.2); /* base slightly darker, more subtle */
 }
 
 .volume-widget scale trough {
