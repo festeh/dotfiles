@@ -49,7 +49,6 @@ local plugins = {
   { "akinsho/bufferline.nvim",                     config = req("bufferline") },
   { 'nvim-telescope/telescope.nvim',               config = req("telescope") },
   { 'nvim-lua/plenary.nvim' },
-  { "nvim-pack/nvim-spectre",                      config = req("spectre") },
   { "kevinhwang91/nvim-bqf",                       config = req("bqf") },
   { 'nvim-treesitter/nvim-treesitter-textobjects', config = req('treesitter-textobjects') },
   -- { 'stevearc/aerial.nvim',                        config = req('aerial') },
