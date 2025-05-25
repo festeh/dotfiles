@@ -247,6 +247,10 @@ local plugins = {
     },
     config = req('flutter-tools'),
   },
+  {
+    'stevearc/resession.nvim',
+    config = req('resession'),
+  },
 
   -- % themes
   { "catppuccin/nvim",     priority = 1000 },
