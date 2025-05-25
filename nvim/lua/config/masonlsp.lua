@@ -34,7 +34,7 @@ local custom_attach = function(client, bufnr)
     end, { desc = "list workspace folder" })
 end
 
-local capabilities = require('cmp_nvim_lsp').default_capabilities()
+local capabilities = {}
 
 local lspconfig = require("lspconfig")
 
@@ -142,7 +142,8 @@ lspconfig.rust_analyzer.setup {
 --   single_file_support = false,
 -- }
 
-local clangd_capabilities = require('cmp_nvim_lsp').default_capabilities()
+-- clone capabilities
+local clangd_capabilities = {}
 clangd_capabilities.offsetEncoding = "utf-8"
 lspconfig.clangd.setup {
   on_attach = custom_attach,

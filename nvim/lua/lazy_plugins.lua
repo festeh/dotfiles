@@ -19,17 +19,14 @@ local plugins = {
     },
     config = req("nvim-tree")
   },
-  { "hrsh7th/nvim-cmp",            config = req("nvim-cmp") },
   { "rafamadriz/friendly-snippets" },
-  -- nvim-cmp completion sources
-  { "hrsh7th/cmp-nvim-lsp",        dependencies = { "nvim-cmp" } },
-  { "hrsh7th/cmp-path",            dependencies = { "nvim-cmp" } },
-  { "hrsh7th/cmp-buffer",          dependencies = { "nvim-cmp" } },
-  { "hrsh7th/cmp-omni",            dependencies = { "nvim-cmp" } },
-  { "saadparwaiz1/cmp_luasnip",    dependencies = { "nvim-cmp", "LuaSnip" } },
+  {
+    'saghen/blink.cmp',
+    version = '*',
+    config = req('blink'),
+  },
   {
     "neovim/nvim-lspconfig",
-    dependencies = { "cmp-nvim-lsp" },
   },
   { "williamboman/mason.nvim",         config = req("masonlsp") },
   { "nvim-treesitter/nvim-treesitter", config = req('treesitter') },
@@ -251,6 +248,7 @@ local plugins = {
     'stevearc/resession.nvim',
     config = req('resession'),
   },
+  { 'rmagatti/alternate-toggler', config = req('toggler') },
 
   -- % themes
   { "catppuccin/nvim",     priority = 1000 },
