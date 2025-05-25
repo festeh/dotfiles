@@ -14,13 +14,13 @@ require("mini.bufremove").setup()
 require("mini.indentscope").setup()
 -- require("mini.jump").setup()
 
-local starter = require("mini.starter")
-starter.setup(
-  {
-    items = {
-      starter.sections.recent_files(5, true, true),
-      starter.sections.telescope(),
-    },
-    evaluate_single = true,
-  }
-)
+-- local starter = require("mini.starter")
+-- starter.setup(
+--   {
+--     items = {
+--       starter.sections.recent_files(5, true, true),
+--       starter.sections.telescope(),
+--     },
+--     evaluate_single = true,
+--   }
+-- )
