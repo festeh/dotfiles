@@ -1,7 +1,5 @@
 require("lazy_install")
 
-
-
 local function req(mod)
   local full_path = "config." .. mod
   local function lazy_loader()
@@ -89,7 +87,7 @@ local plugins = {
   -- { 'ray-x/go.nvim',                   config = req('go') },
   { 'folke/noice.nvim',                 config = [[require('config.noice')]] },
   { "mrjones2014/legendary.nvim",       config = req('legendary') },
-  { 'Exafunction/windsurf.vim',          event = "VeryLazy",                  config = req('codeium') },
+  { 'Exafunction/windsurf.vim',         event = "VeryLazy",                  config = req('codeium') },
   { 'neomake/neomake' },
   { "windwp/nvim-ts-autotag",           config = req("autotag") },
   {
@@ -193,12 +191,6 @@ local plugins = {
       leader_key = '<c-;>',
     }
   },
-  -- {
-  --   "harrisoncramer/gitlab.nvim",
-  --   config = function()
-  --     require("gitlab").setup()
-  --   end,
-  -- },
   { "nvim-neotest/nvim-nio" },
   {
     'stevearc/overseer.nvim',
@@ -234,19 +226,6 @@ local plugins = {
     "MagicDuck/grug-far.nvim",
     config = function() require("grug-far").setup() end
   },
-  -- {
-  --   "supermaven-inc/supermaven-nvim",
-  --   config = function()
-  --     require("supermaven-nvim").setup({
-  --       disable_inline_completion = true,
-  --       keymaps = {
-  --         accept_suggestion = "<C-l>",
-  --         clear_suggestion = "<C-k>",
-  --         accept_word = "<C-j>",
-  --       },
-  --     })
-  --   end
-  -- },
   {
     "toppair/peek.nvim",
     event = { "VeryLazy" },
