@@ -16,8 +16,13 @@ vim.api.nvim_create_autocmd("VimEnter", {
   callback = function()
     -- Only load the session if nvim was started with no args
     if vim.fn.argc(-1) == 0 then
-      local loaded_successfully = resession.load(get_session_name(), { dir = "dirsession", silence_errors = true })
-      if not loaded_successfully then
+      resession.load(get_session_name(), { dir = "dirsession", silence_errors = true })
+      -- Check if we are in the default empty buffer state after attempting to load a session
+      local is_default_buffer = vim.fn.bufnr('$') == 1 and
+                                vim.fn.bufname('%') == "" and
+                                vim.fn.line('$') == 1 and
+                                vim.fn.empty(vim.fn.getline(1))
+      if is_default_buffer then
         local fzf_lua_ok, _ = pcall(require, 'fzf-lua')
         if fzf_lua_ok then
           require('fzf-lua').files()
