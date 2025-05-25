@@ -16,7 +16,13 @@ vim.api.nvim_create_autocmd("VimEnter", {
   callback = function()
     -- Only load the session if nvim was started with no args
     if vim.fn.argc(-1) == 0 then
-      resession.load(get_session_name(), { dir = "dirsession", silence_errors = true })
+      local loaded_successfully = resession.load(get_session_name(), { dir = "dirsession", silence_errors = true })
+      if not loaded_successfully then
+        local fzf_lua_ok, _ = pcall(require, 'fzf-lua')
+        if fzf_lua_ok then
+          require('fzf-lua').files()
+        end
+      end
     end
   end,
 })
