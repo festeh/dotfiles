@@ -10,7 +10,7 @@ local function req(mod)
 end
 
 local plugins = {
-  { 'folke/neodev.nvim',           config = req("neodev") },
+  { 'folke/lazydev.nvim',          config = req("lazydev") },
   {
     "nvim-tree/nvim-tree.lua",
     version = "*",
@@ -249,9 +249,10 @@ local plugins = {
     config = req('resession'),
   },
   { 'rmagatti/alternate-toggler', config = req('toggler') },
+  { 'mrcjkb/rustaceanvim', config = req('rustacean') },
 
   -- % themes
-  { "catppuccin/nvim",     priority = 1000 },
+  { "catppuccin/nvim",            priority = 1000 },
   -- {
   --   'festeh/llm_flow.nvim',
   --   dev = true,

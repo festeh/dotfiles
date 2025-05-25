@@ -112,29 +112,29 @@ lspconfig.lua_ls.setup {
   capabilities = capabilities,
 }
 
-lspconfig.rust_analyzer.setup {
-  on_attach = custom_attach,
-  capabilities = capabilities,
-  settings = {
-    ["rust-analyzer"] = {
-      cargo = {
-        allTargets = false,
-        loadOutDirsFromCheck = true,
-        runBuildScripts = true,
-        features = "all",
-      },
-      checkOnSave = false,
-      procMacro = {
-        enable = true,
-        -- ignored = {
-        --   ["async-trait"] = { "async_trait" },
-        --   ["napi-derive"] = { "napi" },
-        --   ["async-recursion"] = { "async_recursion" },
-        -- },
-      },
-    },
-  }
-}
+-- lspconfig.rust_analyzer.setup {
+--   on_attach = custom_attach,
+--   capabilities = capabilities,
+--   settings = {
+--     ["rust-analyzer"] = {
+--       cargo = {
+--         allTargets = false,
+--         loadOutDirsFromCheck = true,
+--         runBuildScripts = true,
+--         features = "all",
+--       },
+--       checkOnSave = false,
+--       procMacro = {
+--         enable = true,
+--         -- ignored = {
+--         --   ["async-trait"] = { "async_trait" },
+--         --   ["napi-derive"] = { "napi" },
+--         --   ["async-recursion"] = { "async_recursion" },
+--         -- },
+--       },
+--     },
+--   }
+-- }
 
 -- lspconfig.tsserver.setup {
 --   on_attach = custom_attach,
