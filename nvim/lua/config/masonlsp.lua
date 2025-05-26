@@ -10,6 +10,9 @@ local util = require("lspconfig/util")
 -- add any options here, or leave empty to use the default settings
 -- })
 
+vim.diagnostic.config({ virtual_text = true })
+vim.lsp.inlay_hint.enable(true)
+
 local custom_attach = function(client, bufnr)
   local map = function(mode, l, r, opts)
     opts = opts or {}
@@ -197,15 +200,14 @@ lspconfig.jsonls.setup {
   settings = {
     json = {
       schemas = require('schemastore').json.schemas(
-      {
-        select = {
-          "package.json",
-          "Chrome Extension",
+        {
+          select = {
+            "package.json",
+            "Chrome Extension",
+          }
         }
-      }
       ),
       validate = { enable = true },
     },
   },
 }
-
