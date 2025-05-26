@@ -34,7 +34,7 @@ local custom_attach = function(client, bufnr)
     end, { desc = "list workspace folder" })
 end
 
-local capabilities = require('cmp_nvim_lsp').default_capabilities()
+local capabilities = {}
 
 local lspconfig = require("lspconfig")
 
@@ -97,7 +97,6 @@ lspconfig.lua_ls.setup {
         -- see also https://github.com/sumneko/lua-language-server/wiki/Libraries#link-to-workspace .
         -- Lua-dev.nvim also has similar settings for sumneko lua, https://github.com/folke/lua-dev.nvim/blob/main/lua/lua-dev/sumneko.lua .
         library = {
-          -- fn.stdpath("data") .. "/site/pack/packer/opt/emmylua-nvim",
           fn.stdpath("config"),
         },
         maxPreload = 2000,
@@ -113,29 +112,29 @@ lspconfig.lua_ls.setup {
   capabilities = capabilities,
 }
 
-lspconfig.rust_analyzer.setup {
-  on_attach = custom_attach,
-  capabilities = capabilities,
-  settings = {
-    ["rust-analyzer"] = {
-      cargo = {
-        allTargets = false,
-        loadOutDirsFromCheck = true,
-        runBuildScripts = true,
-        features = "all",
-      },
-      checkOnSave = false,
-      procMacro = {
-        enable = true,
-        -- ignored = {
-        --   ["async-trait"] = { "async_trait" },
-        --   ["napi-derive"] = { "napi" },
-        --   ["async-recursion"] = { "async_recursion" },
-        -- },
-      },
-    },
-  }
-}
+-- lspconfig.rust_analyzer.setup {
+--   on_attach = custom_attach,
+--   capabilities = capabilities,
+--   settings = {
+--     ["rust-analyzer"] = {
+--       cargo = {
+--         allTargets = false,
+--         loadOutDirsFromCheck = true,
+--         runBuildScripts = true,
+--         features = "all",
+--       },
+--       checkOnSave = false,
+--       procMacro = {
+--         enable = true,
+--         -- ignored = {
+--         --   ["async-trait"] = { "async_trait" },
+--         --   ["napi-derive"] = { "napi" },
+--         --   ["async-recursion"] = { "async_recursion" },
+--         -- },
+--       },
+--     },
+--   }
+-- }
 
 -- lspconfig.tsserver.setup {
 --   on_attach = custom_attach,
@@ -143,7 +142,8 @@ lspconfig.rust_analyzer.setup {
 --   single_file_support = false,
 -- }
 
-local clangd_capabilities = require('cmp_nvim_lsp').default_capabilities()
+-- clone capabilities
+local clangd_capabilities = {}
 clangd_capabilities.offsetEncoding = "utf-8"
 lspconfig.clangd.setup {
   on_attach = custom_attach,

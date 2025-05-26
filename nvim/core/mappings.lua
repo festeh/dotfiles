@@ -44,7 +44,6 @@ function M.reload()
   end
   local cmd = "source " .. vim.fn.stdpath("config") .. "/init.lua"
   vim.cmd(cmd)
-  vim.cmd("PackerCompile")
   print("Reloaded all modules")
 end
 

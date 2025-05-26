@@ -1,7 +1,5 @@
 require("lazy_install")
 
-
-
 local function req(mod)
   local full_path = "config." .. mod
   local function lazy_loader()
@@ -12,7 +10,7 @@ local function req(mod)
 end
 
 local plugins = {
-  { 'folke/neodev.nvim',           config = req("neodev") },
+  { 'folke/lazydev.nvim',          config = req("lazydev") },
   {
     "nvim-tree/nvim-tree.lua",
     version = "*",
@@ -21,17 +19,14 @@ local plugins = {
     },
     config = req("nvim-tree")
   },
-  { "hrsh7th/nvim-cmp",            config = req("nvim-cmp") },
   { "rafamadriz/friendly-snippets" },
-  -- nvim-cmp completion sources
-  { "hrsh7th/cmp-nvim-lsp",        dependencies = { "nvim-cmp" } },
-  { "hrsh7th/cmp-path",            dependencies = { "nvim-cmp" } },
-  { "hrsh7th/cmp-buffer",          dependencies = { "nvim-cmp" } },
-  { "hrsh7th/cmp-omni",            dependencies = { "nvim-cmp" } },
-  { "saadparwaiz1/cmp_luasnip",    dependencies = { "nvim-cmp", "LuaSnip" } },
+  {
+    'saghen/blink.cmp',
+    version = '*',
+    config = req('blink'),
+  },
   {
     "neovim/nvim-lspconfig",
-    dependencies = { "cmp-nvim-lsp" },
   },
   { "williamboman/mason.nvim",         config = req("masonlsp") },
   { "nvim-treesitter/nvim-treesitter", config = req('treesitter') },
@@ -49,7 +44,6 @@ local plugins = {
   { "akinsho/bufferline.nvim",                     config = req("bufferline") },
   { 'nvim-telescope/telescope.nvim',               config = req("telescope") },
   { 'nvim-lua/plenary.nvim' },
-  { "nvim-pack/nvim-spectre",                      config = req("spectre") },
   { "kevinhwang91/nvim-bqf",                       config = req("bqf") },
   { 'nvim-treesitter/nvim-treesitter-textobjects', config = req('treesitter-textobjects') },
   -- { 'stevearc/aerial.nvim',                        config = req('aerial') },
@@ -90,7 +84,7 @@ local plugins = {
   -- { 'ray-x/go.nvim',                   config = req('go') },
   { 'folke/noice.nvim',                 config = [[require('config.noice')]] },
   { "mrjones2014/legendary.nvim",       config = req('legendary') },
-  { 'Exafunction/codeium.vim',          event = "VeryLazy",                  config = req('codeium') },
+  { 'Exafunction/windsurf.vim',         event = "VeryLazy",                  config = req('codeium') },
   { 'neomake/neomake' },
   { "windwp/nvim-ts-autotag",           config = req("autotag") },
   {
@@ -194,12 +188,6 @@ local plugins = {
       leader_key = '<c-;>',
     }
   },
-  -- {
-  --   "harrisoncramer/gitlab.nvim",
-  --   config = function()
-  --     require("gitlab").setup()
-  --   end,
-  -- },
   { "nvim-neotest/nvim-nio" },
   {
     'stevearc/overseer.nvim',
@@ -235,19 +223,6 @@ local plugins = {
     "MagicDuck/grug-far.nvim",
     config = function() require("grug-far").setup() end
   },
-  -- {
-  --   "supermaven-inc/supermaven-nvim",
-  --   config = function()
-  --     require("supermaven-nvim").setup({
-  --       disable_inline_completion = true,
-  --       keymaps = {
-  --         accept_suggestion = "<C-l>",
-  --         clear_suggestion = "<C-k>",
-  --         accept_word = "<C-j>",
-  --       },
-  --     })
-  --   end
-  -- },
   {
     "toppair/peek.nvim",
     event = { "VeryLazy" },
@@ -269,9 +244,15 @@ local plugins = {
     },
     config = req('flutter-tools'),
   },
+  {
+    'stevearc/resession.nvim',
+    config = req('resession'),
+  },
+  { 'rmagatti/alternate-toggler', config = req('toggler') },
+  { 'mrcjkb/rustaceanvim', config = req('rustacean') },
 
   -- % themes
-  { "catppuccin/nvim",     priority = 1000 },
+  { "catppuccin/nvim",            priority = 1000 },
   -- {
   --   'festeh/llm_flow.nvim',
   --   dev = true,
