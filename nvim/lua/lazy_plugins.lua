@@ -157,7 +157,7 @@ local plugins = {
   { "elkowar/yuck.vim" },
   -- { "theRealCarneiro/hyprland-vim-syntax", event = "VeryLazy" },
   { "luckasRanarison/tree-sitter-hypr" },
-  { "williamboman/mason-lspconfig.nvim" },
+  -- { "williamboman/mason-lspconfig.nvim" },
   -- {
   --   'OscarCreator/rsync.nvim',
   --   build = 'make',
