@@ -34,7 +34,12 @@ local custom_attach = function(client, bufnr)
     end, { desc = "list workspace folder" })
 end
 
-local capabilities = {}
+local capabilities = vim.tbl_deep_extend(
+  "force",
+  {},
+  vim.lsp.protocol.make_client_capabilities(),
+  require("blink.cmp").get_lsp_capabilities()
+)
 
 local lspconfig = require("lspconfig")
 

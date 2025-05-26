@@ -221,7 +221,7 @@ local plugins = {
   },
   {
     "MagicDuck/grug-far.nvim",
-    config = function() require("grug-far").setup() end
+    config = req("grug")
   },
   {
     "toppair/peek.nvim",
@@ -249,7 +249,7 @@ local plugins = {
     config = req('resession'),
   },
   { 'rmagatti/alternate-toggler', config = req('toggler') },
-  { 'mrcjkb/rustaceanvim', config = req('rustacean') },
+  { 'mrcjkb/rustaceanvim',        config = req('rustacean') },
 
   -- % themes
   { "catppuccin/nvim",            priority = 1000 },
