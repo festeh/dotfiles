@@ -1,1 +1,1 @@
-swayidle -w timeout 1500 'systemctl hibernate'
+swayidle -w timeout 1500 'systemctl suspend'
