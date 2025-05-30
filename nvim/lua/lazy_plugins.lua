@@ -47,7 +47,6 @@ local plugins = {
   { "kevinhwang91/nvim-bqf",                       config = req("bqf") },
   { 'nvim-treesitter/nvim-treesitter-textobjects', config = req('treesitter-textobjects') },
   -- { 'stevearc/aerial.nvim',                        config = req('aerial') },
-  -- { "festeh/wilder.nvim",                          config = req("wilder") },
   { "szw/vim-maximizer" },
   { 'sindrets/diffview.nvim',                      dependencies = { 'nvim-lua/plenary.nvim' } },
   { 'tpope/vim-fugitive' },
