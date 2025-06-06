@@ -27,6 +27,10 @@ name = "~/.aider.conf.yml"
 target = "aider/.aider.model.settings.yml"
 name = "~/.aider.model.settings.yml"
 
+[symlinks.aider_model_metadata]
+target = "aider/.aider.model.metadata.json"
+name = "~/.aider.model.metadata.json"
+
 
 [templates.hyprland]
 target = "hyprland/hyprland_template.conf"

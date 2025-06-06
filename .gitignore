@@ -5,4 +5,4 @@ ags/types
 .env
 node_modules
 ags/@girs
-.aider*
+/.aider*
