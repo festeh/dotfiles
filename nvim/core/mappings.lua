@@ -49,3 +49,6 @@ end
 
 keymap.set("n", '<Leader>r', M.reload)
 keymap.set("n", "<c-v>", '"+p', { noremap = true, silent = true })
+
+
+keymap.set('t', '<Esc>', [[<C-\><C-n>]])
