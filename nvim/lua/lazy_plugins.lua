@@ -252,10 +252,17 @@ local plugins = {
   { 'mrcjkb/rustaceanvim',        config = req('rustacean') },
   { 'yetone/avante.nvim',         event = "VeryLazy",       version = false, config = req('avante') },
   { "folke/snacks.nvim",          config = req("snacks") },
-  { 'GeorgesAlkhouri/nvim-aider', confg = req("aider"),     event = "VeryLazy" },
+  {
+    'GeorgesAlkhouri/nvim-aider',
+    config = req("aider"),
+    event = "VeryLazy",
+    dependencies = {
+      "folke/snacks.nvim"
+    }
+  },
 
   -- % themes
-  { "catppuccin/nvim",            priority = 1000 },
+  { "catppuccin/nvim",     priority = 1000 },
   -- {
   --   'festeh/llm_flow.nvim',
   --   dev = true,
