@@ -251,6 +251,8 @@ local plugins = {
   { 'rmagatti/alternate-toggler', config = req('toggler') },
   { 'mrcjkb/rustaceanvim',        config = req('rustacean') },
   { 'yetone/avante.nvim',         event = "VeryLazy",       version = false, config = req('avante') },
+  { "folke/snacks.nvim",          config = req("snacks") },
+  { 'GeorgesAlkhouri/nvim-aider', confg = req("aider"),     event = "VeryLazy" },
 
   -- % themes
   { "catppuccin/nvim",            priority = 1000 },
