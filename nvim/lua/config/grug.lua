@@ -17,7 +17,10 @@ grug.setup({
     replace = {
       n = "<localleader>n",
     }
-  }
+  },
+  folding = {
+    enabled = false
+  },
 })
 
 local function close_grug()
