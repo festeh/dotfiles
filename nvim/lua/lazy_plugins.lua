@@ -111,9 +111,7 @@ local plugins = {
   { "axkirillov/hbac.nvim",      config = req("hbac") },
   {
     "kdheepak/lazygit.nvim",
-    init = function()
-      req('lazygit-vim')
-    end,
+    config = req('lazygit-vim')
   },
   {
     "folke/flash.nvim",
@@ -260,7 +258,6 @@ local plugins = {
       "folke/snacks.nvim"
     }
   },
-
   -- % themes
   { "catppuccin/nvim",     priority = 1000 },
   -- {

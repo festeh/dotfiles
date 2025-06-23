@@ -32,23 +32,8 @@ keymap.set("n", "<Down>", "<C-W>j")
 keymap.set("n", "<leader>d", vim.diagnostic.open_float)
 keymap.set("n", "[d", vim.diagnostic.goto_prev)
 keymap.set("n", "]d", vim.diagnostic.goto_next)
-local M = {}
 
-function M.reload()
-  local mod_reload = require("plenary.reload").reload_module
-  mod_reload "plugins"
-  for key in pairs(package.loaded) do
-    if key:find("^config") ~= nil then
-      mod_reload(key)
-    end
-  end
-  local cmd = "source " .. vim.fn.stdpath("config") .. "/init.lua"
-  vim.cmd(cmd)
-  print("Reloaded all modules")
-end
-
-keymap.set("n", '<Leader>r', M.reload)
 keymap.set("n", "<c-v>", '"+p', { noremap = true, silent = true })
 
 
-keymap.set('t', '<Esc>', [[<C-\><C-n>]])
+-- keymap.set('t', '<Esc>', [[<C-\><C-n>]])

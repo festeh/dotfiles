@@ -1,12 +1,4 @@
-- name: openrouter/anthropic/claude-4-sonnet
-  edit_format: diff
-  cache_control: true
-  extra_params:
-    extra_body:
-      provider:
-        order: ["Google", "Amazon Bedrock"]
-        allow_fallbacks: true
-- name: openrouter/anthropic/claude-3.7-sonnet
+- name: openrouter/anthropic/claude-sonnet-4
   edit_format: diff
   cache_control: true
   extra_params:
