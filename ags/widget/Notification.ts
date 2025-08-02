@@ -32,7 +32,7 @@ function headerBox(n: Notifd.Notification): Widget.Box {
   children.push(new Widget.Label({
     className: "app-name",
     halign: Gtk.Align.START,
-    truncate: true,
+    truncate: false,
     label: n.appName || "Unknown"
   }))
   children.push(new Widget.Label({
@@ -80,7 +80,7 @@ function contentBox(n: Notifd.Notification): Widget.Box {
     halign: Gtk.Align.START,
     xalign: 0,
     label: n.summary,
-    truncate: true,
+    truncate: false,
   }))
   if (n.body) {
     contentBox.add(new Widget.Label({
