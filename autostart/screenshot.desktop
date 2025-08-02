@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Screenshot
+Comment=Take a screenshot of selected area
+Exec=/home/dima/dotfiles/hyprland/scripts/screenshot
+Icon=camera-photo
+Terminal=false
+Categories=Graphics;Photography;

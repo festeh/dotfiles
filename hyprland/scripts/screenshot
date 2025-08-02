@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# Screenshot script using grim and slurp for rofi/wofi integration
+grim -g "$(slurp)"
