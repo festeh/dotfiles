@@ -5,13 +5,22 @@
 
 /* Define Catppuccin Mocha colors directly */
 
+/* Notification window and container styling */
+window {
+  background-color: transparent;
+}
+
+box {
+  background-color: transparent;
+}
+
 /* Notification styling */
 .notification-widget {
   background-color: #1e1e2e; /* base */
   border: 1px solid #313244; /* surface0 */
   border-radius: 16px;
-  padding: 20px;
-  margin: 16px;
+  padding: 30px;
+  margin: 16px 24px 16px 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   transition: all 200ms ease;
   min-width: 400px;
