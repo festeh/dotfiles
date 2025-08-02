@@ -2,7 +2,7 @@
 Description=Launch ags on startup
 
 [Service]
-ExecStart=/home/dima/.local/bin/ags run
+ExecStart=/home/dima/.local/bin/ags run --gtk 3
 Restart=on-failure
 RestartSec=3
 StartLimitBurst=5

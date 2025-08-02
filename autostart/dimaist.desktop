@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Exec=/home/dima/.local/bin/dimaist
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=Dimaist
+Comment=Dimaist application autostart

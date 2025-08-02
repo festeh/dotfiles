@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Exec=/home/dima/.local/bin/switcher
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=Switcher
+Comment=Switcher application autostart
