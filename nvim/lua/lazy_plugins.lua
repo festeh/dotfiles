@@ -42,7 +42,7 @@ local plugins = {
   { "kylechui/nvim-surround",                      config = true },
   { "nvim-lualine/lualine.nvim",                   config = req("lualine") },
   { "akinsho/bufferline.nvim",                     config = req("bufferline") },
-  { 'nvim-telescope/telescope.nvim',               config = req("telescope") },
+  -- { 'nvim-telescope/telescope.nvim',               config = req("telescope") },
   { 'nvim-lua/plenary.nvim' },
   { "kevinhwang91/nvim-bqf",                       config = req("bqf") },
   { 'nvim-treesitter/nvim-treesitter-textobjects', config = req('treesitter-textobjects') },
@@ -67,9 +67,9 @@ local plugins = {
     event = "VeryLazy"
   },
   { 'mfussenegger/nvim-dap-python',     config = req("dap-python"),        event = "VeryLazy" },
-  { "nvim-telescope/telescope-dap.nvim" },
+  -- { "nvim-telescope/telescope-dap.nvim" },
   { "jbyuki/one-small-step-for-vimkind" },
-  { 'stevearc/dressing.nvim',           config = req('dressing') },
+  -- { 'stevearc/dressing.nvim',           config = req('dressing') },
   -- use { 'MunifTanjim/exrc.nvim', config = [[require('config.exrc')]] }
   { 'lakshayg/vim-bazel' },
   { 'echasnovski/mini.nvim',            config = req('mini') },
@@ -79,7 +79,7 @@ local plugins = {
   -- { 'LeonHeidelbach/trailblazer.nvim', config = req('trailblazer') },
   { 'ggandor/leap.nvim',                config = req("leap") },
   { 'declancm/cinnamon.nvim',           config = req('cinnamon') },
-  { "smartpde/telescope-recent-files" },
+  -- { "smartpde/telescope-recent-files" },
   -- { 'ray-x/go.nvim',                   config = req('go') },
   { 'folke/noice.nvim',                 config = req('noice') },
   { 'folke/trouble.nvim',               config = req('trouble') },
@@ -109,10 +109,10 @@ local plugins = {
     config = req("gitsigns")
   },
   { "axkirillov/hbac.nvim",      config = req("hbac") },
-  {
-    "kdheepak/lazygit.nvim",
-    config = req('lazygit-vim')
-  },
+  -- {
+  --   "kdheepak/lazygit.nvim",
+  --   config = req('lazygit-vim')
+  -- },
   {
     "folke/flash.nvim",
     event = "VeryLazy",

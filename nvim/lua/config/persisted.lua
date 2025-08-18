@@ -13,13 +13,13 @@ require("persisted").setup({
     before_save = nil, -- function to run before the session is saved to disk
     after_save = nil, -- function to run after the session is saved to disk
     after_source = nil, -- function to run after the session is sourced
-    telescope = { -- options for the telescope extension
-        before_source = nil, -- function to run before the session is sourced via telescope
-        after_source = nil, -- function to run after the session is sourced via telescope
-        reset_prompt_after_deletion = true, -- whether to reset prompt after session deleted
-    },
+    -- telescope = { -- options for the telescope extension
+    --     before_source = nil, -- function to run before the session is sourced via telescope
+    --     after_source = nil, -- function to run after the session is sourced via telescope
+    --     reset_prompt_after_deletion = true, -- whether to reset prompt after session deleted
+    -- },
 })
 
-require("telescope").load_extension("persisted")
+-- require("telescope").load_extension("persisted")
 
 
