@@ -5,16 +5,25 @@
 
 /* Define Catppuccin Mocha colors directly */
 
+/* Notification window and container styling */
+window {
+  background-color: transparent;
+}
+
+box {
+  background-color: transparent;
+}
+
 /* Notification styling */
 .notification-widget {
   background-color: #1e1e2e; /* base */
   border: 1px solid #313244; /* surface0 */
-  border-radius: 12px;
-  padding: 16px;
-  margin: 12px;
+  border-radius: 16px;
+  padding: 30px;
+  margin: 16px 24px 16px 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   transition: all 200ms ease;
-  min-width: 320px;
+  min-width: 400px;
 }
 
 .notification-widget:hover {
@@ -24,22 +33,23 @@
 }
 
 .notification-widget .app-icon {
-  margin-right: 12px;
+  margin-right: 16px;
   color: #b4befe; /* lavender */
-  font-size: 20px;
+  font-size: 22px;
 }
 
 .notification-widget .app-name {
   color: #89b4fa; /* blue */
-  font-weight: bold;
-  font-size: 14px;
-  margin-bottom: 2px;
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 4px;
+  margin-right: 12px;
 }
 
 .notification-widget .time {
   color: #7f849c; /* overlay1 */
-  font-size: 12px;
-  font-style: italic;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .notification-widget .dismiss-button {
@@ -57,33 +67,35 @@
 }
 
 .notification-widget .image {
-  border-radius: 8px;
-  margin-right: 16px;
-  min-width: 80px;
-  min-height: 80px;
+  border-radius: 12px;
+  margin-right: 20px;
+  margin-top: 4px;
+  min-width: 84px;
+  min-height: 84px;
   background-size: cover;
   background-position: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
 }
 
 .notification-widget .icon-image {
-  margin-right: 16px;
-  min-width: 64px;
-  min-height: 64px;
+  margin-right: 20px;
+  margin-top: 4px;
+  min-width: 68px;
+  min-height: 68px;
 }
 
 .notification-widget .summary {
   color: #cdd6f4; /* text */
-  font-weight: bold;
-  font-size: 16px;
-  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 17px;
+  margin-bottom: 10px;
 }
 
 .notification-widget .body {
   color: #a6adc8; /* subtext0 */
   font-size: 14px;
-  margin-top: 6px;
-  margin-bottom: 4px;
+  margin-top: 8px;
+  margin-bottom: 6px;
 }
 
 .notification-widget .action-button {
@@ -110,6 +122,7 @@
 
 /* Separator styling */
 .notification-widget separator {
-  margin: 10px 0;
+  margin: 14px 0;
   background-color: #313244; /* surface0 */
+  opacity: 0.6;
 }

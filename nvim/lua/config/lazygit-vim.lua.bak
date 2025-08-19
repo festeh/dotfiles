@@ -1,0 +1,5 @@
+-- require('telescope').load_extension('lazygit')
+vim.g.lazygit_use_neovim_remote = 0
+
+-- Using Snacks.nvim lazygit instead
+vim.keymap.set('n', '<leader>l', function() require("snacks").lazygit() end, { noremap = true, silent = true, desc = "Lazygit" })

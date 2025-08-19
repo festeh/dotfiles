@@ -53,7 +53,7 @@ require('dressing').setup({
     -- Set to false to disable the vim.ui.select implementation
     enabled = true,
     -- Priority list of preferred vim.select implementations
-    backend = { "telescope", "fzf_lua", "fzf", "builtin", "nui" },
+    backend = { "fzf_lua", "fzf", "builtin", "nui" },
     -- Trim trailing `:` from prompt
     trim_prompt = true,
     -- Options for telescope selector
@@ -132,19 +132,7 @@ require('dressing').setup({
     get_config = function(opts)
       if opts.kind == "codeaction" then
         return {
-          backend = "telescope",
-          telescope = {
-            on_complete = {
-              function(picker)
-                -- remove this on_complete callback
-                -- picker:clear_completion_callbacks()
-                -- if we have exactly one match, select it
-                if picker.manager.linked_states.size == 1 then
-                  require("telescope.actions").select_default(picker.prompt_bufnr)
-                end
-              end,
-            }
-          }
+          backend = "fzf_lua",
         }
       end
     end,
