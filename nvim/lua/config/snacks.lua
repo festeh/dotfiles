@@ -29,6 +29,11 @@ vim.keymap.set("n", "<leader>gf", function() snacks.picker.git_log_file() end, {
 
 -- Picker keymappings (replacing Telescope)
 local picker = require("snacks").picker
+
+-- Function to show recent files filtered by current directory
+local function recent_files_in_cwd()
+  picker.recent({ filter = { cwd = true } })
+end
 vim.keymap.set('n', '<leader>ff', function() picker.files() end, { desc = 'Find Files' })
 vim.keymap.set('n', '<leader>fg', function() picker.grep() end, { desc = 'Live Grep' })
 vim.keymap.set('n', '<leader>fw', function() picker.grep_word() end, { desc = 'Grep Word' })
@@ -37,7 +42,7 @@ vim.keymap.set('n', '<leader>fh', function() picker.help() end, { desc = 'Help T
 vim.keymap.set('n', '<leader>fr', function() picker.lsp_references() end, { desc = 'LSP References' })
 vim.keymap.set('n', '<leader>fi', function() picker.lsp_incoming_calls() end, { desc = 'LSP Incoming Calls' })
 vim.keymap.set('n', '<leader>k', function() picker.lsp_symbols() end, { desc = 'LSP Document Symbols' })
-vim.keymap.set('n', '<leader>j', function() picker.recent() end, { desc = 'Recent Files' })
-vim.keymap.set('n', '<leader>?', function() picker.recent() end, { desc = 'Recent Files' })
+vim.keymap.set('n', '<leader>j', recent_files_in_cwd, { desc = 'Recent Files' })
+vim.keymap.set('n', '<leader>?', recent_files_in_cwd, { desc = 'Recent Files' })
 vim.keymap.set('n', '<leader>/', function() picker.lines() end, { desc = 'Search in current buffer' })
 vim.keymap.set('n', '<leader>fk', function() picker.keymaps() end, { desc = 'Keymaps' })
