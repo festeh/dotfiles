@@ -11,7 +11,7 @@ require("snacks").setup(
 -- Git keymappings
 local snacks = require("snacks")
 vim.keymap.set({"n", "x"}, "<leader>gB", function() snacks.gitbrowse() end, { desc = "Git Browse" })
-vim.keymap.set({"n", "x"}, "<leader>gO", function() snacks.gitbrowse.open({ what = "repo" }) end, { desc = "Git Browse Repo" })
+vim.keymap.set({"n", "x"}, "<leader>gO", function() snacks.gitbrowse.open() end, { desc = "Git Browse Repo" })
 vim.keymap.set("n", "<leader>gg", function() snacks.lazygit() end, { desc = "Lazygit" })
 vim.keymap.set("n", "<leader>l", function() snacks.lazygit() end, { desc = "Lazygit" })
 vim.keymap.set("n", "<leader>gF", function() snacks.lazygit.log_file() end, { desc = "Lazygit Current File History" })
