@@ -38,7 +38,7 @@ local grug_args = {
 }
 
 vim.keymap.set({ 'n', 'x' }, '<leader>s', function()
-  close_grug()
+  pcall(close_grug)
   local args = vim.deepcopy(grug_args)
   args.prefills = { search = vim.fn.expand("<cword>") }
   grug.open(args)
@@ -46,6 +46,6 @@ end, { desc = 'grug-far: Search for current word under cursor' })
 
 
 vim.keymap.set({ 'n', 'x' }, '<leader>S', function()
-  close_grug()
+  pcall(close_grug)
   grug.open(grug_args)
 end, { desc = 'grug-far: Search globally from scratch' })
