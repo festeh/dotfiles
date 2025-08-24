@@ -58,7 +58,7 @@ function setupHeartbeat() {
   heartbeatSource = GLib.timeout_add(GLib.PRIORITY_DEFAULT, HEARTBEAT_INTERVAL, () => {
     updateFocusingState()
     if (connection && connectionState.get() === "connected") {
-      sendWebSocketMessage(connection, { type: "health" })
+      // Skip sending heartbeat message when connected
     } else {
       reconnect()
     }
@@ -109,7 +109,7 @@ function handleWebSocketConnection(session: Soup.Session, result: Gio.AsyncResul
 
     setupHeartbeat()
 
-    sendWebSocketMessage(connection, { type: "health" })
+    // sendWebSocketMessage(connection, { type: "health" })
   } catch (error) {
     console.error("WebSocket connection error:", error)
     connectionState.set("disconnected")
