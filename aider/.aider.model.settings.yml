@@ -8,11 +8,11 @@
         allow_fallbacks: true
 - name: claude-37-default
   use_repo_map: true
-  name_override: openrouter/anthropic/claude-3.7-sonnet
+  # name_override: openrouter/anthropic/claude-3.7-sonnet
   edit_format: diff-fenced
 - name: nomap-claude-37
   use_repo_map: false
-  name_override: openrouter/anthropic/claude-3.7-sonnet
+  # name_override: openrouter/anthropic/claude-3.7-sonnet
 
 - name: openrouter/qwen/qwen-2.5-coder-32b-instruct
   extra_params:
