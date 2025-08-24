@@ -58,7 +58,7 @@ function setupHeartbeat() {
   heartbeatSource = GLib.timeout_add(GLib.PRIORITY_DEFAULT, HEARTBEAT_INTERVAL, () => {
     updateFocusingState()
     if (connection && connectionState.get() === "connected") {
-      // Skip sending heartbeat message when connected
+      sendWebSocketMessage(connection, { type: "get_focusing" })
     } else {
       reconnect()
     }
