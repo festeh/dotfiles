@@ -27,11 +27,19 @@ vim.keymap.set("n", "<leader>gS", function() snacks.picker.git_stash() end, { de
 vim.keymap.set("n", "<leader>gd", function() snacks.picker.git_diff() end, { desc = "Git Diff (Hunks)" })
 vim.keymap.set("n", "<leader>gf", function() snacks.picker.git_log_file() end, { desc = "Git Log File" })
 
--- vim-fugitive unified diff keymappings
+-- vim-fugitive unified diff keymappings with delta
 vim.keymap.set("n", "<leader>gM", function()
   vim.cmd('tabnew')
-  vim.cmd('Git ++curwin diff origin/master')
-end, { desc = "Git Diff origin/master (unified inline)" })
+  local bufnr = vim.api.nvim_get_current_buf()
+  local job_id = vim.fn.termopen('git diff origin/master | delta --paging=never', {
+    on_exit = function()
+      -- Keep buffer open after process exits
+      vim.bo[bufnr].modified = false
+      -- Switch to normal mode when process finishes
+      vim.cmd('stopinsert')
+    end
+  })
+end, { desc = "Git Diff origin/master with syntax highlighting" })
 
 -- Custom picker to show files changed vs master with stats
 local function git_diff_files_master()
@@ -68,14 +76,14 @@ local function git_diff_files_master()
       -- Close picker
       picker:close()
 
-      -- Find the tab with fugitive diff buffer and switch to it
+      -- Find the tab with delta diff terminal and switch to it
       local found = false
       for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
         for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tab)) do
           local buf = vim.api.nvim_win_get_buf(win)
           local bufname = vim.api.nvim_buf_get_name(buf)
-          -- Check if this is a fugitive git buffer
-          if bufname:match("^fugitive://") or vim.bo[buf].filetype == "git" then
+          -- Check if this is a terminal buffer with delta
+          if vim.bo[buf].buftype == "terminal" and bufname:match("delta") then
             vim.api.nvim_set_current_tabpage(tab)
             vim.api.nvim_set_current_win(win)
             found = true
@@ -88,12 +96,17 @@ local function git_diff_files_master()
       -- If not found, open the diff in a new tab
       if not found then
         vim.cmd('tabnew')
-        vim.cmd('Git ++curwin diff origin/master')
+        local bufnr = vim.api.nvim_get_current_buf()
+        vim.fn.termopen('git diff origin/master | delta --paging=never', {
+          on_exit = function()
+            vim.bo[bufnr].modified = false
+            vim.cmd('stopinsert')
+          end
+        })
       end
 
       -- Search for the file in the diff buffer
-      local search_pattern = "diff --git.*" .. item.file
-      vim.fn.search(search_pattern)
+      vim.fn.feedkeys('/' .. vim.fn.escape(item.file, '/\\') .. '\n')
     end,
     title = "Git Diff Files (origin/master)",
   })
@@ -104,8 +117,14 @@ vim.keymap.set("n", "<leader>gF", git_diff_files_master, { desc = "Picker: Git D
 -- User commands
 vim.api.nvim_create_user_command('GitDiffMaster', function()
   vim.cmd('tabnew')
-  vim.cmd('Git ++curwin diff origin/master')
-end, { desc = "Open git diff against origin/master" })
+  local bufnr = vim.api.nvim_get_current_buf()
+  vim.fn.termopen('git diff origin/master | delta --paging=never', {
+    on_exit = function()
+      vim.bo[bufnr].modified = false
+      vim.cmd('stopinsert')
+    end
+  })
+end, { desc = "Open git diff against origin/master with syntax highlighting" })
 
 vim.api.nvim_create_user_command('GitDiffFiles', git_diff_files_master, { desc = "Show git diff files in picker" })
 
