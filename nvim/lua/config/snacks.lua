@@ -27,6 +27,186 @@ vim.keymap.set("n", "<leader>gS", function() snacks.picker.git_stash() end, { de
 vim.keymap.set("n", "<leader>gd", function() snacks.picker.git_diff() end, { desc = "Git Diff (Hunks)" })
 vim.keymap.set("n", "<leader>gf", function() snacks.picker.git_log_file() end, { desc = "Git Log File" })
 
+-- Function to jump from delta diff to actual file
+local function jump_to_file_from_delta()
+  local current_line = vim.api.nvim_get_current_line()
+  local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
+
+  -- Try to extract line number from current line
+  -- Delta format with line-numbers: " 26 ⋮ 26 │code" or "    ⋮ 29 │code" (added) or " 32 ⋮    │code" (deleted)
+  local line_num = nil
+
+  -- Try to match unchanged line format: " 26 ⋮ 26 │"
+  line_num = current_line:match("%s*%d+%s*⋮%s*(%d+)%s*│")
+
+  -- If not found, try added line format: "    ⋮ 29 │"
+  if not line_num then
+    line_num = current_line:match("%s*⋮%s*(%d+)%s*│")
+  end
+
+  if not line_num then
+    vim.notify("No line number found on current line (might be a deleted line)", vim.log.levels.WARN)
+    return
+  end
+
+  -- Search backwards for file name (format: "apps/path/to/file.rs" or "added: path/to/file.rs")
+  local file_path = nil
+  for i = cursor_line, 1, -1 do
+    local line = vim.api.nvim_buf_get_lines(0, i - 1, i, false)[1]
+    -- Look for file path - should be on a line by itself with path/to/file.ext format
+    if line and line:match("^[a-zA-Z_].*%.%w+%s*$") and line:match("/") then
+      -- Strip leading/trailing whitespace and delta prefixes (added:, removed:, modified:, renamed:)
+      file_path = line:gsub("^%s+", ""):gsub("%s+$", "")
+      file_path = file_path:gsub("^added:%s*", ""):gsub("^removed:%s*", ""):gsub("^modified:%s*", ""):gsub("^renamed:%s*", "")
+      break
+    end
+  end
+
+  if not file_path then
+    vim.notify("Could not find file path", vim.log.levels.WARN)
+    return
+  end
+
+  -- Open the file at the line number
+  vim.cmd('edit +' .. line_num .. ' ' .. vim.fn.fnameescape(file_path))
+end
+
+-- vim-fugitive unified diff keymappings with delta
+vim.keymap.set("n", "<leader>gM", function()
+  vim.cmd('tabnew')
+  local bufnr = vim.api.nvim_get_current_buf()
+  local job_id = vim.fn.termopen('git diff origin/master | delta --paging=never --line-numbers', {
+    on_exit = function()
+      -- Keep buffer open after process exits
+      vim.bo[bufnr].modified = false
+      -- Switch to normal mode when process finishes
+      vim.cmd('stopinsert')
+      -- Set up keybinding to jump to file
+      vim.api.nvim_buf_set_keymap(bufnr, 'n', 'gf', '', {
+        callback = jump_to_file_from_delta,
+        noremap = true,
+        silent = true,
+        desc = "Jump to file at line"
+      })
+      vim.api.nvim_buf_set_keymap(bufnr, 'n', '<CR>', '', {
+        callback = jump_to_file_from_delta,
+        noremap = true,
+        silent = true,
+        desc = "Jump to file at line"
+      })
+    end
+  })
+end, { desc = "Git Diff origin/master with syntax highlighting" })
+
+-- Custom picker to show files changed vs master with stats
+local function git_diff_files_master()
+  snacks.picker.pick({
+    finder = function(_, ctx)
+      return require("snacks.picker.source.proc").proc({
+        cmd = "git",
+        args = { "diff", "--numstat", "origin/master...HEAD" },
+        transform = function(item)
+          -- Parse numstat format: "added\tdeleted\tfilename"
+          local added, deleted, file = item.text:match("^(%S+)%s+(%S+)%s+(.+)$")
+          if file then
+            item.file = file
+            item.added = added
+            item.deleted = deleted
+          end
+        end,
+      }, ctx)
+    end,
+    format = function(item, opts)
+      local ret = {} ---@type string[]
+      local file_part = item.file or item.text
+      local stats = ""
+      if item.added and item.deleted then
+        stats = string.format("  +%s -%s", item.added, item.deleted)
+      end
+      table.insert(ret, { file_part, "Normal" })
+      if stats ~= "" then
+        table.insert(ret, { stats, "Comment" })
+      end
+      return ret
+    end,
+    confirm = function(picker, item)
+      -- Close picker
+      picker:close()
+
+      -- Find the tab with delta diff terminal and switch to it
+      local found = false
+      for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
+        for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tab)) do
+          local buf = vim.api.nvim_win_get_buf(win)
+          local bufname = vim.api.nvim_buf_get_name(buf)
+          -- Check if this is a terminal buffer with delta
+          if vim.bo[buf].buftype == "terminal" and bufname:match("delta") then
+            vim.api.nvim_set_current_tabpage(tab)
+            vim.api.nvim_set_current_win(win)
+            found = true
+            break
+          end
+        end
+        if found then break end
+      end
+
+      -- If not found, open the diff in a new tab
+      if not found then
+        vim.cmd('tabnew')
+        local bufnr = vim.api.nvim_get_current_buf()
+        vim.fn.termopen('git diff origin/master | delta --paging=never --line-numbers', {
+          on_exit = function()
+            vim.bo[bufnr].modified = false
+            vim.cmd('stopinsert')
+            -- Set up keybindings
+            vim.api.nvim_buf_set_keymap(bufnr, 'n', 'gf', '', {
+              callback = jump_to_file_from_delta,
+              noremap = true,
+              silent = true,
+            })
+            vim.api.nvim_buf_set_keymap(bufnr, 'n', '<CR>', '', {
+              callback = jump_to_file_from_delta,
+              noremap = true,
+              silent = true,
+            })
+          end
+        })
+      end
+
+      -- Search for the file in the diff buffer
+      vim.fn.feedkeys('/' .. vim.fn.escape(item.file, '/\\') .. '\n')
+    end,
+    title = "Git Diff Files (origin/master)",
+  })
+end
+
+vim.keymap.set("n", "<leader>gF", git_diff_files_master, { desc = "Picker: Git Diff Files vs master" })
+
+-- User commands
+vim.api.nvim_create_user_command('GitDiffMaster', function()
+  vim.cmd('tabnew')
+  local bufnr = vim.api.nvim_get_current_buf()
+  vim.fn.termopen('git diff origin/master | delta --paging=never --line-numbers', {
+    on_exit = function()
+      vim.bo[bufnr].modified = false
+      vim.cmd('stopinsert')
+      -- Set up keybindings
+      vim.api.nvim_buf_set_keymap(bufnr, 'n', 'gf', '', {
+        callback = jump_to_file_from_delta,
+        noremap = true,
+        silent = true,
+      })
+      vim.api.nvim_buf_set_keymap(bufnr, 'n', '<CR>', '', {
+        callback = jump_to_file_from_delta,
+        noremap = true,
+        silent = true,
+      })
+    end
+  })
+end, { desc = "Open git diff against origin/master with syntax highlighting" })
+
+vim.api.nvim_create_user_command('GitDiffFiles', git_diff_files_master, { desc = "Show git diff files in picker" })
+
 -- Picker keymappings (replacing Telescope)
 local picker = require("snacks").picker
 
