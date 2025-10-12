@@ -22,7 +22,7 @@
       import_role:
         name: ansible-pm2
       environment:
-        PATH: "{{ ansible_env.HOME }}/.asdf/shims:{{ ansible_env.HOME }}/.asdf/bin:{{ ansible_env.PATH }}"
+        PATH: "{{ ansible_env.HOME }}/.local/share/mise/shims:{{ ansible_env.PATH }}"
 
 
 

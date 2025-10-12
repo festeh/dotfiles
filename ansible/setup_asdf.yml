@@ -1,18 +1,18 @@
-- name: Setup ASDF with node
+- name: Setup mise with node
   hosts: "{{ target }}"
   gather_facts: no
 
   tasks:
-    - name: install_asdf
+    - name: install_mise
       include_role:
-        name: ansible-role-asdf
+        name: ansible-role-mise
       vars:
-        asdf_plugins:
+        mise_plugins:
           - name: nodejs
             version: latest
             global: latest
-        asdf_user: "{{ ansible_user }}"
-        asdf_group: "{{ ansible_user }}"
+        mise_user: "{{ ansible_user }}"
+        mise_group: "{{ ansible_user }}"
 
 # First, create a template for the Caddyfile (`templates/Caddyfile.j2`):
 #

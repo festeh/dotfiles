@@ -76,12 +76,10 @@ setopt share_history      # Share command history across sessions
 source $DOTFILES/zsh/scripts.sh
 source $DOTFILES/zsh/aliases.sh
 
-if [ ! -f "$HOME/.asdf/asdf.sh" ]; then
-    export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
+if command -v mise &> /dev/null; then
+    eval "$(mise activate zsh)"
 else
-    . $HOME/.asdf/asdf.sh
-    fpath=(${ASDF_DIR}/completions $fpath)
-    . ~/.asdf/plugins/golang/set-env.zsh
+    echo "WARN: mise is not found"
 fi
 
 _comp_options+=(globdots)
