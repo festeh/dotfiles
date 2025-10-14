@@ -13,12 +13,12 @@ ansible-playbook -i ~/.ansible/hosts/inventory -l <host> --key-file=~/.ssh/id_rs
 
 # Packages from ansible-galaxy
 * caddy_ansible
-* cimon-io.asdf
+* ansible-role-mise
 * isaackehle.ansible_pm2
 
 
-# Setup asdf
-ansible-playbook setup_asdf.yml -i ~/.ansible/hosts -e target=contabo --key-file ~/.ssh/contabo -e ansible_user=root -e ansible_os_family=Debian -e asdf_group=root
+# Setup mise
+ansible-playbook setup_asdf.yml -i ~/.ansible/hosts -e target=contabo --key-file ~/.ssh/contabo -e ansible_user=root -e ansible_os_family=Debian -e mise_group=root
 
 # Setup pm2
 - Use -e "{'flags' : ['init']}"

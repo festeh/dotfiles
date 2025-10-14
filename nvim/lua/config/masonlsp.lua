@@ -189,7 +189,7 @@ lspconfig.tailwindcss.setup {
   capabilities = capabilities,
 }
 
-lspconfig.kotlin_language_server.setup {
+lspconfig.kotlin_lsp.setup {
   on_attach = custom_attach,
   capabilities = capabilities,
 }
