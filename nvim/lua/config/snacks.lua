@@ -73,6 +73,11 @@ end
 
 -- vim-fugitive unified diff keymappings with delta
 vim.keymap.set("n", "<leader>gM", function()
+  -- Capture current file and line before opening diff
+  local current_file = vim.fn.expand('%:p')
+  local current_line = vim.fn.line('.')
+  local has_context = current_file ~= '' and vim.fn.filereadable(current_file) == 1
+
   vim.cmd('tabnew')
   local bufnr = vim.api.nvim_get_current_buf()
   local job_id = vim.fn.termopen('git diff origin/master | delta --paging=never --line-numbers', {
@@ -94,6 +99,73 @@ vim.keymap.set("n", "<leader>gM", function()
         silent = true,
         desc = "Jump to file at line"
       })
+
+      -- Try to jump to the current file and line in the diff
+      if has_context then
+        vim.schedule(function()
+          -- Search for the file in the diff
+          local file_pattern = vim.fn.fnamemodify(current_file, ':t')  -- just filename
+          local search_result = vim.fn.search(file_pattern, 'w')
+
+          if search_result > 0 then
+            -- File found, now try to find the line number
+            -- Look for lines with format " XXX ⋮ XXX │" where XXX is close to current_line
+            local buf_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+            local best_match = nil
+            local best_diff = math.huge
+
+            for i = search_result, math.min(search_result + 500, #buf_lines) do
+              local line = buf_lines[i]
+              if line then
+                -- Try to extract line number from delta format
+                local line_num = line:match("%s*%d+%s*⋮%s*(%d+)%s*│")
+                if not line_num then
+                  line_num = line:match("%s*⋮%s*(%d+)%s*│")
+                end
+
+                if line_num then
+                  local num = tonumber(line_num)
+                  local diff = math.abs(num - current_line)
+                  if diff < best_diff then
+                    best_diff = diff
+                    best_match = i
+                  end
+                  -- If we found exact match or very close, stop searching
+                  if diff <= 2 then
+                    break
+                  end
+                end
+
+                -- Stop if we hit another file
+                if line:match("^[a-zA-Z_].*%.%w+%s*$") and i > search_result then
+                  break
+                end
+              end
+            end
+
+            if best_match and best_diff <= 10 then
+              -- Add a small delay to ensure terminal is ready
+              vim.defer_fn(function()
+                -- Find the window showing our terminal buffer
+                for _, win in ipairs(vim.api.nvim_list_wins()) do
+                  if vim.api.nvim_win_get_buf(win) == bufnr then
+                    vim.api.nvim_win_set_cursor(win, {best_match, 0})
+
+                    -- Center the view
+                    vim.api.nvim_win_call(win, function()
+                      local height = vim.api.nvim_win_get_height(win)
+                      local topline = math.max(1, best_match - math.floor(height / 2))
+                      vim.fn.winrestview({topline = topline})
+                    end)
+
+                    break
+                  end
+                end
+              end, 100)  -- 100ms delay
+            end
+          end
+        end)
+      end
     end
   })
 end, { desc = "Git Diff origin/master with syntax highlighting" })
