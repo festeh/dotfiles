@@ -38,6 +38,10 @@ name = "~/.aider.model.settings.yml"
 target = "switcher"
 name = "~/.config/switcher"
 
+[symlinks.screenshot_desktop]
+target = "autostart/screenshot.desktop"
+name = "~/.local/share/applications/screenshot.desktop"
+
 [templates.hyprland]
 target = "hyprland/hyprland_template.conf"
 name = "~/.config/hypr/hyprland.conf"

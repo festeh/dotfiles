@@ -1,4 +1,18 @@
 #!/bin/bash
 
 # Screenshot script using grim and slurp for rofi/wofi integration
-grim -g "$(slurp)"
+# Creates Pictures directory if it doesn't exist
+SCREENSHOT_DIR="${HOME}/Pictures"
+mkdir -p "$SCREENSHOT_DIR"
+
+# Generate filename with timestamp
+FILENAME="${SCREENSHOT_DIR}/screenshot_$(date +%Y%m%d_%H%M%S).png"
+
+# Take screenshot of selected area
+grim -g "$(slurp)" "$FILENAME"
+
+# Copy the file path to clipboard if screenshot was successful
+if [ -f "$FILENAME" ]; then
+    echo -n "$FILENAME" | wl-copy
+    notify-send "Screenshot saved" "$FILENAME\nPath copied to clipboard"
+fi

@@ -9,7 +9,6 @@ if [ -f "/etc/arch-release" ]; then
 else
     source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 fi
-source /usr/share/autojump/autojump.zsh
 
 bindkey -v
 bindkey  "^?" backward-delete-char
@@ -90,6 +89,9 @@ if [ "$(find $ZDOTDIR/.zcompdump -mtime +1)" ] ; then
 fi
 compinit -C
 
+# scripts
+export PATH="$DOTFILES/scripts:$PATH"
+
 # pnpm
 export PNPM_HOME="/home/dlipin/.local/share/pnpm"
 case ":$PATH:" in
@@ -101,3 +103,5 @@ esac
 if command -v tmux &> /dev/null && [ -n "$PS1" ] && [[ ! "$TERM" =~ screen ]] && [[ ! "$TERM" =~ tmux ]] && [ -z "$TMUX" ]; then
   tmux attach -t projects || tmux new -s projects
 fi
+
+eval "$(zoxide init zsh)"
