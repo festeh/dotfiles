@@ -16,19 +16,19 @@ function copypath() {
         CMD="$XSEL --clipboard --input"
     else
       CMD=$(which wl-copy)
-    fi 
+    fi
     if [ -z "$1" ]
     then
-        echo "No argument supplied. Please provide a file or directory name."
+        local filepath="$PWD"
     else
         local filepath=$(realpath "$1")
-        if [ -f "$filepath" ] || [ -d "$filepath" ]
-        then
-            FINAL_CMD="echo $filepath | $CMD 2>/dev/null"
-            eval "$FINAL_CMD" && echo "Copied $filepath to clipboard."
-        else
-            echo "Error getting the real path. Please check the file or directory name."
-        fi
+    fi
+    if [ -f "$filepath" ] || [ -d "$filepath" ]
+    then
+        FINAL_CMD="echo $filepath | $CMD 2>/dev/null"
+        eval "$FINAL_CMD" && echo "Copied $filepath to clipboard."
+    else
+        echo "Error getting the real path. Please check the file or directory name."
     fi
 }
 
