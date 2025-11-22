@@ -43,9 +43,8 @@ local capabilities = vim.tbl_deep_extend(
   require("blink.cmp").get_lsp_capabilities()
 )
 
-local lspconfig = require("lspconfig")
-
-lspconfig.ruff.setup {
+-- Configure Ruff LSP
+vim.lsp.config.ruff = {
   init_options = {
     settings = {
       -- Any extra CLI arguments for `ruff` go here.
@@ -54,6 +53,7 @@ lspconfig.ruff.setup {
   },
   on_attach = custom_attach,
 }
+vim.lsp.enable('ruff')
 
 
 -- lspconfig.jedi_language_server.setup {
@@ -81,13 +81,16 @@ lspconfig.ruff.setup {
 --     },
 --   },
 -- }
-lspconfig.basedpyright.setup {
+-- Configure basedpyright LSP
+vim.lsp.config.basedpyright = {
   on_attach = custom_attach,
   capabilities = capabilities,
   single_file_support = false,
 }
+vim.lsp.enable('basedpyright')
 
-lspconfig.lua_ls.setup {
+-- Configure Lua LSP
+vim.lsp.config.lua_ls = {
   on_attach = custom_attach,
   settings = {
     Lua = {
@@ -118,6 +121,7 @@ lspconfig.lua_ls.setup {
   },
   capabilities = capabilities,
 }
+vim.lsp.enable('lua_ls')
 
 -- lspconfig.rust_analyzer.setup {
 --   on_attach = custom_attach,
@@ -149,24 +153,30 @@ lspconfig.lua_ls.setup {
 --   single_file_support = false,
 -- }
 
+-- Configure clangd LSP
 -- clone capabilities
 local clangd_capabilities = {}
 clangd_capabilities.offsetEncoding = "utf-8"
-lspconfig.clangd.setup {
+vim.lsp.config.clangd = {
   on_attach = custom_attach,
   capabilities = clangd_capabilities,
   filetypes = { "c", "cpp", "objc", "objcpp", "cuda", }
 }
+vim.lsp.enable('clangd')
 
-lspconfig.buf_ls.setup {
+-- Configure buf_ls LSP
+vim.lsp.config.buf_ls = {
   on_attach = custom_attach,
   capabilities = capabilities
 }
+vim.lsp.enable('buf_ls')
 
-lspconfig.gopls.setup {
+-- Configure gopls LSP
+vim.lsp.config.gopls = {
   on_attach = custom_attach,
   capabilities = capabilities
 }
+vim.lsp.enable('gopls')
 
 -- lspconfig.emmet_language_server.setup({
 --   on_attach = custom_attach,
@@ -175,26 +185,35 @@ lspconfig.gopls.setup {
 --     "typescriptreact", "vue" },
 -- })
 
-lspconfig.svelte.setup {
+-- Configure svelte LSP
+vim.lsp.config.svelte = {
   on_attach = custom_attach,
   capabilities = capabilities
 }
+vim.lsp.enable('svelte')
 
-lspconfig.html.setup {
+-- Configure HTML LSP
+vim.lsp.config.html = {
   capabilities = capabilities,
 }
+vim.lsp.enable('html')
 
-lspconfig.tailwindcss.setup {
+-- Configure Tailwind CSS LSP
+vim.lsp.config.tailwindcss = {
   on_attach = custom_attach,
   capabilities = capabilities,
 }
+vim.lsp.enable('tailwindcss')
 
-lspconfig.kotlin_lsp.setup {
+-- Configure Kotlin LSP
+vim.lsp.config.kotlin_language_server = {
   on_attach = custom_attach,
   capabilities = capabilities,
 }
+vim.lsp.enable('kotlin_language_server')
 
-lspconfig.jsonls.setup {
+-- Configure JSON LSP
+vim.lsp.config.jsonls = {
   on_attach = custom_attach,
   capabilities = capabilities,
   settings = {
@@ -211,3 +230,4 @@ lspconfig.jsonls.setup {
     },
   },
 }
+vim.lsp.enable('jsonls')

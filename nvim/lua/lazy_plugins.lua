@@ -25,9 +25,6 @@ local plugins = {
     version = '*',
     config = req('blink'),
   },
-  {
-    "neovim/nvim-lspconfig",
-  },
   { "williamboman/mason.nvim",         config = req("masonlsp") },
   { "nvim-treesitter/nvim-treesitter", config = req('treesitter') },
   {
