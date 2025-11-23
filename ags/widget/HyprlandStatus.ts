@@ -26,10 +26,10 @@ export default function HyprlandStatus() {
             onClicked: () => ws.focus(),
           })
 
-          // Update className based on focused workspace
+          // Update css_classes based on focused workspace
           const updateClass = () => {
             const isFocused = hypr.get_focused_workspace() === ws
-            button.className = isFocused ? "focused" : ""
+            button.css_classes = isFocused ? ["focused"] : []
           }
 
           // Update label when workspace name changes

@@ -47,7 +47,105 @@ window {
 .focusing-widget,
 .tray-widget {
   background-color: @surface0;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 6px 14px;
   margin: 2px 8px;
+}
+
+/* Battery widget - normal color, red when low */
+.battery-widget {
+  color: @text;
+}
+
+.battery-widget.battery-low {
+  color: @red;
+}
+
+/* Volume widget - blue accent */
+.volume-widget {
+  color: @blue;
+}
+
+.volume-widget button {
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 200ms ease;
+}
+
+.volume-widget button:hover {
+  background-color: @surface1;
+}
+
+.volume-widget button.muted {
+  color: @red;
+}
+
+/* Time widget - lavender accent */
+.time-widget button {
+  padding: 4px 12px;
+  border-radius: 6px;
+  color: @lavender;
+  transition: all 200ms ease;
+}
+
+.time-widget button:hover {
+  background-color: @surface1;
+  color: @mauve;
+}
+
+/* Idle widget */
+.idle-widget {
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: all 200ms ease;
+  color: @green;
+}
+
+.idle-widget:hover {
+  background-color: @surface1;
+}
+
+.idle-widget.idle-widget-inactive {
+  color: @red;
+}
+
+/* Workspace widget */
+.workspace-widget button {
+  padding: 4px 10px;
+  margin: 0 2px;
+  border-radius: 6px;
+  color: @subtext0;
+  transition: all 200ms ease;
+  min-width: 24px;
+}
+
+.workspace-widget button:hover {
+  background-color: @surface1;
+  color: @text;
+}
+
+.workspace-widget button.focused {
+  background-color: @mauve;
+  color: @base;
+  font-weight: bold;
+}
+
+/* Focusing widget */
+.focusing-widget {
+  color: @text;
+}
+
+.focusing-widget.not-focusing {
+  color: @red;
+}
+
+/* Tray widget */
+.tray-widget button {
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 200ms ease;
+}
+
+.tray-widget button:hover {
+  background-color: @surface1;
 }

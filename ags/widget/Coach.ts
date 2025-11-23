@@ -9,6 +9,7 @@ const changedState = Variable(new Date())
 const durationState = Variable(0)
 const connectionState = Variable("disconnected")
 const numFocusesState = Variable(0)
+const isFocusing = Variable(true) // Track if currently focusing
 
 // Connection management variables
 let connection: Soup.WebsocketConnection | null = null
@@ -21,6 +22,7 @@ const HEARTBEAT_INTERVAL = 60000 // 30 seconds
 function setFocusingState(focusing: boolean, duration: number, numFocuses: number) {
   durationState.set(duration)
   numFocusesState.set(numFocuses)
+  isFocusing.set(focusing) // Update focusing state
   const durationMinutes = Math.floor(duration / 60)
   let durationString = ""
   if (durationMinutes == 1) {
@@ -212,8 +214,8 @@ export default function Coach() {
     })
   });
   return Widget.Box({
-    css_classes: bind(connectionState).as(state =>
-      state !== "connected" ? ["focusing-widget", "disconnected"] : ["focusing-widget"]
+    css_classes: bind(isFocusing).as(focusing =>
+      focusing ? ["focusing-widget"] : ["focusing-widget", "not-focusing"]
     ),
     children: [button]
   })

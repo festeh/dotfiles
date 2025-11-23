@@ -6,7 +6,9 @@ import { bind } from "astal"
 export default function Battery() {
   const bat = AstalBattery.get_default()
   return Widget.Box({
-    css_classes: ["battery-widget"],
+    css_classes: bind(bat, "percentage").as((p) =>
+      p < 0.20 ? ["battery-widget", "battery-low"] : ["battery-widget"]
+    ),
     children: [
       Widget.Image({
         iconName: bind(bat, "icon-name"),

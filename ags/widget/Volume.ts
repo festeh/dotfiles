@@ -10,7 +10,7 @@ export default function Volume() {
     css_classes: ["volume-widget"],
     children: [
       Widget.Button({
-        className: bind(muted).as(m => m ? "muted" : ""),
+        css_classes: bind(muted).as(m => m ? ["muted"] : []),
         child: Widget.Image({
           iconName: bind(muted).as(m =>
             m ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic"
