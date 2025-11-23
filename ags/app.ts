@@ -39,17 +39,10 @@ function initWidgets(monitor: Gdk.Monitor) {
   ]
 }
 
-console.log("CSS loaded, length:", style?.length || 0)
-console.log("CSS first 200 chars:", style?.substring(0, 200))
-
 App.start({
+  css: style,
   main() {
-    // Create Bar first
     Bar(monitor, calendarVisible, currentDate)
-
-    // Apply CSS AFTER widgets are created
-    console.log("Applying CSS after widgets created...")
-    App.apply_css(style, false)
 
     // TODO: Add back when Bar is working
     // Calendar(monitor, calendarVisible, currentDate)
