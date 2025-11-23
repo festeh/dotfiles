@@ -1,59 +1,6 @@
 import { App, Astal, Gdk, Gtk } from "astal/gtk4"
 import { Variable, bind } from "astal"
 
-const css = `
-.calendar-widget {
-  background-color: #1E1E2E;
-  padding: 10px;
-  margin-right: 10px;
-  border-radius: 10px;
-}
-
-.calendar-row {
-  margin: 0;
-  padding: 0;
-}
-
-.calendar-cell {
-  padding: 1em;
-  border: 1px solid #6E6C7E;
-  background-color: #302D41;
-  color: #D9E0EE;
-}
-
-.calendar-cell.current-day {
-  background-color: #F5C2E7;
-  color: #1E1E2E;
-  font-weight: bold;
-}
-
-.calendar-container {
-  border: 1px solid #6E6C7E;
-  background-color: #1E1E2E;
-}
-
-.month-label {
-  font-weight: bold;
-  font-size: 16px;
-  margin-bottom: 10px;
-  color: #F5C2E7;
-}
-
-.weekday-header {
-  font-weight: bold;
-  color: #89DCEB;
-  padding: 0.5em;
-}
-`
-
-const styleProvider = new Gtk.CssProvider()
-styleProvider.load_from_string(css)
-Gtk.StyleContext.add_provider_for_display(
-  Gdk.Display.get_default(),
-  styleProvider,
-  Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-)
-
 // function makeWeekdayHeader() {
 //   const weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 //   return <box
@@ -72,9 +19,11 @@ Gtk.StyleContext.add_provider_for_display(
 // }
 
 function generateCalendarDays(currentDate: Variable<Date>) {
-  const currentDay = bind(currentDate).as((date: Date) => date.getDate())
-  const month = bind(currentDate).as((date: Date) => date.getMonth()).get()
-  const year = bind(currentDate).as((date: Date) => date.getFullYear()).get()
+  const today = new Date()
+  const todayDay = today.getDate()
+  const todayMonth = today.getMonth()
+  const todayYear = today.getFullYear()
+
   const firstDay = bind(currentDate).as((date: Date) => {
     const year = date.getFullYear()
     const month = date.getMonth()
@@ -99,7 +48,12 @@ function generateCalendarDays(currentDate: Variable<Date>) {
       return d
     }
   )
+
   const rows = bind(days).as((d: number[]) => {
+    const viewedMonth = currentDate.get().getMonth()
+    const viewedYear = currentDate.get().getFullYear()
+    const isCurrentMonth = viewedMonth === todayMonth && viewedYear === todayYear
+
     const r = []
     for (let i = 0; i < d.length; i += 7) {
       const weekDays = d.slice(i, i + 7)
@@ -108,12 +62,12 @@ function generateCalendarDays(currentDate: Variable<Date>) {
           hexpand={true}
           halign={Gtk.Align.FILL}
           homogeneous={true}
-          className="calendar-row"
+          cssClasses={["calendar-row"]}
         >
           {weekDays.map((day: number | null) => (
             <label
               label={day ? day.toString() : ''}
-              className={bind(currentDay).as((cDay: number) => cDay === day ? 'calendar-cell current-day' : 'calendar-cell')}
+              cssClasses={isCurrentMonth && day === todayDay ? ['calendar-cell', 'current-day'] : ['calendar-cell']}
             />
           ))}
         </box>
@@ -131,11 +85,11 @@ function makeWeekdayHeader() {
     hexpand={true}
     halign={Gtk.Align.FILL}
     homogeneous={true}
-    className="calendar-row"
+    cssClasses={["calendar-row"]}
   >
     {weekdays.map((day: string) => (
       <label
-        className="weekday-header"
+        cssClasses={["weekday-header"]}
         label={day}
       />
     ))}
@@ -143,22 +97,43 @@ function makeWeekdayHeader() {
 }
 
 export default function Calendar(monitor: Gdk.Monitor, visible: Variable<boolean>, currentDate: Variable<Date>) {
-  const monthName = bind(currentDate).as((date: Date) => date.toLocaleString('default', { month: 'long' }))
+  const monthName = bind(currentDate).as((date: Date) => date.toLocaleString('default', { month: 'long', year: 'numeric' }))
+
+  const previousMonth = () => {
+    const current = currentDate.get()
+    const newDate = new Date(current.getFullYear(), current.getMonth() - 1, 1)
+    currentDate.set(newDate)
+  }
+
+  const nextMonth = () => {
+    const current = currentDate.get()
+    const newDate = new Date(current.getFullYear(), current.getMonth() + 1, 1)
+    currentDate.set(newDate)
+  }
+
   return (
     <window
       gdkmonitor={monitor}
-      className="Calendar"
+      cssClasses={["Calendar"]}
       visible={bind(visible)}
       anchor={Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT}
       application={App}>
       <box
-        className="calendar-widget"
+        cssClasses={["calendar-widget"]}
         spacing={5}
         valign={Gtk.Align.FILL}
         orientation={Gtk.Orientation.VERTICAL}
       >
-        <label className="month-label" label={monthName} />
-        <box className="calendar-container" orientation={Gtk.Orientation.VERTICAL}>
+        <box cssClasses={["calendar-header"]} spacing={10}>
+          <button cssClasses={["calendar-nav-button"]} onClicked={previousMonth}>
+            <label label="◀" />
+          </button>
+          <label cssClasses={["month-label"]} label={monthName} hexpand={true} />
+          <button cssClasses={["calendar-nav-button"]} onClicked={nextMonth}>
+            <label label="▶" />
+          </button>
+        </box>
+        <box cssClasses={["calendar-container"]} orientation={Gtk.Orientation.VERTICAL}>
           {makeWeekdayHeader()}
           {generateCalendarDays(currentDate)}
         </box>

@@ -45,6 +45,17 @@ export default function Tray() {
         }
       ))
 
+      // Add right-click support for context menu
+      const gesture = Gtk.GestureClick.new()
+      gesture.set_button(3) // Right mouse button
+      gesture.connect("pressed", () => {
+        if (menu) {
+          menu.set_parent(button)
+          menu.popup()
+        }
+      })
+      button.add_controller(gesture)
+
       return button;
     })
   })

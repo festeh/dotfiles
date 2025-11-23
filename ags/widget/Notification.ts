@@ -11,7 +11,7 @@ type NotificationProps = {
 
 export default function Notification({ notification, onHoverLost, setup }: NotificationProps): Gtk.Widget {
   const box = Widget.Box({
-    className: "notification",
+    css_classes: ["notification"],
     vertical: true,
     children: [
       // Header with app icon, app name, and close button
@@ -95,10 +95,14 @@ export default function Notification({ notification, onHoverLost, setup }: Notif
     ],
   })
 
-  // TODO: Implement GTK4 hover events using GtkEventControllerMotion
-  // if (onHoverLost) {
-  //   // GTK4: Use event controller instead of leave-notify-event
-  // }
+  // Implement GTK4 hover events
+  if (onHoverLost) {
+    const motion = new Gtk.EventControllerMotion()
+    motion.connect("leave", () => {
+      onHoverLost()
+    })
+    box.add_controller(motion)
+  }
 
   if (setup) {
     setup()

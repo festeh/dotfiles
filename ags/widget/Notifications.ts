@@ -38,13 +38,15 @@ class NotificationHistory implements Subscribable {
       this.set(id, Notification({
         notification,
 
-        onHoverLost: () => this.delete(id),
+        // Defer dismissal to next event loop iteration to avoid GTK4 crash during event processing
+        onHoverLost: () => {
+          timeout(1, () => notification.dismiss())
+        },
 
         setup: () => {
-          // Only auto-dismiss if not in persistent apps list
           if (!isPersistent) {
             timeout(TIMEOUT_DELAY, () => {
-              this.delete(id)
+              notification.dismiss()
             })
           }
         }
@@ -57,26 +59,25 @@ class NotificationHistory implements Subscribable {
   }
 
   private set(key: number, value: Gtk.Widget) {
-    const widget = this.map.get(key)
-    if (widget) {
-      // Remove from parent before disposing
-      const parent = widget.get_parent()
-      if (parent) parent.remove(widget)
-      widget.run_dispose()
-    }
+    // Just update the map, GTK will handle widget replacement
     this.map.set(key, value)
     this.notifiy()
   }
 
   private delete(key: number) {
+    console.log(`Deleting notification ${key}`)
     const widget = this.map.get(key)
-    if (widget) {
-      // Remove from parent before disposing
-      const parent = widget.get_parent()
-      if (parent) parent.remove(widget)
-      widget.run_dispose()
+    if (!widget) {
+      console.log(`Widget ${key} not found in map`)
+      this.map.delete(key)
+      this.notifiy()
+      return
     }
+
+    // Just remove from map and let notifiy() update the widget list
+    // GTK will handle cleanup when widgets are removed from the box
     this.map.delete(key)
+    console.log(`Removed notification ${key} from map`)
     this.notifiy()
   }
 
@@ -96,7 +97,7 @@ export default function Notifications(monitor: Gdk.Monitor) {
   console.log("Notifications: NotificationHistory created, creating window...")
   return Widget.Window({
     gdkmonitor: monitor,
-    visible: true,
+    visible: bind(history).as(list => list.length > 0),
     exclusivity: Astal.Exclusivity.NORMAL,
     anchor: Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT,
   }, Widget.Box({
