@@ -194,6 +194,11 @@ tooltip label {
 }
 
 /* Notifications */
+window.Calendar,
+window {
+  background-color: transparent;
+}
+
 .notification {
   background-color: @surface0;
   border-radius: 12px;

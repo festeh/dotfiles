@@ -21,18 +21,13 @@ class NotificationHistory implements Subscribable {
   }
 
   constructor() {
-    console.log("NotificationHistory: Starting initialization...")
     const notifd = Notifd.get_default()
-    console.log("NotificationHistory: Notifd.get_default() completed")
 
     // Enforce our own timeout instead of sender's timeout
     notifd.ignoreTimeout = true
-    console.log("NotificationHistory: Set ignoreTimeout=true")
 
     notifd.connect("notified", (_, id) => {
-      console.log(`Notification received! ID: ${id}`)
       const notification = notifd.get_notification(id)!
-      console.log(`Notification details: ${notification.summary}`)
       const isPersistent = PERSISTENT_APPS.includes(notification.appName || "")
 
       this.set(id, Notification({
@@ -65,10 +60,8 @@ class NotificationHistory implements Subscribable {
   }
 
   private delete(key: number) {
-    console.log(`Deleting notification ${key}`)
     const widget = this.map.get(key)
     if (!widget) {
-      console.log(`Widget ${key} not found in map`)
       this.map.delete(key)
       this.notifiy()
       return
@@ -77,7 +70,6 @@ class NotificationHistory implements Subscribable {
     // Just remove from map and let notifiy() update the widget list
     // GTK will handle cleanup when widgets are removed from the box
     this.map.delete(key)
-    console.log(`Removed notification ${key} from map`)
     this.notifiy()
   }
 
@@ -92,9 +84,7 @@ class NotificationHistory implements Subscribable {
   }
 }
 export default function Notifications(monitor: Gdk.Monitor) {
-  console.log("Notifications: Creating NotificationHistory...")
   const history = new NotificationHistory()
-  console.log("Notifications: NotificationHistory created, creating window...")
   return Widget.Window({
     gdkmonitor: monitor,
     visible: bind(history).as(list => list.length > 0),
@@ -102,6 +92,7 @@ export default function Notifications(monitor: Gdk.Monitor) {
     anchor: Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT,
   }, Widget.Box({
     vertical: true,
+    spacing: 0,
   }, bind(history))
 
   )

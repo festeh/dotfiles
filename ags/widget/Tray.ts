@@ -35,7 +35,6 @@ export default function Tray() {
       const button = Widget.Button({
         tooltipMarkup: bind(item, "tooltipMarkup"),
         onClicked: () => {
-          console.log("click")
           item.activate(0, 0);
         },
 
