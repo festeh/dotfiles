@@ -15,6 +15,7 @@ export default function Bar(monitor: Gdk.Monitor, calendarVisible: Variable<bool
   return Widget.Window(
     {
       className: "Bar",
+      visible: true,
       gdkmonitor: monitor,
       exclusivity: Astal.Exclusivity.EXCLUSIVE,
       anchor: Astal.WindowAnchor.TOP | Astal.WindowAnchor.LEFT | Astal.WindowAnchor.RIGHT,

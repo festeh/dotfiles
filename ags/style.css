@@ -1,21 +1,18 @@
 * {
     text-shadow: none;
- }
+}
 
-/* Base bar styling */
 window.Bar {
-    color: #cdd6f4; /* Catppuccin text color */
-    /* font-weight: 600; */
+    color: #cdd6f4;
     font-size: 1rem;
 }
 
 .bar-container {
-    background-color: #1e1e2e; /* Catppuccin base color */
+    background-color: #1e1e2e;
     padding: 4px 6px;
 }
 
-/* Global button styling - removes white backgrounds */
- button {
+button {
     background: none;
     border: none;
     box-shadow: none;
@@ -27,31 +24,29 @@ window.Bar {
 }
 
 window.Bar button:hover {
-    background-color: rgba(166, 173, 200, 0.1); /* Subtext0 with transparency */
+    background-color: rgba(166, 173, 200, 0.1);
 }
 
-/* General widget styling */
 .workspace-widget,
 .battery-widget,
 .volume-widget,
 .idle-widget,
 .time-widget,
 .focusing-widget {
-    background-color: #313244; /* surface0 */
+    background-color: #313244;
     border-radius: 8px;
     padding: 4px 8px;
     margin: 2px;
 }
 
-/* Focusing widget (Coach) */
 .focusing-widget {
-    background-color: #89b4fa; /* blue */
+    background-color: #89b4fa;
 }
 
 .focusing-widget .focusing-label,
 .focusing-widget label {
     font-weight: 500;
-    color: #1e1e2e; /* dark text on blue background */
+    color: #1e1e2e;
 }
 
 .focusing-widget button {
@@ -61,17 +56,15 @@ window.Bar button:hover {
     padding: 0;
 }
 
-/* Battery widget */
 .battery-widget {
-    background-color: #cba6f7; /* mauve */
-    color: #1e1e2e; /* dark text on mauve background */
+    background-color: #cba6f7;
+    color: #1e1e2e;
 }
 
-/* Time widget */
 .time-widget {
-    background-color: #74c7ec; /* sapphire - darker than lavender */
-    color: #1e1e2e; /* dark text on sapphire background */
-    font-weight: 600; /* slightly bolder for better readability */
+    background-color: #74c7ec;
+    color: #1e1e2e;
+    font-weight: 600;
     padding: 4px 8px;
 }
 
@@ -82,16 +75,15 @@ window.Bar button:hover {
     padding: 0;
 }
 
-/* Workspace widget */
 .workspace-widget {
-    background-color: #313244; /* surface0 - darker background */
+    background-color: #313244;
     border-radius: 10px;
     padding: 2px 4px;
 }
 
 .workspace-widget button {
-    background-color: rgba(205, 214, 244, 0.1); /* subtle text color with transparency */
-    color: #cdd6f4; /* text */
+    background-color: rgba(205, 214, 244, 0.1);
+    color: #cdd6f4;
     border-radius: 6px;
     min-width: 32px;
     min-height: 28px;
@@ -106,32 +98,30 @@ window.Bar button:hover {
 }
 
 .workspace-widget button.focused {
-    background-color: #cba6f7; /* mauve */
-    color: #1e1e2e; /* dark text on mauve background */
+    background-color: #cba6f7;
+    color: #1e1e2e;
     font-weight: 600;
     border: 2px solid rgba(203, 166, 247, 0.4);
     box-shadow: 0 0 12px rgba(203, 166, 247, 0.3);
 }
 
 .workspace-widget button.focused:hover {
-    background-color: #d4b3ff; /* lighter mauve */
+    background-color: #d4b3ff;
     box-shadow: 0 0 16px rgba(203, 166, 247, 0.5);
 }
 
-/* Idle widget */
 .idle-widget {
-    background-color: #7287fd; /* deeper blue - more visible */
-    color: #1e1e2e; /* dark text on blue background */
+    background-color: #7287fd;
+    color: #1e1e2e;
 }
 
 .idle-widget-inactive {
-    background-color: #f38ba8; /* red - keeping this the same */
+    background-color: #f38ba8;
 }
 
-/* Volume widget */
 .volume-widget {
-    background-color: #94e2d5; /* teal */
-    color: #1e1e2e; /* dark text on teal background */
+    background-color: #94e2d5;
+    color: #1e1e2e;
 }
 
 .volume-widget button {
@@ -140,37 +130,31 @@ window.Bar button:hover {
 }
 
 .volume-widget button.muted {
-    background-color: #f38ba8; /* red */
+    background-color: #f38ba8;
 }
 
-/* Highlight for + and - buttons on hover */
 .volume-widget .volume-button-minus:hover,
 .volume-widget .volume-button-plus:hover {
-    background-color: rgba(30, 30, 46, 0.2); /* base slightly darker, more subtle */
+    background-color: rgba(30, 30, 46, 0.2);
 }
 
 .volume-widget scale trough {
     min-width: 120px;
     min-height: 6px;
-    background-color: rgba(30, 30, 46, 0.3); /* base with transparency */
+    background-color: rgba(30, 30, 46, 0.3);
 }
 
 .volume-widget scale highlight {
-    background-color: #1e1e2e; /* base */
+    background-color: #1e1e2e;
 }
 
-/* Tray icons - fix white background */
 window.Bar box > button > image {
-    color: #cdd6f4; /* text */
+    color: #cdd6f4;
 }
 
-
-/* Specific styling for icons */
 window.Bar icon {
     font-size: 16px;
 }
-
-/* ========== Notification Styling - macOS Style ========== */
 
 window.Notifications {
     background-color: transparent;
@@ -181,13 +165,13 @@ window.Notifications > box {
 }
 
 .notification {
-    background-color: #1e1e2e; /* base */
+    background-color: #1e1e2e;
     border-radius: 12px;
     padding: 12px;
     margin: 8px;
     min-width: 300px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    border: 1px solid #313244; /* surface0 */
+    border: 1px solid #313244;
 }
 
 .notification-header {
@@ -198,13 +182,13 @@ window.Notifications > box {
     margin-right: 8px;
     min-width: 16px;
     min-height: 16px;
-    color: #cdd6f4; /* text */
+    color: #cdd6f4;
 }
 
 .notification-app-name {
     font-size: 0.85rem;
     font-weight: 500;
-    color: #a6adc8; /* subtext0 */
+    color: #a6adc8;
 }
 
 .notification-close {
@@ -217,7 +201,7 @@ window.Notifications > box {
 }
 
 .notification-close:hover {
-    background-color: rgba(243, 139, 168, 0.2); /* red with transparency */
+    background-color: rgba(243, 139, 168, 0.2);
 }
 
 .notification-content {
@@ -233,31 +217,28 @@ window.Notifications > box {
     min-height: 48px;
 }
 
-.notification-text {
-}
-
 .notification-summary {
     font-size: 1rem;
     font-weight: 600;
-    color: #cdd6f4; /* text */
+    color: #cdd6f4;
     margin-bottom: 4px;
 }
 
 .notification-body {
     font-size: 0.9rem;
-    color: #bac2de; /* subtext1 */
+    color: #bac2de;
     opacity: 0.9;
 }
 
 .notification-actions {
     margin-top: 8px;
     padding-top: 8px;
-    border-top: 1px solid #313244; /* surface0 */
+    border-top: 1px solid #313244;
 }
 
 .notification-action {
-    background-color: #313244; /* surface0 */
-    color: #cdd6f4; /* text */
+    background-color: #313244;
+    color: #cdd6f4;
     border-radius: 6px;
     padding: 6px 12px;
     margin-right: 8px;
@@ -265,9 +246,9 @@ window.Notifications > box {
 }
 
 .notification-action:hover {
-    background-color: #45475a; /* surface1 */
+    background-color: #45475a;
 }
 
 .notification-action:active {
-    background-color: #585b70; /* surface2 */
+    background-color: #585b70;
 }
