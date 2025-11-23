@@ -10,88 +10,108 @@ type NotificationProps = {
 }
 
 export default function Notification({ notification, onHoverLost, setup }: NotificationProps): Gtk.Widget {
+  // Debug: Log full notification info
+  console.log("=== NOTIFICATION DEBUG ===")
+  console.log("App:", notification.appName)
+  console.log("Icon:", notification.appIcon)
+  console.log("Summary:", notification.summary)
+  console.log("Body:", notification.body)
+  console.log("Image:", notification.image)
+  console.log("Actions:", JSON.stringify(notification.actions))
+  console.log("Urgency:", notification.urgency)
+  console.log("========================")
+
+  // Check if appIcon is a file path or icon name
+  const isFilePath = notification.appIcon?.startsWith("/") || notification.appIcon?.startsWith("~")
+  const hasValidIcon = notification.appIcon && notification.appIcon !== ""
+
+  // Check if image is valid (file path exists and is safe)
+  const hasValidImage = notification.image &&
+                        notification.image.trim() !== "" &&
+                        (notification.image.startsWith("/") || notification.image.startsWith("~")) &&
+                        !notification.image.includes("..") // Prevent path traversal
+
+  // Filter out invalid/empty actions (must have both label and id, and label must not be empty)
+  const validActions = notification.actions?.filter(action => {
+    const hasValidLabel = action.label && action.label.trim() !== ""
+    const hasValidId = action.id && action.id !== ""
+    return hasValidLabel && hasValidId
+  }) || []
+
   const box = Widget.Box({
     css_classes: ["notification"],
-    vertical: true,
+    spacing: 12,
     children: [
-      // Header with app icon, app name, and close button
-      Widget.Box({
-        className: "notification-header",
+      // Left side: Icon and/or Image (show both if available, side by side)
+      (hasValidIcon || hasValidImage) ? Widget.Box({
+        css_classes: ["notification-icons"],
+        spacing: 8,
+        vertical: false,
         children: [
-          Widget.Image({
-            className: "notification-app-icon",
-            iconName: notification.appIcon || "dialog-information-symbolic",
-          }),
-          Widget.Label({
-            className: "notification-app-name",
-            label: notification.appName || "Unknown",
-            hexpand: true,
-            xalign: 0,
-          }),
-          Widget.Button({
-            className: "notification-close",
-            child: Widget.Image({
-              iconName: "window-close-symbolic",
-            }),
-            onClicked: () => notification.dismiss(),
-          }),
-        ],
-      }),
-
-      // Content area with summary and body
-      Widget.Box({
-        className: "notification-content",
-        children: [
-          // Image (if available)
-          notification.image ? Widget.Box({
-            className: "notification-image-container",
-            children: [
-              Widget.Image({
-                className: "notification-image",
-                iconName: notification.image,
-              }),
-            ],
+          // App icon
+          hasValidIcon ? Widget.Image({
+            css_classes: ["notification-icon"],
+            ...(isFilePath
+              ? { file: notification.appIcon }
+              : { iconName: notification.appIcon }
+            ),
           }) : Widget.Box({ visible: false }),
 
-          // Text content
-          Widget.Box({
-            className: "notification-text",
-            vertical: true,
-            hexpand: true,
-            children: [
-              Widget.Label({
-                className: "notification-summary",
-                label: notification.summary,
-                xalign: 0,
-                wrap: true,
-                maxWidthChars: 40,
-              }),
-              notification.body ? Widget.Label({
-                className: "notification-body",
-                label: notification.body,
-                xalign: 0,
-                wrap: true,
-                maxWidthChars: 40,
-                useMarkup: true,
-              }) : Widget.Box({ visible: false }),
-            ],
+          // Notification image
+          hasValidImage ? Widget.Image({
+            css_classes: ["notification-image"],
+            file: notification.image,
+          }) : Widget.Box({ visible: false }),
+        ],
+      }) : Widget.Box({ visible: false }),
+
+      // Main content area
+      Widget.Box({
+        css_classes: ["notification-content"],
+        vertical: true,
+        hexpand: true,
+        spacing: 4,
+        children: [
+          // App name (small, subtle)
+          Widget.Label({
+            css_classes: ["notification-app-name"],
+            label: notification.appName || "Notification",
+            xalign: 0,
           }),
+
+          // Summary (main text, bold)
+          Widget.Label({
+            css_classes: ["notification-summary"],
+            label: notification.summary,
+            xalign: 0,
+            wrap: true,
+            maxWidthChars: 35,
+          }),
+
+          // Body text (if available)
+          notification.body ? Widget.Label({
+            css_classes: ["notification-body"],
+            label: notification.body,
+            xalign: 0,
+            wrap: true,
+            maxWidthChars: 35,
+            useMarkup: true,
+          }) : Widget.Box({ visible: false }),
+
+          // Actions (only show valid ones)
+          validActions.length > 0 ? Widget.Box({
+            css_classes: ["notification-actions"],
+            spacing: 8,
+            children: validActions.map(action =>
+              Widget.Button({
+                css_classes: ["notification-action"],
+                label: action.label,
+                onClicked: () => notification.invoke(action.id),
+              })
+            ),
+          }) : Widget.Box({ visible: false }),
         ],
       }),
-
-      // Actions (if available)
-      notification.actions && notification.actions.length > 0 ? Widget.Box({
-        className: "notification-actions",
-        children: notification.actions.map(action =>
-          Widget.Button({
-            className: "notification-action",
-            child: Widget.Label({
-              label: action.label,
-            }),
-            onClicked: () => notification.invoke(action.id),
-          })
-        ),
-      }) : Widget.Box({ visible: false }),
     ],
   })
 
