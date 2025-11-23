@@ -1,0 +1,20 @@
+# Kitty session for dotfiles development
+
+# Tab 1: Neovim
+new_tab neovim
+cd ~/dotfiles
+launch nvim
+
+# Tab 2: Claude
+new_tab claude
+cd ~/dotfiles
+launch claude
+
+# Tab 3: Terminal
+new_tab terminal
+cd ~/dotfiles
+launch
+
+# Start in fullscreen mode
+# (Note: kitty sessions don't directly support fullscreen,
+#  use: kitty --session ~/.config/kitty/dotfiles --start-as fullscreen)

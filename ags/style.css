@@ -231,8 +231,7 @@ window {
 .notification-image {
   min-width: 48px;
   min-height: 48px;
-  max-width: 64px;
-  max-height: 64px;
+  /* max-width/max-height not supported in GTK CSS - control size via widget properties */
   border-radius: 6px;
 }
 

@@ -11,16 +11,27 @@ export default function HyprlandStatus() {
     css_classes: ["workspace-widget"],
     setup: (self) => {
       const updateWorkspaces = () => {
-        // Remove all children
-        self.children.forEach((child) => child.destroy())
+        try {
+          console.log("🔄 updateWorkspaces called")
 
-        // Get all workspaces, filter and sort
-        const workspaces = hypr.get_workspaces()
-          .filter((ws) => !(ws.get_id() >= -99 && ws.get_id() <= -2))
-          .sort((a, b) => a.get_id() - b.get_id())
+          // Clear all children (GTK will handle cleanup)
+          console.log(`🗑️  Clearing ${self.children.length} existing workspace buttons`)
+          self.children = []
 
-        // Add workspace buttons
-        self.children = workspaces.map((ws) => {
+          // Get all workspaces, filter and sort
+          const workspaces = hypr.get_workspaces()
+          console.log(`📋 Raw workspaces: ${workspaces.length}`)
+
+          const filtered = workspaces.filter((ws) => !(ws.get_id() >= -99 && ws.get_id() <= -2))
+          console.log(`🔍 After filter: ${filtered.length}`)
+
+          const sorted = filtered.sort((a, b) => a.get_id() - b.get_id())
+
+          const workspaceIds = sorted.map(ws => ws.get_id()).join(", ")
+          console.log(`✨ Creating buttons for ${sorted.length} workspaces: [${workspaceIds}]`)
+
+          // Add workspace buttons
+          self.children = sorted.map((ws) => {
           const getLabel = () => {
             const id = ws.get_id()
             const name = ws.get_name()
@@ -64,11 +75,24 @@ export default function HyprlandStatus() {
 
           return button
         })
+        } catch (error) {
+          console.error("❌ Error in updateWorkspaces:", error)
+        }
       }
 
       // Update initially and when workspaces change
       updateWorkspaces()
       hypr.connect("notify::workspaces", updateWorkspaces)
+
+      // Listen for workspace rename events only
+      // (create/destroy handled by notify::workspaces above)
+      hypr.connect("event", (_, eventName, args) => {
+        console.log(`Hyprland event: ${eventName} ${args}`)
+        if (eventName === "renameworkspace") {
+          // Rebuild all workspace buttons with updated names
+          updateWorkspaces()
+        }
+      })
     }
   })
 }
