@@ -21,13 +21,18 @@ class NotificationHistory implements Subscribable {
   }
 
   constructor() {
+    console.log("NotificationHistory: Starting initialization...")
     const notifd = Notifd.get_default()
+    console.log("NotificationHistory: Notifd.get_default() completed")
 
     // Enforce our own timeout instead of sender's timeout
     notifd.ignoreTimeout = true
+    console.log("NotificationHistory: Set ignoreTimeout=true")
 
     notifd.connect("notified", (_, id) => {
+      console.log(`Notification received! ID: ${id}`)
       const notification = notifd.get_notification(id)!
+      console.log(`Notification details: ${notification.summary}`)
       const isPersistent = PERSISTENT_APPS.includes(notification.appName || "")
 
       this.set(id, Notification({
@@ -52,13 +57,25 @@ class NotificationHistory implements Subscribable {
   }
 
   private set(key: number, value: Gtk.Widget) {
-    this.map.get(key)?.destroy()
+    const widget = this.map.get(key)
+    if (widget) {
+      // Remove from parent before disposing
+      const parent = widget.get_parent()
+      if (parent) parent.remove(widget)
+      widget.run_dispose()
+    }
     this.map.set(key, value)
     this.notifiy()
   }
 
   private delete(key: number) {
-    this.map.get(key)?.destroy()
+    const widget = this.map.get(key)
+    if (widget) {
+      // Remove from parent before disposing
+      const parent = widget.get_parent()
+      if (parent) parent.remove(widget)
+      widget.run_dispose()
+    }
     this.map.delete(key)
     this.notifiy()
   }
@@ -74,13 +91,16 @@ class NotificationHistory implements Subscribable {
   }
 }
 export default function Notifications(monitor: Gdk.Monitor) {
+  console.log("Notifications: Creating NotificationHistory...")
   const history = new NotificationHistory()
+  console.log("Notifications: NotificationHistory created, creating window...")
   return Widget.Window({
     gdkmonitor: monitor,
-    exclusivity: Astal.Exclusivity.EXCLUSIVE,
+    visible: true,
+    exclusivity: Astal.Exclusivity.NORMAL,
     anchor: Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT,
   }, Widget.Box({
-
+    vertical: true,
   }, bind(history))
 
   )

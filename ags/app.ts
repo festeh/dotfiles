@@ -43,10 +43,10 @@ App.start({
   css: style,
   main() {
     Bar(monitor, calendarVisible, currentDate)
+    Notifications(monitor)
 
     // TODO: Add back when Bar is working
     // Calendar(monitor, calendarVisible, currentDate)
-    // Notifications(monitor)
 
     // Note: GTK4 monitor events work differently
     // TODO: Implement monitor hotplug using Gdk.Display signals if needed

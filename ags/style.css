@@ -49,7 +49,7 @@ window {
   background-color: @surface0;
   border-radius: 10px;
   padding: 6px 14px;
-  margin: 2px 8px;
+  margin: 2px 4px;
 }
 
 /* Battery widget - normal color, red when low */
@@ -142,10 +142,87 @@ window {
 /* Tray widget */
 .tray-widget button {
   padding: 4px;
+  margin: 0px 3px;
   border-radius: 6px;
   transition: all 200ms ease;
 }
 
 .tray-widget button:hover {
   background-color: @surface1;
+}
+
+/* Notifications */
+.notification {
+  background-color: @surface0;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 8px;
+  min-width: 350px;
+  border: 1px solid @surface2;
+}
+
+.notification-header {
+  margin-bottom: 8px;
+}
+
+.notification-app-icon {
+  margin-right: 8px;
+}
+
+.notification-app-name {
+  color: @subtext0;
+  font-size: 12px;
+}
+
+.notification-close {
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 200ms ease;
+}
+
+.notification-close:hover {
+  background-color: @surface1;
+  color: @red;
+}
+
+.notification-content {
+  margin-bottom: 8px;
+}
+
+.notification-image-container {
+  margin-right: 12px;
+}
+
+.notification-image {
+  min-width: 64px;
+  min-height: 64px;
+}
+
+.notification-summary {
+  color: @text;
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.notification-body {
+  color: @subtext1;
+  font-size: 12px;
+}
+
+.notification-actions {
+  margin-top: 8px;
+}
+
+.notification-action {
+  background-color: @surface1;
+  border-radius: 6px;
+  padding: 6px 12px;
+  margin-right: 8px;
+  transition: all 200ms ease;
+}
+
+.notification-action:hover {
+  background-color: @surface2;
+  color: @mauve;
 }
