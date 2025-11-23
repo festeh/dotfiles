@@ -21,8 +21,17 @@ export default function HyprlandStatus() {
 
         // Add workspace buttons
         self.children = workspaces.map((ws) => {
+          const getLabel = () => {
+            const id = ws.get_id()
+            const name = ws.get_name()
+            return name === id.toString() ? name : `<span alpha="50%">${id}</span> ${name}`
+          }
+
           const button = Widget.Button({
-            label: ws.get_name(),
+            child: Widget.Label({
+              label: getLabel(),
+              use_markup: true,
+            }),
             onClicked: () => ws.focus(),
           })
 
@@ -34,7 +43,8 @@ export default function HyprlandStatus() {
 
           // Update label when workspace name changes
           const updateLabel = () => {
-            button.label = ws.get_name()
+            const label = button.child as ReturnType<typeof Widget.Label>
+            label.label = getLabel()
           }
 
           // Set initial state
