@@ -1,254 +1,53 @@
+/* Catppuccin Mocha Theme for AGS */
+
 * {
-    text-shadow: none;
+  all: unset;
+  font-family: "JetBrainsMono Nerd Font";
+  font-size: 14px;
 }
 
-window.Bar {
-    color: #cdd6f4;
-    font-size: 1rem;
+/* Catppuccin Mocha Colors */
+@define-color base #1e1e2e;
+@define-color mantle #181825;
+@define-color crust #11111b;
+@define-color text #cdd6f4;
+@define-color subtext0 #a6adc8;
+@define-color subtext1 #bac2de;
+@define-color surface0 #313244;
+@define-color surface1 #45475a;
+@define-color surface2 #585b70;
+@define-color overlay0 #6c7086;
+@define-color overlay1 #7f849c;
+@define-color overlay2 #9399b2;
+@define-color blue #89b4fa;
+@define-color lavender #b4befe;
+@define-color sapphire #74c7ec;
+@define-color sky #89dceb;
+@define-color teal #94e2d5;
+@define-color green #a6e3a1;
+@define-color yellow #f9e2af;
+@define-color peach #fab387;
+@define-color maroon #eba0ac;
+@define-color red #f38ba8;
+@define-color mauve #cba6f7;
+@define-color pink #f5c2e7;
+
+/* Window background */
+window {
+  background-color: @base;
+  color: @text;
 }
 
-.bar-container {
-    background-color: #1e1e2e;
-    padding: 4px 6px;
-}
-
-button {
-    background: none;
-    border: none;
-    box-shadow: none;
-    border-radius: 8px;
-    margin: 2px;
-    min-height: 28px;
-    padding: 4px 8px;
-    transition: all 200ms ease;
-}
-/**/
-window.Bar button:hover {
-    background-color: rgba(166, 173, 200, 0.1);
-}
-
-.workspace-widget,
+/* All widgets with rounded boxes */
 .battery-widget,
 .volume-widget,
-.idle-widget,
 .time-widget,
-.focusing-widget {
-    background-color: #313244;
-    border-radius: 8px;
-    padding: 4px 8px;
-    margin: 2px;
+.idle-widget,
+.workspace-widget,
+.focusing-widget,
+.tray-widget {
+  background-color: @surface0;
+  border-radius: 8px;
+  padding: 6px 14px;
+  margin: 2px 8px;
 }
-/**/
-/* .focusing-widget { */
-/*     background-color: #89b4fa; */
-/* } */
-/**/
-/* .focusing-widget .focusing-label, */
-/* .focusing-widget label { */
-/*     font-weight: 500; */
-/*     color: #1e1e2e; */
-/* } */
-/**/
-/* .focusing-widget button { */
-/*     background: none; */
-/*     border: none; */
-/*     box-shadow: none; */
-/*     padding: 0; */
-/* } */
-/**/
-/* .battery-widget { */
-/*     background-color: #cba6f7; */
-/*     color: #1e1e2e; */
-/* } */
-/**/
-/* .time-widget { */
-/*     background-color: #74c7ec; */
-/*     color: #1e1e2e; */
-/*     font-weight: 600; */
-/*     padding: 4px 8px; */
-/* } */
-/**/
-/* .time-widget button { */
-/*     background: none; */
-/*     border: none; */
-/*     box-shadow: none; */
-/*     padding: 0; */
-/* } */
-/**/
-/* .workspace-widget { */
-/*     background-color: #313244; */
-/*     border-radius: 10px; */
-/*     padding: 2px 4px; */
-/* } */
-/**/
-/* .workspace-widget button { */
-/*     background-color: rgba(205, 214, 244, 0.1); */
-/*     color: #cdd6f4; */
-/*     border-radius: 6px; */
-/*     min-width: 32px; */
-/*     min-height: 28px; */
-/*     margin: 2px; */
-/*     padding: 4px 8px; */
-/*     transition: all 200ms ease; */
-/*     border: 2px solid transparent; */
-/* } */
-/**/
-/* .workspace-widget button:hover { */
-/*     background-color: rgba(205, 214, 244, 0.2); */
-/* } */
-/**/
-/* .workspace-widget button.focused { */
-/*     background-color: #cba6f7; */
-/*     color: #1e1e2e; */
-/*     font-weight: 600; */
-/*     border: 2px solid rgba(203, 166, 247, 0.4); */
-/*     box-shadow: 0 0 12px rgba(203, 166, 247, 0.3); */
-/* } */
-/**/
-/* .workspace-widget button.focused:hover { */
-/*     background-color: #d4b3ff; */
-/*     box-shadow: 0 0 16px rgba(203, 166, 247, 0.5); */
-/* } */
-/**/
-/* .idle-widget { */
-/*     background-color: #7287fd; */
-/*     color: #1e1e2e; */
-/* } */
-/**/
-/* .idle-widget-inactive { */
-/*     background-color: #f38ba8; */
-/* } */
-/**/
-/* .volume-widget { */
-/*     background-color: #94e2d5; */
-/*     color: #1e1e2e; */
-/* } */
-/**/
-/* .volume-widget button { */
-/*     padding: 0 4px; */
-/*     margin-right: 4px; */
-/* } */
-/**/
-/* .volume-widget button.muted { */
-/*     background-color: #f38ba8; */
-/* } */
-/**/
-/* .volume-widget .volume-button-minus:hover, */
-/* .volume-widget .volume-button-plus:hover { */
-/*     background-color: rgba(30, 30, 46, 0.2); */
-/* } */
-/**/
-/* .volume-widget scale trough { */
-/*     min-width: 120px; */
-/*     min-height: 6px; */
-/*     background-color: rgba(30, 30, 46, 0.3); */
-/* } */
-/**/
-/* .volume-widget scale highlight { */
-/*     background-color: #1e1e2e; */
-/* } */
-/**/
-/* window.Bar box > button > image { */
-/*     color: #cdd6f4; */
-/* } */
-/**/
-/* window.Bar icon { */
-/*     font-size: 16px; */
-/* } */
-/**/
-/* window.Notifications { */
-/*     background-color: transparent; */
-/* } */
-/**/
-/* window.Notifications > box { */
-/*     background-color: transparent; */
-/* } */
-/**/
-/* .notification { */
-/*     background-color: #1e1e2e; */
-/*     border-radius: 12px; */
-/*     padding: 12px; */
-/*     margin: 8px; */
-/*     min-width: 300px; */
-/*     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); */
-/*     border: 1px solid #313244; */
-/* } */
-/**/
-/* .notification-header { */
-/*     margin-bottom: 8px; */
-/* } */
-/**/
-/* .notification-app-icon { */
-/*     margin-right: 8px; */
-/*     min-width: 16px; */
-/*     min-height: 16px; */
-/*     color: #cdd6f4; */
-/* } */
-/**/
-/* .notification-app-name { */
-/*     font-size: 0.85rem; */
-/*     font-weight: 500; */
-/*     color: #a6adc8; */
-/* } */
-/**/
-/* .notification-close { */
-/*     background: none; */
-/*     border: none; */
-/*     padding: 4px; */
-/*     margin-left: 8px; */
-/*     min-width: 20px; */
-/*     min-height: 20px; */
-/* } */
-/**/
-/* .notification-close:hover { */
-/*     background-color: rgba(243, 139, 168, 0.2); */
-/* } */
-/**/
-/* .notification-content { */
-/*     margin-bottom: 8px; */
-/* } */
-/**/
-/* .notification-image-container { */
-/*     margin-right: 12px; */
-/* } */
-/**/
-/* .notification-image { */
-/*     min-width: 48px; */
-/*     min-height: 48px; */
-/* } */
-/**/
-/* .notification-summary { */
-/*     font-size: 1rem; */
-/*     font-weight: 600; */
-/*     color: #cdd6f4; */
-/*     margin-bottom: 4px; */
-/* } */
-/**/
-/* .notification-body { */
-/*     font-size: 0.9rem; */
-/*     color: #bac2de; */
-/*     opacity: 0.9; */
-/* } */
-/**/
-/* .notification-actions { */
-/*     margin-top: 8px; */
-/*     padding-top: 8px; */
-/*     border-top: 1px solid #313244; */
-/* } */
-/**/
-/* .notification-action { */
-/*     background-color: #313244; */
-/*     color: #cdd6f4; */
-/*     border-radius: 6px; */
-/*     padding: 6px 12px; */
-/*     margin-right: 8px; */
-/*     font-size: 0.85rem; */
-/* } */
-/**/
-/* .notification-action:hover { */
-/*     background-color: #45475a; */
-/* } */
-/**/
-/* .notification-action:active { */
-/*     background-color: #585b70; */
-/* } */

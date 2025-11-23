@@ -16,7 +16,7 @@ export default function DateWidget(currentDate, calendarVisible) {
     }
   })
   return Widget.Box({
-    className: "time-widget",
+    css_classes: ["time-widget"],
     children: [button]
   })
 }

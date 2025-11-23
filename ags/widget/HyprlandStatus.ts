@@ -8,7 +8,7 @@ export default function HyprlandStatus() {
   const hypr = Hyprland.get_default()
 
   return Widget.Box({
-    className: "workspace-widget",
+    css_classes: ["workspace-widget"],
     setup: (self) => {
       const updateWorkspaces = () => {
         // Remove all children

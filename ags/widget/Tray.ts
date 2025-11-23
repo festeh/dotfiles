@@ -49,6 +49,7 @@ export default function Tray() {
     })
   })
   return Widget.Box({
+    css_classes: ["tray-widget"],
     spacing: 0
   }, children)
 }

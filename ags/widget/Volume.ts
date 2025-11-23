@@ -7,7 +7,7 @@ export default function Volume() {
   const speaker = Wp.get_default()?.audio.defaultSpeaker!
   const muted = bind(speaker, "mute")
   return Widget.Box({
-    className: "volume-widget",
+    css_classes: ["volume-widget"],
     children: [
       Widget.Button({
         className: bind(muted).as(m => m ? "muted" : ""),

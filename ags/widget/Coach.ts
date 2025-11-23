@@ -212,8 +212,8 @@ export default function Coach() {
     })
   });
   return Widget.Box({
-    className: bind(connectionState).as(state =>
-      `focusing-widget ${state !== "connected" ? "disconnected" : ""}`
+    css_classes: bind(connectionState).as(state =>
+      state !== "connected" ? ["focusing-widget", "disconnected"] : ["focusing-widget"]
     ),
     children: [button]
   })

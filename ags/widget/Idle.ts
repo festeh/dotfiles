@@ -15,8 +15,8 @@ const isIdleRunning = Variable<boolean>(checkSwayidle()).poll(1000, () => checkS
 
 export default function Idle() {
   return Widget.Button({
-    className: bind(isIdleRunning).as(running =>
-      running ? "idle-widget" : "idle-widget idle-widget-inactive"
+    css_classes: bind(isIdleRunning).as(running =>
+      running ? ["idle-widget"] : ["idle-widget", "idle-widget-inactive"]
     ),
     margin: 0,
     child: Widget.Image({
