@@ -1,11 +1,11 @@
-import { Gtk, Widget } from "astal/gtk3";
+import { Gtk, Widget } from "astal/gtk4";
 import { Variable, bind } from "astal";
 
 
 const time = Variable<string>("").poll(1000, "date +%H:%M")
 
 export default function DateWidget(currentDate, calendarVisible) {
-  const button = new Widget.Button({
+  const button = Widget.Button({
     className: "time-button",
     label: bind(time),
     // halign: Gtk.Align.CENTER,
@@ -15,7 +15,7 @@ export default function DateWidget(currentDate, calendarVisible) {
       calendarVisible.set(!value)
     }
   })
-  return new Widget.Box({
+  return Widget.Box({
     className: "time-widget",
     children: [button]
   })

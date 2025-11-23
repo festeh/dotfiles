@@ -1,10 +1,10 @@
-import { App, Widget, Gdk, Gtk } from "astal/gtk3";
+import { App, Widget, Gdk, Gtk } from "astal/gtk4";
 import AstalTray from "gi://AstalTray?version=0.1";
 import { GLib, Variable, bind } from "astal";
 
 
-const createMenu = (menuModel, actionGroup): Gtk.Menu => {
-    const menu = Gtk.Menu.new_from_model(menuModel);
+const createMenu = (menuModel, actionGroup): Gtk.PopoverMenu => {
+    const menu = Gtk.PopoverMenu.new_from_model(menuModel);
     menu.insert_action_group('dbusmenu', actionGroup);
     return menu;
 };
@@ -16,7 +16,7 @@ export default function Tray() {
       if (item.icon_theme_path !== null) {
         App.add_icons(item.icon_theme_path)
       }
-      let menu: Gtk.Menu;
+      let menu: Gtk.PopoverMenu;
 
       const entryBinding = Variable.derive(
         [bind(item, 'menuModel'), bind(item, 'actionGroup')],
@@ -32,26 +32,23 @@ export default function Tray() {
         },
       );
 
-      return new Widget.Button({
+      const button = Widget.Button({
         tooltipMarkup: bind(item, "tooltipMarkup"),
-        onClick: (self, event) => {
-          if (event.button === Gdk.BUTTON_PRIMARY) {
-            console.log("click")
-            item.activate(0, 0);
-          }
-          if (event.button === Gdk.BUTTON_SECONDARY) {
-            menu?.popup_at_widget(self, Gdk.Gravity.NORTH, Gdk.Gravity.SOUTH, null);
-          }
+        onClicked: () => {
+          console.log("click")
+          item.activate(0, 0);
         },
 
-      }, new Widget.Icon(
+      }, Widget.Image(
         {
           gicon: bind(item, "gicon"),
         }
       ))
+
+      return button;
     })
   })
-  return new Widget.Box({
+  return Widget.Box({
     spacing: 0
   }, children)
 }

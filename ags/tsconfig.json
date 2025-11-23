@@ -3,7 +3,7 @@
     "compilerOptions": {
         "experimentalDecorators": true,
         "jsx": "react-jsx",
-        "jsxImportSource": "/usr/share/astal/gjs/gtk3",
+        "jsxImportSource": "/usr/share/astal/gjs/gtk4",
         "module": "ES2022",
         "moduleResolution": "Bundler",
         "paths": {

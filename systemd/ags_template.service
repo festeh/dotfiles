@@ -2,7 +2,7 @@
 Description=Launch ags on startup
 
 [Service]
-ExecStart={{or .AGS_PATH "%h/go/bin"}}/ags run
+ExecStart={{or .AGS_PATH "%h/go/bin"}}/ags run --gtk 4
 Restart=on-failure
 RestartSec=3
 StartLimitBurst=5

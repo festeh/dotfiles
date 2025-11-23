@@ -42,6 +42,10 @@ name = "~/.config/switcher"
 target = "autostart/screenshot.desktop"
 name = "~/.local/share/applications/screenshot.desktop"
 
+[symlinks.workspace_name_script]
+target = "scripts/workspace-name-from-kitty.sh"
+name = "~/.local/bin/workspace-name-from-kitty"
+
 [templates.hyprland]
 target = "hyprland/hyprland_template.conf"
 name = "~/.config/hypr/hyprland.conf"

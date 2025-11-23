@@ -1,4 +1,4 @@
-import { App, Astal, Gdk, Gtk } from "astal/gtk3"
+import { App, Astal, Gdk, Gtk } from "astal/gtk4"
 import { Variable, bind } from "astal"
 
 const css = `
@@ -47,9 +47,9 @@ const css = `
 `
 
 const styleProvider = new Gtk.CssProvider()
-styleProvider.load_from_data(css)
-Gtk.StyleContext.add_provider_for_screen(
-  Gdk.Screen.get_default(),
+styleProvider.load_from_string(css)
+Gtk.StyleContext.add_provider_for_display(
+  Gdk.Display.get_default(),
   styleProvider,
   Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 )

@@ -1,10 +1,16 @@
 import { bind, timeout, Variable } from "astal";
 import { Subscribable } from "astal/binding";
-import { Astal, Gdk, Gtk, Widget } from "astal/gtk3";
+import { Astal, Gdk, Gtk, Widget } from "astal/gtk4";
 import Notifd from "gi://AstalNotifd"
 import Notification from "./Notification";
 
-const TIMEOUT_DELAY = 5000
+const TIMEOUT_DELAY = 30000 // 30 seconds
+
+// List of app names that should not auto-dismiss
+const PERSISTENT_APPS: string[] = [
+  // Add app names here that should never auto-dismiss
+  // Example: "Spotify", "Discord", etc.
+]
 
 class NotificationHistory implements Subscribable {
   private map: Map<number, Gtk.Widget> = new Map()
@@ -17,23 +23,26 @@ class NotificationHistory implements Subscribable {
   constructor() {
     const notifd = Notifd.get_default()
 
-    /**
-     * uncomment this if you want to
-     * ignore timeout by senders and enforce our own timeout
-     * note that if the notification has any actions
-     * they might not work, since the sender already treats them as resolved
-     */
-    // notifd.ignoreTimeout = true
+    // Enforce our own timeout instead of sender's timeout
+    notifd.ignoreTimeout = true
 
     notifd.connect("notified", (_, id) => {
+      const notification = notifd.get_notification(id)!
+      const isPersistent = PERSISTENT_APPS.includes(notification.appName || "")
+
       this.set(id, Notification({
-        notification: notifd.get_notification(id)!,
+        notification,
 
         onHoverLost: () => this.delete(id),
 
-        setup: () => timeout(TIMEOUT_DELAY, () => {
-          // this.delete(id)
-        })
+        setup: () => {
+          // Only auto-dismiss if not in persistent apps list
+          if (!isPersistent) {
+            timeout(TIMEOUT_DELAY, () => {
+              this.delete(id)
+            })
+          }
+        }
       }))
     })
 
@@ -66,11 +75,11 @@ class NotificationHistory implements Subscribable {
 }
 export default function Notifications(monitor: Gdk.Monitor) {
   const history = new NotificationHistory()
-  return new Widget.Window({
+  return Widget.Window({
     gdkmonitor: monitor,
     exclusivity: Astal.Exclusivity.EXCLUSIVE,
     anchor: Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT,
-  }, new Widget.Box({
+  }, Widget.Box({
 
   }, bind(history))
 

@@ -1,8 +1,8 @@
-import { Widget } from "astal/gtk3"
+import { Widget } from "astal/gtk4"
 import { Variable, bind } from "astal"
 
 export default function Pomodoro(pomodoro: Variable<string>) {
-  return new Widget.Label({
+  return Widget.Label({
     className: "pomodoro-widget",
     label: bind(pomodoro)
   })

@@ -1,5 +1,3 @@
-@import "NotificationStyle.css";
-
 * {
     text-shadow: none;
  }
@@ -86,8 +84,38 @@ window.Bar button:hover {
 
 /* Workspace widget */
 .workspace-widget {
+    background-color: #313244; /* surface0 - darker background */
+    border-radius: 10px;
+    padding: 2px 4px;
+}
+
+.workspace-widget button {
+    background-color: rgba(205, 214, 244, 0.1); /* subtle text color with transparency */
+    color: #cdd6f4; /* text */
+    border-radius: 6px;
+    min-width: 32px;
+    min-height: 28px;
+    margin: 2px;
+    padding: 4px 8px;
+    transition: all 200ms ease;
+    border: 2px solid transparent;
+}
+
+.workspace-widget button:hover {
+    background-color: rgba(205, 214, 244, 0.2);
+}
+
+.workspace-widget button.focused {
     background-color: #cba6f7; /* mauve */
     color: #1e1e2e; /* dark text on mauve background */
+    font-weight: 600;
+    border: 2px solid rgba(203, 166, 247, 0.4);
+    box-shadow: 0 0 12px rgba(203, 166, 247, 0.3);
+}
+
+.workspace-widget button.focused:hover {
+    background-color: #d4b3ff; /* lighter mauve */
+    box-shadow: 0 0 16px rgba(203, 166, 247, 0.5);
 }
 
 /* Idle widget */
@@ -140,4 +168,106 @@ window.Bar box > button > image {
 /* Specific styling for icons */
 window.Bar icon {
     font-size: 16px;
+}
+
+/* ========== Notification Styling - macOS Style ========== */
+
+window.Notifications {
+    background-color: transparent;
+}
+
+window.Notifications > box {
+    background-color: transparent;
+}
+
+.notification {
+    background-color: #1e1e2e; /* base */
+    border-radius: 12px;
+    padding: 12px;
+    margin: 8px;
+    min-width: 300px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    border: 1px solid #313244; /* surface0 */
+}
+
+.notification-header {
+    margin-bottom: 8px;
+}
+
+.notification-app-icon {
+    margin-right: 8px;
+    min-width: 16px;
+    min-height: 16px;
+    color: #cdd6f4; /* text */
+}
+
+.notification-app-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #a6adc8; /* subtext0 */
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    padding: 4px;
+    margin-left: 8px;
+    min-width: 20px;
+    min-height: 20px;
+}
+
+.notification-close:hover {
+    background-color: rgba(243, 139, 168, 0.2); /* red with transparency */
+}
+
+.notification-content {
+    margin-bottom: 8px;
+}
+
+.notification-image-container {
+    margin-right: 12px;
+}
+
+.notification-image {
+    min-width: 48px;
+    min-height: 48px;
+}
+
+.notification-text {
+}
+
+.notification-summary {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #cdd6f4; /* text */
+    margin-bottom: 4px;
+}
+
+.notification-body {
+    font-size: 0.9rem;
+    color: #bac2de; /* subtext1 */
+    opacity: 0.9;
+}
+
+.notification-actions {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #313244; /* surface0 */
+}
+
+.notification-action {
+    background-color: #313244; /* surface0 */
+    color: #cdd6f4; /* text */
+    border-radius: 6px;
+    padding: 6px 12px;
+    margin-right: 8px;
+    font-size: 0.85rem;
+}
+
+.notification-action:hover {
+    background-color: #45475a; /* surface1 */
+}
+
+.notification-action:active {
+    background-color: #585b70; /* surface2 */
 }

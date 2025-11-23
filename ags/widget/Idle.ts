@@ -1,4 +1,4 @@
-import { Widget } from "astal/gtk3"
+import { Widget } from "astal/gtk4"
 import { Variable, bind } from "astal"
 import GLib from "gi://GLib"
 
@@ -14,13 +14,13 @@ function checkSwayidle(): boolean {
 const isIdleRunning = Variable<boolean>(checkSwayidle()).poll(1000, () => checkSwayidle())
 
 export default function Idle() {
-  return new Widget.Button({
+  return Widget.Button({
     className: bind(isIdleRunning).as(running =>
       running ? "idle-widget" : "idle-widget idle-widget-inactive"
     ),
     margin: 0,
-    child: new Widget.Icon({
-      icon: bind(isIdleRunning).as(running =>
+    child: Widget.Image({
+      iconName: bind(isIdleRunning).as(running =>
         running ? "face-plain-symbolic" : "face-surprise-symbolic"
       ),
       css: "font-size: 18px",

@@ -1,4 +1,4 @@
-import { Widget } from "astal/gtk3"
+import { Widget } from "astal/gtk4"
 import { Gio, Variable, bind } from "astal"
 import GLib from "gi://GLib"
 import Soup from "gi://Soup?version=3.0"
@@ -203,15 +203,15 @@ function toggleFocus() {
 export default function Coach() {
   init();
 
-  const button = new Widget.Button({
+  const button = Widget.Button({
     // className: "focusing-button",
     onClicked: toggleFocus,
-    child: new Widget.Label({
+    child: Widget.Label({
       // className: "focusing-label",
       label: bind(focusingState),
     })
   });
-  return new Widget.Box({
+  return Widget.Box({
     className: bind(connectionState).as(state =>
       `focusing-widget ${state !== "connected" ? "disconnected" : ""}`
     ),
