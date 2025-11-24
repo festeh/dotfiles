@@ -3,7 +3,7 @@ import style from "inline:./style.css"
 import Bar from "./widget/Bar"
 import Calendar from "./widget/Calendar"
 import Notifications from "./widget/Notifications"
-import Menu from "./widget/Menu"
+import Menu, { toggleRecording } from "./widget/Menu"
 import { Variable } from "astal"
 import "./service/WorkspaceNaming"
 
@@ -44,6 +44,15 @@ function initWidgets(monitor: Gdk.Monitor) {
 
 App.start({
   css: style,
+  requestHandler(request: string, response: (res: string) => void) {
+    if (request === "toggle-recording") {
+      menuVisible.set(true)
+      toggleRecording()
+      response("ok")
+    } else {
+      response(`Unknown command: ${request}`)
+    }
+  },
   main() {
     Bar(monitor, calendarVisible, currentDate, menuVisible)
     Notifications(monitor)

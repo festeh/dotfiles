@@ -71,6 +71,39 @@ function getLanguageCode(): string {
   return "auto"
 }
 
+function startRecording() {
+  if (isRecording.get() || isProcessing.get()) return
+
+  GLib.spawn_command_line_sync(`mkdir -p ${RECORDS_DIR}`)
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+  const filename = `${RECORDS_DIR}/record_${timestamp}.wav`
+  lastRecordedFile.set(filename)
+  GLib.spawn_command_line_async(`ffmpeg -f pulse -i default -ac 1 -acodec pcm_s16le -ar 16000 ${filename}`)
+  recordingStartTime.set(Date.now())
+}
+
+function stopRecording() {
+  if (!isRecording.get() || isProcessing.get()) return
+
+  GLib.spawn_command_line_async("pkill -f 'ffmpeg.*pulse.*records'")
+  const filepath = lastRecordedFile.get()
+  recordingStartTime.set(0)
+  GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
+    if (filepath) {
+      transcribeAudio(filepath)
+    }
+    return false
+  })
+}
+
+function toggleRecording() {
+  if (isRecording.get()) {
+    stopRecording()
+  } else {
+    startRecording()
+  }
+}
+
 async function transcribeAudio(filepath: string): Promise<void> {
   isProcessing.set(true)
   const langCode = getLanguageCode()
@@ -185,28 +218,7 @@ export default function Menu(monitor: Gdk.Monitor, visible: Variable<boolean>) {
             }
           )()}
           sensitive={bind(isProcessing).as(p => !p)}
-          onClicked={() => {
-            const recording = isRecording.get()
-            if (recording) {
-              GLib.spawn_command_line_async("pkill -f 'ffmpeg.*pulse.*records'")
-              const filepath = lastRecordedFile.get()
-              recordingStartTime.set(0)
-              // Wait a moment for ffmpeg to finish writing, then transcribe
-              GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
-                if (filepath) {
-                  transcribeAudio(filepath)
-                }
-                return false
-              })
-            } else {
-              GLib.spawn_command_line_sync(`mkdir -p ${RECORDS_DIR}`)
-              const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-              const filename = `${RECORDS_DIR}/record_${timestamp}.wav`
-              lastRecordedFile.set(filename)
-              GLib.spawn_command_line_async(`ffmpeg -f pulse -i default -ac 1 -acodec pcm_s16le -ar 16000 ${filename}`)
-              recordingStartTime.set(Date.now())
-            }
-          }}
+          onClicked={() => toggleRecording()}
         >
           <box spacing={10}>
             <image
@@ -243,4 +255,4 @@ export default function Menu(monitor: Gdk.Monitor, visible: Variable<boolean>) {
   )
 }
 
-export { isIdleRunning, keyboardLayout, isRecording }
+export { isIdleRunning, keyboardLayout, isRecording, startRecording, toggleRecording }
