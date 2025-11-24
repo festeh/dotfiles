@@ -4,6 +4,7 @@ import Bar from "./widget/Bar"
 import Calendar from "./widget/Calendar"
 import Notifications from "./widget/Notifications"
 import { Variable } from "astal"
+import "./service/WorkspaceNaming"
 
 const calendarVisible = Variable(false)
 const currentDate = Variable(new Date())

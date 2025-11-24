@@ -46,10 +46,6 @@ name = "~/.local/share/applications/screenshot.desktop"
 target = "scripts/workspace-name-from-kitty.sh"
 name = "~/.local/bin/workspace-name-from-kitty"
 
-[symlinks.workspace_listener]
-target = "scripts/hyprland-workspace-listener.sh"
-name = "~/.local/bin/hyprland-workspace-listener"
-
 [templates.hyprland]
 target = "hyprland/hyprland_template.conf"
 name = "~/.config/hypr/hyprland.conf"
