@@ -44,6 +44,7 @@ window {
 .time-widget,
 .idle-widget,
 .idle-status-widget,
+.layout-status-widget,
 .workspace-widget,
 .focusing-widget,
 .tray-widget {
@@ -118,8 +119,19 @@ window {
   background-color: @surface1;
 }
 
-/* Idle Menu */
-.idle-menu-widget {
+/* Layout Status widget - Russian tricolor SVG */
+.layout-status-widget {
+  transition: all 200ms ease;
+  /* padding: 6px 12px; */
+  margin: 2px 4px;
+}
+
+.layout-status-widget:hover {
+  background-color: @surface1;
+}
+
+/* Menu */
+.menu-widget {
   background-color: @surface0;
   padding: 12px;
   margin: 10px;
@@ -146,6 +158,72 @@ window {
 .idle-toggle-button.idle-toggle-button-inactive {
   color: @yellow;
   border-color: @yellow;
+}
+
+.keyboard-layout-button {
+  background-color: @surface1;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: @text;
+  transition: all 200ms ease;
+  border: 1px solid @surface2;
+}
+
+.keyboard-layout-button:hover {
+  background-color: @surface2;
+  color: @mauve;
+}
+
+/* Record button */
+.record-button {
+  background-color: @surface1;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: @text;
+  transition: all 200ms ease;
+  border: 1px solid @surface2;
+}
+
+.record-button:hover {
+  background-color: @surface2;
+  color: @red;
+}
+
+.record-button.record-button-active {
+  background-color: alpha(@red, 0.2);
+  border-color: @red;
+  color: @red;
+}
+
+.record-button.record-button-active:hover {
+  background-color: alpha(@red, 0.3);
+}
+
+.record-button.record-button-processing {
+  background-color: alpha(@blue, 0.2);
+  border-color: @blue;
+  color: @blue;
+}
+
+.record-button.record-button-processing:hover {
+  background-color: alpha(@blue, 0.3);
+}
+
+@keyframes spin {
+  from { -gtk-icon-transform: rotate(0deg); }
+  to { -gtk-icon-transform: rotate(360deg); }
+}
+
+.record-icon-spinning {
+  animation: spin 1s linear infinite;
+}
+
+.record-duration {
+  font-family: "JetBrainsMono Nerd Font";
+  font-size: 12px;
+  color: @red;
+  font-weight: bold;
+  margin-left: 8px;
 }
 
 /* Workspace widget */

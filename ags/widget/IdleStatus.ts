@@ -1,6 +1,6 @@
 import { Widget } from "astal/gtk4"
 import { Variable, bind } from "astal"
-import { isIdleRunning } from "./IdleMenu"
+import { isIdleRunning } from "./Menu"
 import GLib from "gi://GLib"
 
 export default function IdleStatus() {

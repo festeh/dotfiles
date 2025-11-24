@@ -1,7 +1,7 @@
 import { Widget } from "astal/gtk4"
 import { Variable } from "astal"
 
-export default function Menu(menuVisible: Variable<boolean>) {
+export default function MenuButton(menuVisible: Variable<boolean>) {
   return Widget.Button({
     css_classes: ["idle-widget"],
     margin: 0,

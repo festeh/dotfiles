@@ -3,7 +3,7 @@ import style from "inline:./style.css"
 import Bar from "./widget/Bar"
 import Calendar from "./widget/Calendar"
 import Notifications from "./widget/Notifications"
-import IdleMenu from "./widget/IdleMenu"
+import Menu from "./widget/Menu"
 import { Variable } from "astal"
 import "./service/WorkspaceNaming"
 
@@ -48,7 +48,7 @@ App.start({
     Bar(monitor, calendarVisible, currentDate, menuVisible)
     Notifications(monitor)
     Calendar(monitor, calendarVisible, currentDate)
-    IdleMenu(monitor, menuVisible)
+    Menu(monitor, menuVisible)
 
     // Note: GTK4 monitor events work differently
     // TODO: Implement monitor hotplug using Gdk.Display signals if needed

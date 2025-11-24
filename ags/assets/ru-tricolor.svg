@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="tricolor" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="33%" stop-color="#FFFFFF"/>
+      <stop offset="33%" stop-color="#0039A6"/>
+      <stop offset="66%" stop-color="#0039A6"/>
+      <stop offset="66%" stop-color="#D52B1E"/>
+      <stop offset="100%" stop-color="#D52B1E"/>
+    </linearGradient>
+  </defs>
+  <text
+    x="9"
+    y="14"
+    font-family="JetBrains Mono"
+    font-size="12"
+    font-weight="800"
+    text-anchor="middle"
+    fill="url(#tricolor)">RU</text>
+</svg>
