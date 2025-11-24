@@ -3,11 +3,13 @@ import style from "inline:./style.css"
 import Bar from "./widget/Bar"
 import Calendar from "./widget/Calendar"
 import Notifications from "./widget/Notifications"
+import IdleMenu from "./widget/IdleMenu"
 import { Variable } from "astal"
 import "./service/WorkspaceNaming"
 
 const calendarVisible = Variable(false)
 const currentDate = Variable(new Date())
+const menuVisible = Variable(false)
 
 
 const display = Gdk.Display.get_default()!
@@ -43,9 +45,10 @@ function initWidgets(monitor: Gdk.Monitor) {
 App.start({
   css: style,
   main() {
-    Bar(monitor, calendarVisible, currentDate)
+    Bar(monitor, calendarVisible, currentDate, menuVisible)
     Notifications(monitor)
     Calendar(monitor, calendarVisible, currentDate)
+    IdleMenu(monitor, menuVisible)
 
     // Note: GTK4 monitor events work differently
     // TODO: Implement monitor hotplug using Gdk.Display signals if needed

@@ -1,7 +1,8 @@
 import { App, Astal, Gdk, Widget } from "astal/gtk4"
 import { Variable } from "astal"
 import Battery from "./Battery"
-import Idle from "./Idle"
+import Menu from "./Menu"
+import IdleStatus from "./IdleStatus"
 import Tray from "./Tray"
 import HyprlandStatus from "./HyprlandStatus"
 import TimeDate from "./TimeDate"
@@ -11,6 +12,7 @@ import Coach from "./Coach"
 
 export default function Bar(monitor: Gdk.Monitor, calendarVisible: Variable<boolean>,
   currentDate: Variable<Date>,
+  menuVisible: Variable<boolean>,
 ) {
   return Widget.Window(
     {
@@ -33,7 +35,8 @@ export default function Bar(monitor: Gdk.Monitor, calendarVisible: Variable<bool
         }),
         Widget.Box({
           children: [
-            Idle(),
+            IdleStatus(),
+            Menu(menuVisible),
             Volume(),
             Battery(),
             TimeDate(currentDate, calendarVisible),

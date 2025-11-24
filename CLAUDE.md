@@ -99,3 +99,44 @@ If symlinks fail to create, ensure:
 - The destination directory exists
 - No file already exists at the symlink destination
 - You have write permissions to the destination
+
+## AGS (Astal) Management
+
+AGS is managed as a systemd user service. **NEVER run `ags` command directly.**
+
+### Starting/Stopping AGS
+
+```bash
+# Restart AGS
+systemctl --user restart ags
+
+# Stop AGS
+systemctl --user stop ags
+
+# Start AGS
+systemctl --user start ags
+
+# Check AGS status
+systemctl --user status ags
+```
+
+### Viewing AGS Logs
+
+Use `journalctl` to view AGS logs:
+
+```bash
+# View recent logs
+journalctl --user -u ags -n 50
+
+# Follow logs in real-time
+journalctl --user -u ags -f
+
+# View logs since last restart
+journalctl --user -u ags -b
+```
+
+### Workflow for AGS Changes
+
+1. Make changes to AGS config files in `~/dotfiles/ags/`
+2. Restart AGS: `systemctl --user restart ags`
+3. Check logs for errors: `journalctl --user -u ags -n 50`

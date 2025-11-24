@@ -43,6 +43,7 @@ window {
 .volume-widget,
 .time-widget,
 .idle-widget,
+.idle-status-widget,
 .workspace-widget,
 .focusing-widget,
 .tray-widget {
@@ -105,6 +106,46 @@ window {
 
 .idle-widget.idle-widget-inactive {
   color: @yellow;
+}
+
+/* Idle Status widget */
+.idle-status-widget {
+  color: @yellow;
+  transition: all 200ms ease;
+}
+
+.idle-status-widget:hover {
+  background-color: @surface1;
+}
+
+/* Idle Menu */
+.idle-menu-widget {
+  background-color: @surface0;
+  padding: 12px;
+  margin: 10px;
+  border-radius: 12px;
+  border: 2px solid @surface2;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  min-width: 200px;
+}
+
+.idle-toggle-button {
+  background-color: @surface1;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: @text;
+  transition: all 200ms ease;
+  border: 1px solid @surface2;
+}
+
+.idle-toggle-button:hover {
+  background-color: @surface2;
+  color: @mauve;
+}
+
+.idle-toggle-button.idle-toggle-button-inactive {
+  color: @yellow;
+  border-color: @yellow;
 }
 
 /* Workspace widget */
