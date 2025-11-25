@@ -42,9 +42,14 @@ function getCurrentKeyboardLayout(): string {
     const [success, stdout] = GLib.spawn_command_line_sync("hyprctl devices -j")
     if (success) {
       const devices = JSON.parse(new TextDecoder().decode(stdout))
-      const mainKeyboard = devices.keyboards.find((kb: any) => kb.main)
-      if (mainKeyboard) {
-        return mainKeyboard.active_keymap || "Unknown"
+      // Filter out virtual keyboards (like wtype) and find the main physical keyboard
+      const realKeyboard = devices.keyboards.find((kb: any) =>
+        kb.main && !kb.name.includes("virtual")
+      ) || devices.keyboards.find((kb: any) =>
+        kb.name === "at-translated-set-2-keyboard"
+      )
+      if (realKeyboard) {
+        return realKeyboard.active_keymap || "Unknown"
       }
     }
   } catch (error) {

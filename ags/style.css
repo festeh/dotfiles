@@ -117,12 +117,7 @@ window {
 
 .idle-status-widget:hover {
   background-color: @surface1;
-}
-
-/* Layout Status widget - Russian tricolor SVG */
-.layout-status-widget {
-  transition: all 200ms ease;
-  /* padding: 6px 12px; */
+/* padding: 6px 12px; */
   margin: 2px 4px;
 }
 
