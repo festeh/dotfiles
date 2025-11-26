@@ -12,8 +12,10 @@ fi
 
 bindkey -v
 bindkey  "^?" backward-delete-char
-bindkey  "^[L" forwar-word
-bindkey  "^[[1;3C" forward-word
+bindkey "^[[1;3D" backward-word  # Alt+Left
+bindkey "^[[1;3C" forward-word   # Alt+Right
+bindkey "^[[1;5D" backward-word  # Ctrl+Left
+bindkey "^[[1;5C" forward-word   # Ctrl+Right
 bindkey "^R" history-incremental-search-backward
 
 export KEYTIMEOUT=1
