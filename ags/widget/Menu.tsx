@@ -68,6 +68,7 @@ const recordingDuration = Variable<string>("00:00").poll(1000, () => {
   return formatDuration(getRecordingDuration())
 })
 const lastRecordedFile = Variable<string>("")
+const menuVisible = Variable<boolean>(false)
 
 function getLanguageCode(): string {
   const layout = keyboardLayout.get().toLowerCase()
@@ -93,6 +94,7 @@ function stopRecording() {
   GLib.spawn_command_line_async("pkill -f 'ffmpeg.*pulse.*records'")
   const filepath = lastRecordedFile.get()
   recordingStartTime.set(0)
+  menuVisible.set(false)
   GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
     if (filepath) {
       transcribeAudio(filepath)
@@ -155,12 +157,12 @@ hyprland.connect("keyboard-layout", () => {
   keyboardLayout.set(getCurrentKeyboardLayout())
 })
 
-export default function Menu(monitor: Gdk.Monitor, visible: Variable<boolean>) {
+export default function Menu(monitor: Gdk.Monitor) {
   return (
     <window
       gdkmonitor={monitor}
       cssClasses={["Menu"]}
-      visible={bind(visible)}
+      visible={bind(menuVisible)}
       anchor={Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT}
       application={App}>
       <box
@@ -260,4 +262,4 @@ export default function Menu(monitor: Gdk.Monitor, visible: Variable<boolean>) {
   )
 }
 
-export { isIdleRunning, keyboardLayout, isRecording, startRecording, toggleRecording }
+export { isIdleRunning, keyboardLayout, isRecording, startRecording, toggleRecording, menuVisible }

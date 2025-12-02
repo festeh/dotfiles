@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const readline = require('readline');
+const { spawn } = require('child_process');
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -20,7 +21,8 @@ function expandPath(filePath) {
   if (filePath.startsWith('~/')) {
     return path.join(os.homedir(), filePath.slice(2));
   }
-  return filePath;
+  // Resolve relative paths (like . or ..) to absolute
+  return path.resolve(filePath);
 }
 
 function validateDirectory(dirPath) {
@@ -79,12 +81,14 @@ focus_tab 2
 }
 
 async function main() {
-  // Check if path was provided as command-line argument
+  // Parse command-line arguments
   const args = process.argv.slice(2);
+  const spawnFlag = args.includes('--spawn');
+  const pathArgs = args.filter(arg => arg !== '--spawn');
   let projectPath;
 
-  if (args.length > 0) {
-    projectPath = args[0];
+  if (pathArgs.length > 0) {
+    projectPath = pathArgs[0];
   } else {
     console.log('Kitty Session Generator\n');
     projectPath = await question('Enter project path (e.g., ~/projects/myproject): ');
@@ -104,7 +108,8 @@ async function main() {
     process.exit(1);
   }
 
-  const { dirName, sessionContent } = generateSession(projectPath.trim());
+  // Use the expanded (absolute) path for session generation
+  const { dirName, sessionContent } = generateSession(validation.expanded);
 
   // Save to dotfiles/kitty directory
   // (This directory is symlinked to ~/.config/kitty by the Installer)
@@ -130,10 +135,20 @@ async function main() {
     console.log(`\n✓ Session file created in dotfiles: ${outputPath}`);
     console.log(`✓ Symlink created: ${symlinkPath} -> ${outputPath}`);
     console.log(`  Session name: ${dirName}`);
-    console.log(`  Project path: ${projectPath.trim()}`);
+    console.log(`  Project path: ${validation.expanded}`);
     console.log(`  Validated: Directory exists ✓`);
-    console.log(`\nYou can now load this session with:`);
-    console.log(`  kitty --session ~/.config/kitty/${dirName}`);
+
+    if (spawnFlag) {
+      console.log(`\nSpawning kitty with session...`);
+      const kitty = spawn('kitty', ['--session', symlinkPath], {
+        detached: true,
+        stdio: 'ignore'
+      });
+      kitty.unref();
+    } else {
+      console.log(`\nYou can now load this session with:`);
+      console.log(`  kitty --session ~/.config/kitty/${dirName}`);
+    }
   } catch (error) {
     console.error(`Error: ${error.message}`);
     process.exit(1);

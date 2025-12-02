@@ -19,11 +19,6 @@ import { Variable, bind } from "astal"
 // }
 
 function generateCalendarDays(currentDate: Variable<Date>) {
-  const today = new Date()
-  const todayDay = today.getDate()
-  const todayMonth = today.getMonth()
-  const todayYear = today.getFullYear()
-
   const firstDay = bind(currentDate).as((date: Date) => {
     const year = date.getFullYear()
     const month = date.getMonth()
@@ -50,9 +45,11 @@ function generateCalendarDays(currentDate: Variable<Date>) {
   )
 
   const rows = bind(days).as((d: number[]) => {
+    const today = new Date()
+    const todayDay = today.getDate()
     const viewedMonth = currentDate.get().getMonth()
     const viewedYear = currentDate.get().getFullYear()
-    const isCurrentMonth = viewedMonth === todayMonth && viewedYear === todayYear
+    const isCurrentMonth = viewedMonth === today.getMonth() && viewedYear === today.getFullYear()
 
     const r = []
     for (let i = 0; i < d.length; i += 7) {
