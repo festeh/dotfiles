@@ -84,7 +84,8 @@ async function main() {
   // Parse command-line arguments
   const args = process.argv.slice(2);
   const spawnFlag = args.includes('--spawn');
-  const pathArgs = args.filter(arg => arg !== '--spawn');
+  const localFlag = args.includes('--local');
+  const pathArgs = args.filter(arg => !arg.startsWith('--'));
   let projectPath;
 
   if (pathArgs.length > 0) {
@@ -111,36 +112,39 @@ async function main() {
   // Use the expanded (absolute) path for session generation
   const { dirName, sessionContent } = generateSession(validation.expanded);
 
-  // Save to dotfiles/kitty directory
-  // (This directory is symlinked to ~/.config/kitty by the Installer)
-  const scriptDir = __dirname;
-  const outputPath = path.join(scriptDir, dirName);
+  const configKittyDir = path.join(os.homedir(), '.config', 'kitty');
+  const sessionPath = path.join(configKittyDir, dirName);
 
   try {
-    // Write the session file to dotfiles
-    fs.writeFileSync(outputPath, sessionContent);
+    if (localFlag) {
+      // Write directly to ~/.config/kitty/
+      fs.writeFileSync(sessionPath, sessionContent);
+      console.log(`\n✓ Session file created: ${sessionPath}`);
+    } else {
+      // Save to dotfiles/kitty/sessions/ and create symlink
+      const sessionsDir = path.join(__dirname, 'sessions');
+      if (!fs.existsSync(sessionsDir)) {
+        fs.mkdirSync(sessionsDir, { recursive: true });
+      }
+      const outputPath = path.join(sessionsDir, dirName);
+      fs.writeFileSync(outputPath, sessionContent);
 
-    // Create symlink in ~/.config/kitty
-    const configKittyDir = path.join(os.homedir(), '.config', 'kitty');
-    const symlinkPath = path.join(configKittyDir, dirName);
+      // Remove existing symlink if it exists
+      if (fs.existsSync(sessionPath)) {
+        fs.unlinkSync(sessionPath);
+      }
+      fs.symlinkSync(outputPath, sessionPath);
 
-    // Remove existing symlink if it exists
-    if (fs.existsSync(symlinkPath)) {
-      fs.unlinkSync(symlinkPath);
+      console.log(`\n✓ Session file created in dotfiles: ${outputPath}`);
+      console.log(`✓ Symlink created: ${sessionPath} -> ${outputPath}`);
     }
 
-    // Create the symlink
-    fs.symlinkSync(outputPath, symlinkPath);
-
-    console.log(`\n✓ Session file created in dotfiles: ${outputPath}`);
-    console.log(`✓ Symlink created: ${symlinkPath} -> ${outputPath}`);
     console.log(`  Session name: ${dirName}`);
     console.log(`  Project path: ${validation.expanded}`);
-    console.log(`  Validated: Directory exists ✓`);
 
     if (spawnFlag) {
       console.log(`\nSpawning kitty with session...`);
-      const kitty = spawn('kitty', ['--session', symlinkPath], {
+      const kitty = spawn('kitty', ['--session', sessionPath], {
         detached: true,
         stdio: 'ignore'
       });
