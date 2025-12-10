@@ -11,14 +11,6 @@ end
 
 local plugins = {
   { 'folke/lazydev.nvim',          config = req("lazydev") },
-  {
-    "nvim-tree/nvim-tree.lua",
-    version = "*",
-    dependencies = {
-      "nvim-tree/nvim-web-devicons",
-    },
-    config = req("nvim-tree")
-  },
   { "rafamadriz/friendly-snippets" },
   {
     'saghen/blink.cmp',
@@ -245,7 +237,7 @@ local plugins = {
   },
   { 'rmagatti/alternate-toggler', config = req('toggler') },
   { 'mrcjkb/rustaceanvim',        config = req('rustacean') },
-  { 'yetone/avante.nvim',         event = "VeryLazy",       version = false, config = req('avante') },
+  { 'yetone/avante.nvim',         event = "VeryLazy",       version = false, opts = {} },
   { "folke/snacks.nvim",          config = req("snacks") },
   {
     'GeorgesAlkhouri/nvim-aider',

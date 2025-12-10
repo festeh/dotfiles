@@ -1,12 +1,18 @@
 require("snacks").setup(
   {
     picker = { enabled = true },
+    explorer = { enabled = true },
     gitbrowse = { enabled = true },
     git = { enabled = true },
     lazygit = { enabled = true },
     input = { enabled = true },  -- Better vim.ui.input
   }
 )
+
+-- Explorer command
+vim.api.nvim_create_user_command('Explorer', function()
+  Snacks.picker.explorer({ diagnostics = false })
+end, {})
 
 -- Git keymappings
 local snacks = require("snacks")
