@@ -6,6 +6,10 @@ name = "~/.config/nvim"
 target = "zsh"
 name = "~/.config/zsh"
 
+[symlinks.zshenv]
+target = "zsh/.zshenv"
+name = "~/.zshenv"
+
 [symlinks.tmux]
 target = "tmux/tmux.conf"
 name = "~/.config/tmux/tmux.conf"

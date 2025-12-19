@@ -3,10 +3,10 @@ setopt AUTO_CD # cd to directory without typing cd
 source $DOTFILES/zsh/external/completion.zsh
 
 
-# TODO: template
-if [ -f "/etc/arch-release" ]; then
+# zsh-autosuggestions
+if [ -f "/usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
     source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
-else
+elif [ -f "/usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
     source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 fi
 
@@ -36,22 +36,22 @@ bindkey -M vicmd v edit-command-line
 
 bindkey '^_' undo
 
-# TODO: template
-if [ -f "/etc/arch-release" ]; then
+# zsh-syntax-highlighting
+if [ -f "/usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
     source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-else 
-    source /usr/share/zsh-syntax-highlighting
+elif [ -f "/usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
+    source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
 
-if [ $(command -v "fzf") ]; then
-    source /usr/share/fzf/completion.zsh
-    source /usr/share/fzf/key-bindings.zsh
-else
-    echo "WARN: fzf is not found"
+# fzf
+if command -v fzf &> /dev/null; then
+    [ -f /usr/share/fzf/completion.zsh ] && source /usr/share/fzf/completion.zsh
+    [ -f /usr/share/fzf/key-bindings.zsh ] && source /usr/share/fzf/key-bindings.zsh
 fi
 
-# Source zsh-system-clipboard
-source "$XDG_CONFIG_HOME/zsh/plugins/zsh-system-clipboard/zsh-system-clipboard.zsh"
+# zsh-system-clipboard
+[ -f "$XDG_CONFIG_HOME/zsh/plugins/zsh-system-clipboard/zsh-system-clipboard.zsh" ] && \
+    source "$XDG_CONFIG_HOME/zsh/plugins/zsh-system-clipboard/zsh-system-clipboard.zsh"
 
 # Prefix autocomplete
 autoload -U up-line-or-beginning-search
@@ -61,7 +61,8 @@ zle -N down-line-or-beginning-search
 bindkey "^[[A" up-line-or-beginning-search # Up
 bindkey "^[[B" down-line-or-beginning-search # Down
 
-eval "$(starship init zsh)"
+# starship prompt
+command -v starship &> /dev/null && eval "$(starship init zsh)"
 
 LOCAL_SETTINGS="$ZDOTDIR/local.sh"
 if [ -f "$LOCAL_SETTINGS" ]; then
@@ -77,11 +78,8 @@ setopt share_history      # Share command history across sessions
 source $DOTFILES/zsh/scripts.sh
 source $DOTFILES/zsh/aliases.sh
 
-if command -v mise &> /dev/null; then
-    eval "$(mise activate zsh)"
-else
-    echo "WARN: mise is not found"
-fi
+# mise
+command -v mise &> /dev/null && eval "$(mise activate zsh)"
 
 _comp_options+=(globdots)
 autoload -U compinit;
@@ -102,4 +100,5 @@ case ":$PATH:" in
 esac
 # pnpm end
 
-eval "$(zoxide init zsh)"
+# zoxide
+command -v zoxide &> /dev/null && eval "$(zoxide init zsh)"

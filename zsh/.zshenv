@@ -41,14 +41,6 @@ pathadd() {
     fi
 }
 
-try-source() {
-    if [ -f "$1" ]; then
-        source "$1"
-    else
-        echo "Couldn't source $1 - not found"
-    fi
-}
-
 # To not add if already in path
 pathadd "$HOME/.local/bin"
 pathadd "$HOME/.cargo/bin"
@@ -59,5 +51,5 @@ pathadd "$ANDROID_HOME/platform-tools"
 pathadd "$HOME/Downloads/swift-5.7.3-RELEASE-ubuntu22.04"
 pathadd "$GOENV_ROOT/bin"
 
-try-source "$HOME/.cargo/env"
-try-source "$HOME/dotfiles/.env"
+[ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
+[ -f "$HOME/dotfiles/.env" ] && source "$HOME/dotfiles/.env"

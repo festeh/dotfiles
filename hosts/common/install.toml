@@ -8,6 +8,16 @@ cmd = "chsh -s /usr/bin/zsh $USER"
 sudo = true
 check = "getent passwd $USER | grep -q zsh"
 
+[simples.neovim]
+cmd = "pacman -S --noconfirm neovim"
+sudo = true
+check = "which nvim"
+
+[simples.fzf]
+cmd = "pacman -S --noconfirm fzf"
+sudo = true
+check = "which fzf"
+
 [simples.mise]
 cmd = "pacman -S --noconfirm mise"
 sudo = true
