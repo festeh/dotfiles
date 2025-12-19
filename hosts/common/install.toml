@@ -42,3 +42,8 @@ check = "which starship"
 cmd = "pacman -S --noconfirm zoxide"
 sudo = true
 check = "which zoxide"
+
+[simples.lsd]
+cmd = "pacman -S --noconfirm lsd"
+sudo = true
+check = "which lsd"
