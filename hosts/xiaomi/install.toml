@@ -1,4 +1,1 @@
-[simples.mise]
-cmd = "pacman -S --noconfirm mise"
-sudo = true
-check = "which mise"
+inherits = "common"

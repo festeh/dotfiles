@@ -1,0 +1,14 @@
+[simples.zsh]
+cmd = "pacman -S --noconfirm zsh"
+sudo = true
+check = "which zsh"
+
+[simples.zsh_default]
+cmd = "chsh -s /usr/bin/zsh $USER"
+sudo = true
+check = "getent passwd $USER | grep -q zsh"
+
+[simples.mise]
+cmd = "pacman -S --noconfirm mise"
+sudo = true
+check = "which mise"
