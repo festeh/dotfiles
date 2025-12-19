@@ -2,15 +2,13 @@
 set -e
 
 # Bootstrap script for dotfiles + Installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/festeh/dotfiles/master/bootstrap.sh | bash -s <hostname>
-# Or: ./bootstrap.sh <hostname>
+# Usage: curl -fsSL https://raw.githubusercontent.com/festeh/dotfiles/master/bootstrap.sh | bash
 
-HOSTNAME="${1:-$(hostname)}"
 DOTFILES_DIR="$HOME/dotfiles"
 INSTALLER_DIR="$HOME/Installer"
 GITHUB_USER="festeh"
 
-echo "==> Bootstrapping dotfiles for host: $HOSTNAME"
+echo "==> Bootstrapping dotfiles..."
 
 # Check for git
 if ! command -v git &> /dev/null; then
@@ -50,18 +48,11 @@ echo "==> Downloading installer from $INSTALLER_URL..."
 curl -fsSL "$INSTALLER_URL" -o "$INSTALLER_DIR/installer"
 chmod +x "$INSTALLER_DIR/installer"
 
-# Check if host config exists
-if [ ! -f "$DOTFILES_DIR/hosts/$HOSTNAME/config.toml" ]; then
-    echo "Error: No config found for host '$HOSTNAME'"
-    echo "Available hosts:"
-    ls -1 "$DOTFILES_DIR/hosts/"
-    exit 1
-fi
-
-# Run installer
-echo "==> Running installer for $HOSTNAME..."
+# Run installer (auto-detects hostname)
+echo "==> Running installer..."
 cd "$INSTALLER_DIR"
-./installer -c config -h "$HOSTNAME"
+./installer -c install
+./installer -c config
 
 echo ""
 echo "==> Bootstrap complete!"
