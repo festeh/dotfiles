@@ -7,6 +7,7 @@ check = "which zsh"
 cmd = "chsh -s /usr/bin/zsh $USER"
 sudo = true
 check = "getent passwd $USER | grep -q zsh"
+depends_on = ["zsh"]
 
 [simples.neovim]
 cmd = "pacman -S --noconfirm neovim"
@@ -52,3 +53,4 @@ check = "which lsd"
 cmd = "mise install"
 sudo = false
 check = "mise list node | grep -q node"
+depends_on = ["mise"]
