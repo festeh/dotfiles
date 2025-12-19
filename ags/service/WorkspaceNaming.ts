@@ -33,8 +33,9 @@ class WorkspaceNamingService {
         case "activewindowv2": {
           // activewindowv2>>ADDRESS
           const client = this.hypr.get_client(parts[0])
-          if (client) {
-            const wsId = client.get_workspace().get_id()
+          const workspace = client?.get_workspace()
+          if (client && workspace) {
+            const wsId = workspace.get_id()
             console.log(`🏷️  Active window changed: ws${wsId}`)
             this.updateWorkspaceName(wsId)
             windowWorkspaces.set(parts[0], wsId)
@@ -73,7 +74,7 @@ class WorkspaceNamingService {
 
     // Find kitty client in this workspace
     const kittyClient = this.hypr.get_clients().find(
-      (client) => client.get_workspace().get_id() === workspaceId &&
+      (client) => client.get_workspace()?.get_id() === workspaceId &&
                   client.get_class() === "kitty"
     )
 
