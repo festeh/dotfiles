@@ -2,3 +2,4 @@
 node = "lts"
 rust = "latest"
 go = "latest"
+uv = "latest"
