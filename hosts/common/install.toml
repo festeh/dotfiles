@@ -52,5 +52,5 @@ check = "which lsd"
 [simples.mise_tools]
 cmd = "mise install"
 sudo = false
-check = "mise list node | grep -q node"
+check = "mise list node | grep -q node && mise list rust | grep -q rust && mise list go | grep -q go"
 depends_on = ["mise"]

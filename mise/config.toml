@@ -1,2 +1,4 @@
 [tools]
 node = "lts"
+rust = "latest"
+go = "latest"
