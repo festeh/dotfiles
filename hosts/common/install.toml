@@ -22,3 +22,23 @@ check = "which fzf"
 cmd = "pacman -S --noconfirm mise"
 sudo = true
 check = "which mise"
+
+[simples.zsh_autosuggestions]
+cmd = "pacman -S --noconfirm zsh-autosuggestions"
+sudo = true
+check = "[ -f /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ]"
+
+[simples.zsh_syntax_highlighting]
+cmd = "pacman -S --noconfirm zsh-syntax-highlighting"
+sudo = true
+check = "[ -f /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]"
+
+[simples.starship]
+cmd = "pacman -S --noconfirm starship"
+sudo = true
+check = "which starship"
+
+[simples.zoxide]
+cmd = "pacman -S --noconfirm zoxide"
+sudo = true
+check = "which zoxide"

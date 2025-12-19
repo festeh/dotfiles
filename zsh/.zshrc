@@ -8,6 +8,8 @@ if [ -f "/usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; 
     source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 elif [ -f "/usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
     source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+else
+    echo "WARN: zsh-autosuggestions not found. Install: sudo pacman -S zsh-autosuggestions"
 fi
 
 bindkey -v
@@ -41,12 +43,16 @@ if [ -f "/usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.
     source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 elif [ -f "/usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
     source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+else
+    echo "WARN: zsh-syntax-highlighting not found. Install: sudo pacman -S zsh-syntax-highlighting"
 fi
 
 # fzf
 if command -v fzf &> /dev/null; then
     [ -f /usr/share/fzf/completion.zsh ] && source /usr/share/fzf/completion.zsh
     [ -f /usr/share/fzf/key-bindings.zsh ] && source /usr/share/fzf/key-bindings.zsh
+else
+    echo "WARN: fzf not found. Install: sudo pacman -S fzf"
 fi
 
 # zsh-system-clipboard
@@ -62,7 +68,11 @@ bindkey "^[[A" up-line-or-beginning-search # Up
 bindkey "^[[B" down-line-or-beginning-search # Down
 
 # starship prompt
-command -v starship &> /dev/null && eval "$(starship init zsh)"
+if command -v starship &> /dev/null; then
+    eval "$(starship init zsh)"
+else
+    echo "WARN: starship not found. Install: sudo pacman -S starship"
+fi
 
 LOCAL_SETTINGS="$ZDOTDIR/local.sh"
 if [ -f "$LOCAL_SETTINGS" ]; then
@@ -79,7 +89,11 @@ source $DOTFILES/zsh/scripts.sh
 source $DOTFILES/zsh/aliases.sh
 
 # mise
-command -v mise &> /dev/null && eval "$(mise activate zsh)"
+if command -v mise &> /dev/null; then
+    eval "$(mise activate zsh)"
+else
+    echo "WARN: mise not found. Install: sudo pacman -S mise"
+fi
 
 _comp_options+=(globdots)
 autoload -U compinit;
@@ -101,4 +115,8 @@ esac
 # pnpm end
 
 # zoxide
-command -v zoxide &> /dev/null && eval "$(zoxide init zsh)"
+if command -v zoxide &> /dev/null; then
+    eval "$(zoxide init zsh)"
+else
+    echo "WARN: zoxide not found. Install: sudo pacman -S zoxide"
+fi
