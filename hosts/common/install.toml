@@ -49,8 +49,13 @@ cmd = "pacman -S --noconfirm lsd"
 sudo = true
 check = "which lsd"
 
+[simples.node_gpg_keys]
+cmd = "gpg --keyserver hkps://keys.openpgp.org --recv-keys 8FCCA13FEF1D0C2E91008E09770F7A9A5AE15600 C0D6248439F1D5604AAFFB4021D900FFDB233756"
+sudo = false
+check = "gpg --list-keys 8FCCA13FEF1D0C2E91008E09770F7A9A5AE15600"
+
 [simples.mise_tools]
 cmd = "mise install"
 sudo = false
 check = "mise list node | grep -q node && mise list rust | grep -q rust && mise list go | grep -q go && mise list uv | grep -q uv"
-depends_on = ["mise"]
+depends_on = ["mise", "node_gpg_keys"]
