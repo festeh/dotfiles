@@ -49,8 +49,13 @@ cmd = "pacman -S --noconfirm lsd"
 sudo = true
 check = "which lsd"
 
+[simples.gnupg]
+cmd = "pacman -S --noconfirm gnupg"
+sudo = true
+check = "which gpg"
+
 [simples.mise_tools]
 cmd = "mise install"
 sudo = false
 check = "mise list node | grep -q node && mise list rust | grep -q rust && mise list go | grep -q go && mise list uv | grep -q uv"
-depends_on = ["mise"]
+depends_on = ["mise", "gnupg"]

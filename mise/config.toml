@@ -1,3 +1,6 @@
+[settings]
+node_verify = false
+
 [tools]
 node = "lts"
 rust = "latest"
