@@ -47,3 +47,8 @@ check = "which zoxide"
 cmd = "pacman -S --noconfirm lsd"
 sudo = true
 check = "which lsd"
+
+[simples.mise_tools]
+cmd = "mise install"
+sudo = false
+check = "mise list node | grep -q node"
