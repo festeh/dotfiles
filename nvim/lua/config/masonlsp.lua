@@ -205,12 +205,13 @@ vim.lsp.config.tailwindcss = {
 }
 vim.lsp.enable('tailwindcss')
 
--- Configure Kotlin LSP
-vim.lsp.config.kotlin_language_server = {
+-- Configure JetBrains Kotlin LSP (https://github.com/Kotlin/kotlin-lsp)
+-- Install via: brew install JetBrains/utils/kotlin-lsp
+vim.lsp.config.kotlin_lsp = {
   on_attach = custom_attach,
   capabilities = capabilities,
 }
-vim.lsp.enable('kotlin_language_server')
+vim.lsp.enable('kotlin_lsp')
 
 -- Configure JSON LSP
 vim.lsp.config.jsonls = {

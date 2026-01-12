@@ -237,7 +237,7 @@ local plugins = {
   },
   { 'rmagatti/alternate-toggler', config = req('toggler') },
   { 'mrcjkb/rustaceanvim',        config = req('rustacean') },
-  { 'yetone/avante.nvim',         event = "VeryLazy",       version = false, opts = {} },
+  -- { 'yetone/avante.nvim',         event = "VeryLazy",       version = false, opts = {} },
   { "folke/snacks.nvim",          config = req("snacks") },
   {
     'GeorgesAlkhouri/nvim-aider',
