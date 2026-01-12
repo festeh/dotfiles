@@ -47,6 +47,7 @@ pathadd "$HOME/.cargo/bin"
 pathadd "$HOME/go/bin"
 pathadd "$ANDROID_HOME/cmdline-tools/latest/bin"
 pathadd "$ANDROID_HOME/platform-tools"
+pathadd "$ANDROID_HOME/emulator"
 # TODO: only work pc
 pathadd "$HOME/Downloads/swift-5.7.3-RELEASE-ubuntu22.04"
 pathadd "$GOENV_ROOT/bin"
