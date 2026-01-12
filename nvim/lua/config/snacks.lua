@@ -14,6 +14,10 @@ vim.api.nvim_create_user_command('Explorer', function()
   Snacks.picker.explorer({ diagnostics = false })
 end, {})
 
+vim.keymap.set('n', '<leader>e', function()
+  Snacks.picker.explorer({ diagnostics = false })
+end, { desc = 'Toggle Explorer' })
+
 -- Git keymappings
 local snacks = require("snacks")
 vim.keymap.set({"n", "x"}, "<leader>gB", function() snacks.gitbrowse() end, { desc = "Git Browse" })
@@ -303,4 +307,32 @@ vim.keymap.set('n', '<leader>k', function() picker.lsp_symbols() end, { desc = '
 vim.keymap.set('n', '<leader>j', recent_files_in_cwd, { desc = 'Recent Files' })
 vim.keymap.set('n', '<leader>?', recent_files_in_cwd, { desc = 'Recent Files' })
 vim.keymap.set('n', '<leader>/', function() picker.lines() end, { desc = 'Search in current buffer' })
-vim.keymap.set('n', '<leader>fk', function() picker.keymaps() end, { desc = 'Keymaps' })
+vim.keymap.set('n', '<leader>fk', function()
+  picker.keymaps({
+    layout = {
+      preset = "vertical",
+      preview = "bottom",
+      fullscreen = true,
+    },
+    actions = {
+      toggle_wrap = function(p)
+        local win = p.list.win.win
+        local current = vim.wo[win].wrap
+        vim.wo[win].wrap = not current
+        vim.wo[win].linebreak = not current
+      end,
+    },
+    win = {
+      input = {
+        keys = {
+          ["<A-w>"] = { "toggle_wrap", mode = { "i", "n" }, desc = "Toggle wrap" },
+        },
+      },
+      list = {
+        keys = {
+          ["<A-w>"] = { "toggle_wrap", desc = "Toggle wrap" },
+        },
+      },
+    },
+  })
+end, { desc = 'Keymaps (snacks)' })

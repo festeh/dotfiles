@@ -23,11 +23,6 @@ keymap.set("n", "<leader>x", "<cmd>q<CR>", { desc = "Close window" })
 keymap.set("n", "<F11>", "<cmd>set spell!<cr>", { desc = "toggle spell" })
 keymap.set("i", "<F11>", "<c-o><cmd>set spell!<cr>", { desc = "toggle spell" })
 
--- Switch windows
-keymap.set("n", "<left>", "<c-w>h")
-keymap.set("n", "<Right>", "<C-W>l")
-keymap.set("n", "<Up>", "<C-W>k")
-keymap.set("n", "<Down>", "<C-W>j")
 
 keymap.set("n", "<leader>d", vim.diagnostic.open_float)
 keymap.set("n", "[d", vim.diagnostic.goto_prev)
