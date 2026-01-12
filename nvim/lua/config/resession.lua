@@ -22,9 +22,9 @@ vim.api.nvim_create_autocmd("VimEnter", {
                                 vim.fn.line('$') == 1 and
                                 vim.fn.empty(vim.fn.getline(1))
       if is_default_buffer then
-        local fzf_lua_ok, _ = pcall(require, 'fzf-lua')
-        if fzf_lua_ok then
-          require('fzf-lua').files()
+        local snacks_ok, snacks = pcall(require, 'snacks')
+        if snacks_ok then
+          snacks.picker.files()
         end
       end
     end

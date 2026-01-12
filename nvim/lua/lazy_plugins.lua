@@ -19,11 +19,6 @@ local plugins = {
   },
   { "williamboman/mason.nvim",         config = req("masonlsp") },
   { "nvim-treesitter/nvim-treesitter", config = req('treesitter') },
-  {
-    'ibhagwan/fzf-lua',
-    dependencies = { 'nvim-tree/nvim-web-devicons' },
-    config = req("fzf")
-  },
   { "Pocco81/auto-save.nvim",                      config = req('auto-save') },
   { "windwp/nvim-autopairs",                       config = true },
   { "tpope/vim-unimpaired" },
@@ -31,11 +26,9 @@ local plugins = {
   { "kylechui/nvim-surround",                      config = true },
   { "nvim-lualine/lualine.nvim",                   config = req("lualine") },
   { "akinsho/bufferline.nvim",                     config = req("bufferline") },
-  -- { 'nvim-telescope/telescope.nvim',               config = req("telescope") },
   { 'nvim-lua/plenary.nvim' },
   { "kevinhwang91/nvim-bqf",                       config = req("bqf") },
   { 'nvim-treesitter/nvim-treesitter-textobjects', config = req('treesitter-textobjects') },
-  -- { 'stevearc/aerial.nvim',                        config = req('aerial') },
   { "szw/vim-maximizer" },
   { 'sindrets/diffview.nvim',                      dependencies = { 'nvim-lua/plenary.nvim' } },
   { 'tpope/vim-fugitive' },
@@ -50,26 +43,18 @@ local plugins = {
     'mfussenegger/nvim-dap',
     config = req("dap"),
     dependencies = {
-      -- { "festeh/nvim-dap-view", opts = {}, dev = true },
       { "igorlfs/nvim-dap-view", opts = {} },
     },
     event = "VeryLazy"
   },
   { 'mfussenegger/nvim-dap-python',     config = req("dap-python"),        event = "VeryLazy" },
-  -- { "nvim-telescope/telescope-dap.nvim" },
   { "jbyuki/one-small-step-for-vimkind" },
-  -- { 'stevearc/dressing.nvim',           config = req('dressing') },
-  -- use { 'MunifTanjim/exrc.nvim', config = [[require('config.exrc')]] }
   { 'lakshayg/vim-bazel' },
   { 'echasnovski/mini.nvim',            config = req('mini') },
   { 'drybalka/tree-climber.nvim',       config = req('treeclimber') },
   { 'ziontee113/syntax-tree-surfer',    config = req('syntax_tree_surfer') },
-  -- { 'themercorp/themer.lua',           config = req('themer') },
-  -- { 'LeonHeidelbach/trailblazer.nvim', config = req('trailblazer') },
   { 'ggandor/leap.nvim',                config = req("leap") },
   { 'declancm/cinnamon.nvim',           config = req('cinnamon') },
-  -- { "smartpde/telescope-recent-files" },
-  -- { 'ray-x/go.nvim',                   config = req('go') },
   { 'folke/noice.nvim',                 config = req('noice') },
   { 'folke/trouble.nvim',               config = req('trouble') },
   { "mrjones2014/legendary.nvim",       config = req('legendary') },
@@ -82,12 +67,6 @@ local plugins = {
     event = "VeryLazy"
   },
   { 'Civitasv/cmake-tools.nvim', config = req('cmake') },
-  -- {
-  --   "zbirenbaum/copilot.lua",
-  --   cmd = "Copilot",
-  --   event = "InsertEnter",
-  --   config = req('copilot'),
-  -- },
   {
     "tomasky/bookmarks.nvim",
     config = req("bookmarks"),
@@ -98,10 +77,6 @@ local plugins = {
     config = req("gitsigns")
   },
   { "axkirillov/hbac.nvim",      config = req("hbac") },
-  -- {
-  --   "kdheepak/lazygit.nvim",
-  --   config = req('lazygit-vim')
-  -- },
   {
     "folke/flash.nvim",
     event = "VeryLazy",
@@ -112,24 +87,20 @@ local plugins = {
         }
       }
     },
-    -- stylua: ignore
     keys = {
-      -- { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
       { "Q", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
       { "r", mode = "o",               function() require("flash").remote() end,     desc = "Remote Flash" },
       {
         "R",
         mode = { "o", "x" },
         function() require("flash").treesitter_search() end,
-        desc =
-        "Treesitter Search"
+        desc = "Treesitter Search"
       },
       {
         "<c-s>",
         mode = { "c" },
         function() require("flash").toggle() end,
-        desc =
-        "Toggle Flash Search"
+        desc = "Toggle Flash Search"
       },
     },
   },
@@ -142,28 +113,15 @@ local plugins = {
     config = req('ufo')
   },
   { "elkowar/yuck.vim" },
-  -- { "theRealCarneiro/hyprland-vim-syntax", event = "VeryLazy" },
   { "luckasRanarison/tree-sitter-hypr" },
-  -- { "williamboman/mason-lspconfig.nvim" },
-  -- {
-  --   'OscarCreator/rsync.nvim',
-  --   build = 'make',
-  --   dependencies = 'nvim-lua/plenary.nvim',
-  --   config = function()
-  --     require("rsync").setup({})
-  --   end,
-  -- },
   {
     "benlubas/molten-nvim",
     build = ":UpdateRemotePlugins",
     init = function()
-      -- this is an example, not a default. Please see the readme for more configuration options
       vim.g.molten_auto_open_output = false
       vim.g.molten_enter_output_behavior = "open_and_enter"
-      -- vim.g.molten_output_show_more = true
       vim.g.molten_output_virt_lines = true
       vim.g.molten_output_win_max_height = 50
-      -- vim.g.molten_use_border_highlights = true
       vim.g.molten_virt_text_output = true
       vim.g.molten_virt_text_max_lines = 12
     end,
@@ -180,19 +138,6 @@ local plugins = {
     'stevearc/overseer.nvim',
     config = req('overseer'),
   },
-  -- {
-  --   'festeh/todoist.lua',
-  --   dependencies = {
-  --     'nvim-lua/plenary.nvim',
-  --     'muniftanjim/nui.nvim',
-  --   },
-  --   dev = true,
-  -- },
-  -- {
-  --   'festeh/dllm.nvim',
-  --   dev = true,
-  --   config = true,
-  -- },
   {
     "stevearc/profile.nvim"
   },
@@ -204,7 +149,6 @@ local plugins = {
   {
     "CopilotC-Nvim/CopilotChat.nvim",
     config = req('copilot_chat'),
-    -- dev = true,
   },
   {
     "MagicDuck/grug-far.nvim",
@@ -227,7 +171,7 @@ local plugins = {
     lazy = false,
     dependencies = {
       'nvim-lua/plenary.nvim',
-      'stevearc/dressing.nvim', -- optional for vim.ui.select
+      'stevearc/dressing.nvim',
     },
     config = req('flutter-tools'),
   },
@@ -237,7 +181,6 @@ local plugins = {
   },
   { 'rmagatti/alternate-toggler', config = req('toggler') },
   { 'mrcjkb/rustaceanvim',        config = req('rustacean') },
-  -- { 'yetone/avante.nvim',         event = "VeryLazy",       version = false, opts = {} },
   { "folke/snacks.nvim",          config = req("snacks") },
   {
     'GeorgesAlkhouri/nvim-aider',
@@ -247,31 +190,10 @@ local plugins = {
       "folke/snacks.nvim"
     }
   },
-  -- % themes
   { "catppuccin/nvim",     priority = 1000 },
-  -- {
-  --   'festeh/llm_flow.nvim',
-  --   dev = true,
-  -- },
-
-  -- -- %Next goes here
-  -- --
   { "MunifTanjim/nui.nvim" },
-  -- -- use({
-  -- --   "jackMort/ChatGPT.nvim",
-  -- --   config = function()
-  -- --     require("chatgpt").setup({
-  -- --       max_tokens=10000
-  -- --     })
-  -- --   end,
-  -- --   requires = {
-  -- --     "MunifTanjim/nui.nvim",
-  -- --     "nvim-lua/plenary.nvim",
-  -- --     "nvim-telescope/telescope.nvim"
-  -- --   }
-  -- -- })
-  --
 }
+
 local opts = {
   dev = {
     path = "~/projects/",
