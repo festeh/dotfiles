@@ -56,6 +56,7 @@ name = "~/.config/hypr/hyprland.conf"
 SCALING = "1"
 USER = "dima"
 GTK_THEME = "catppuccin-mocha-mauve-standard+default"
+BIND_WORKSPACES_TO_EDP1 = "true"
 
 [templates.ags_daemon]
 target = "systemd/ags_template.service"
