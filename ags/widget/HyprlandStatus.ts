@@ -12,23 +12,12 @@ export default function HyprlandStatus() {
     setup: (self) => {
       const updateWorkspaces = () => {
         try {
-          console.log("🔄 updateWorkspaces called")
-
-          // Clear all children (GTK will handle cleanup)
-          console.log(`🗑️  Clearing ${self.children.length} existing workspace buttons`)
           self.children = []
 
           // Get all workspaces, filter and sort
           const workspaces = hypr.get_workspaces()
-          console.log(`📋 Raw workspaces: ${workspaces.length}`)
-
           const filtered = workspaces.filter((ws) => !(ws.get_id() >= -99 && ws.get_id() <= -2))
-          console.log(`🔍 After filter: ${filtered.length}`)
-
           const sorted = filtered.sort((a, b) => a.get_id() - b.get_id())
-
-          const workspaceIds = sorted.map(ws => ws.get_id()).join(", ")
-          console.log(`✨ Creating buttons for ${sorted.length} workspaces: [${workspaceIds}]`)
 
           // Add workspace buttons
           self.children = sorted.map((ws) => {
@@ -86,10 +75,8 @@ export default function HyprlandStatus() {
 
       // Listen for workspace rename events only
       // (create/destroy handled by notify::workspaces above)
-      hypr.connect("event", (_, eventName, args) => {
-        console.log(`Hyprland event: ${eventName} ${args}`)
+      hypr.connect("event", (_, eventName) => {
         if (eventName === "renameworkspace") {
-          // Rebuild all workspace buttons with updated names
           updateWorkspaces()
         }
       })

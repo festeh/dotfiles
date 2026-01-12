@@ -5,8 +5,6 @@ class WorkspaceNamingService {
   private hypr = Hyprland.get_default()
 
   constructor() {
-    console.log("🏷️  WorkspaceNaming service started")
-
     // Track previous workspace of windows for move detection
     const windowWorkspaces = new Map<string, number>()
 
@@ -15,14 +13,10 @@ class WorkspaceNamingService {
 
       switch (eventName) {
         case "movewindowv2": {
-          // movewindowv2>>ADDRESS,WORKSPACEID,WORKSPACENAME
           const address = parts[0]
           const destWorkspaceId = parseInt(parts[1])
           const sourceWorkspaceId = windowWorkspaces.get(address)
 
-          console.log(`🏷️  Window moved: ws${sourceWorkspaceId} → ws${destWorkspaceId}`)
-
-          // Update both source and destination
           if (sourceWorkspaceId) this.updateWorkspaceName(sourceWorkspaceId)
           this.updateWorkspaceName(destWorkspaceId)
 
@@ -31,12 +25,10 @@ class WorkspaceNamingService {
         }
 
         case "activewindowv2": {
-          // activewindowv2>>ADDRESS
           const client = this.hypr.get_client(parts[0])
           const workspace = client?.get_workspace()
           if (client && workspace) {
             const wsId = workspace.get_id()
-            console.log(`🏷️  Active window changed: ws${wsId}`)
             this.updateWorkspaceName(wsId)
             windowWorkspaces.set(parts[0], wsId)
           }
@@ -44,8 +36,6 @@ class WorkspaceNamingService {
         }
 
         case "closewindow": {
-          // closewindow>>ADDRESS - just update all since we don't track deleted windows
-          console.log(`🏷️  Window closed: updating all workspaces`)
           this.updateAllWorkspaceNames()
           windowWorkspaces.delete(parts[0])
           break
@@ -89,13 +79,11 @@ class WorkspaceNamingService {
     }
 
     if (workspace.get_name() !== newName) {
-      console.log(`🏷️  Renaming workspace ${workspaceId}: "${workspace.get_name()}" → "${newName}"`)
       exec(`hyprctl dispatch renameworkspace ${workspaceId} ${newName}`)
     }
   }
 
   private async updateAllWorkspaceNames() {
-    console.log(`🏷️  Updating all workspace names...`)
     const workspaces = this.hypr.get_workspaces()
       .filter((ws) => !(ws.get_id() >= -99 && ws.get_id() <= -2))
 

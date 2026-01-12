@@ -60,8 +60,10 @@ function setupHeartbeat() {
   heartbeatSource = GLib.timeout_add(GLib.PRIORITY_DEFAULT, HEARTBEAT_INTERVAL, () => {
     updateFocusingState()
     if (connection && connectionState.get() === "connected") {
+      console.log("Sending heartbeat get_focusing request")
       sendWebSocketMessage(connection, { type: "get_focusing" })
     } else {
+      console.log("Connection lost, attempting reconnect")
       reconnect()
     }
     return GLib.SOURCE_CONTINUE
@@ -130,8 +132,8 @@ function handleWebSocketMessage(_: any, type: Soup.WebsocketDataType, message: a
   try {
     const parsed = JSON.parse(data)
 
-    if (parsed.focusing !== null) {
-      setFocusingState(parsed.focusing, parsed.since_last_change, parsed.num_focuses)
+    if ('focusing' in parsed) {
+      setFocusingState(parsed.focusing === true, parsed.since_last_change, parsed.num_focuses)
     }
 
   } catch (error) {

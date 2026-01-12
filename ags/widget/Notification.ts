@@ -10,17 +10,6 @@ type NotificationProps = {
 }
 
 export default function Notification({ notification, onHoverLost, setup }: NotificationProps): Gtk.Widget {
-  // Debug: Log full notification info
-  console.log("=== NOTIFICATION DEBUG ===")
-  console.log("App:", notification.appName)
-  console.log("Icon:", notification.appIcon)
-  console.log("Summary:", notification.summary)
-  console.log("Body:", notification.body)
-  console.log("Image:", notification.image)
-  console.log("Actions:", JSON.stringify(notification.actions))
-  console.log("Urgency:", notification.urgency)
-  console.log("========================")
-
   // Check if appIcon is a file path or icon name
   const isFilePath = notification.appIcon?.startsWith("/") || notification.appIcon?.startsWith("~")
   const hasValidIcon = notification.appIcon && notification.appIcon !== ""
