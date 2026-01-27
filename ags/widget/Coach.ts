@@ -17,12 +17,17 @@ let reconnectAttempts = 0
 const MAX_RECONNECT_ATTEMPTS = 10
 const BASE_RECONNECT_DELAY = 1000 // 1 second
 let heartbeatSource: number | null = null
-const HEARTBEAT_INTERVAL = 60000 // 30 seconds
+const HEARTBEAT_INTERVAL = 60000 // 60 seconds
+let awaitingHeartbeatResponse = false
 
 function setFocusingState(focusing: boolean, duration: number, numFocuses: number) {
+  const wasFocusing = isFocusing.get()
+  if (wasFocusing !== focusing) {
+    console.log(`Focus state changed: ${wasFocusing} -> ${focusing}`)
+  }
   durationState.set(duration)
   numFocusesState.set(numFocuses)
-  isFocusing.set(focusing) // Update focusing state
+  isFocusing.set(focusing)
   const durationMinutes = Math.floor(duration / 60)
   let durationString = ""
   if (durationMinutes == 1) {
@@ -60,7 +65,13 @@ function setupHeartbeat() {
   heartbeatSource = GLib.timeout_add(GLib.PRIORITY_DEFAULT, HEARTBEAT_INTERVAL, () => {
     updateFocusingState()
     if (connection && connectionState.get() === "connected") {
+      if (awaitingHeartbeatResponse) {
+        console.log("Previous heartbeat not answered, reconnecting")
+        reconnect()
+        return GLib.SOURCE_CONTINUE
+      }
       console.log("Sending heartbeat get_focusing request")
+      awaitingHeartbeatResponse = true
       sendWebSocketMessage(connection, { type: "get_focusing" })
     } else {
       console.log("Connection lost, attempting reconnect")
@@ -99,7 +110,8 @@ function handleWebSocketConnection(session: Soup.Session, result: Gio.AsyncResul
   try {
     connection = session.websocket_connect_finish(result)
     connectionState.set("connected")
-    reconnectAttempts = 0 // Reset reconnect attempts on successful connection
+    reconnectAttempts = 0
+    awaitingHeartbeatResponse = false
 
     connection.connect("message", handleWebSocketMessage)
 
@@ -123,6 +135,18 @@ function handleWebSocketConnection(session: Soup.Session, result: Gio.AsyncResul
   }
 }
 
+interface FocusInfo {
+  type: "focusing"
+  focusing: boolean
+  since_last_change: number
+  focus_time_left: number
+  num_focuses: number
+}
+
+function isFocusInfo(obj: unknown): obj is FocusInfo {
+  return typeof obj === "object" && obj !== null && (obj as FocusInfo).type === "focusing"
+}
+
 function handleWebSocketMessage(_: any, type: Soup.WebsocketDataType, message: any) {
   if (type !== Soup.WebsocketDataType.TEXT) return
 
@@ -132,8 +156,11 @@ function handleWebSocketMessage(_: any, type: Soup.WebsocketDataType, message: a
   try {
     const parsed = JSON.parse(data)
 
-    if ('focusing' in parsed) {
-      setFocusingState(parsed.focusing === true, parsed.since_last_change, parsed.num_focuses)
+    if (isFocusInfo(parsed)) {
+      awaitingHeartbeatResponse = false
+      setFocusingState(parsed.focusing, parsed.since_last_change, parsed.num_focuses)
+    } else {
+      console.error("Unknown message type:", parsed.type ?? "missing type", data)
     }
 
   } catch (error) {
