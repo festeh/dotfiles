@@ -307,6 +307,7 @@ vim.keymap.set('n', '<leader>fg', function() picker.grep() end, { desc = 'Live G
 vim.keymap.set('n', '<leader>fw', function() picker.grep_word() end, { desc = 'Grep Word' })
 vim.keymap.set('n', '<leader>fb', function() picker.buffers() end, { desc = 'Buffers' })
 vim.keymap.set('n', '<leader>fh', function() picker.help() end, { desc = 'Help Tags' })
+vim.keymap.set('n', '<leader>fc', function() picker.commands() end, { desc = 'Commands' })
 vim.keymap.set('n', '<leader>fr', function() picker.lsp_references() end, { desc = 'LSP References' })
 vim.keymap.set('n', '<leader>fi', function() picker.lsp_incoming_calls() end, { desc = 'LSP Incoming Calls' })
 vim.keymap.set('n', '<leader>k', function() picker.lsp_symbols() end, { desc = 'LSP Document Symbols' })

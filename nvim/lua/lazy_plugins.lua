@@ -33,7 +33,6 @@ local plugins = {
   { 'sindrets/diffview.nvim',                      dependencies = { 'nvim-lua/plenary.nvim' } },
   { 'tpope/vim-fugitive' },
   { "lukas-reineke/indent-blankline.nvim",         config = req("indent") },
-  { "iamcco/markdown-preview.nvim",                run = function() vim.fn["mkdp#util#install"]() end },
   { 'nvim-neotest/neotest',                        config = req("neotest") },
   { 'nvim-neotest/neotest-python' },
   { 'sbdchd/neoformat',                            config = req("neoformat") },
@@ -57,7 +56,6 @@ local plugins = {
   { 'declancm/cinnamon.nvim',           config = req('cinnamon') },
   { 'folke/noice.nvim',                 config = req('noice') },
   { 'folke/trouble.nvim',               config = req('trouble') },
-  { "mrjones2014/legendary.nvim",       config = req('legendary') },
   { 'Exafunction/windsurf.vim',         event = "VeryLazy",                config = req('codeium') },
   { 'neomake/neomake' },
   { "windwp/nvim-ts-autotag",           config = req("autotag") },
@@ -155,14 +153,12 @@ local plugins = {
     config = req("grug")
   },
   {
-    "toppair/peek.nvim",
-    event = { "VeryLazy" },
-    build = "deno task --quiet build:fast",
-    config = function()
-      require("peek").setup()
-      vim.api.nvim_create_user_command("PeekOpen", require("peek").open, {})
-      vim.api.nvim_create_user_command("PeekClose", require("peek").close, {})
-    end,
+    'MeanderingProgrammer/render-markdown.nvim',
+    ft = { 'markdown' },
+    opts = {},
+    keys = {
+      { '<leader>mr', function() require('render-markdown').toggle() end, desc = 'Toggle Markdown Render' },
+    },
   },
   { "b0o/schemastore.nvim" },
   { 'akinsho/toggleterm.nvim', version = "*", config = true },
