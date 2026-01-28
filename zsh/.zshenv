@@ -44,6 +44,7 @@ pathadd() {
 # To not add if already in path
 pathadd "$HOME/.local/bin"
 pathadd "$HOME/.cargo/bin"
+pathadd "$HOME/.bun/bin"
 pathadd "$HOME/go/bin"
 pathadd "$ANDROID_HOME/cmdline-tools/latest/bin"
 pathadd "$ANDROID_HOME/platform-tools"
