@@ -25,8 +25,7 @@ function copypath() {
     fi
     if [ -f "$filepath" ] || [ -d "$filepath" ]
     then
-        FINAL_CMD="echo $filepath | $CMD 2>/dev/null"
-        eval "$FINAL_CMD" && echo "Copied $filepath to clipboard."
+        printf '%s' "$filepath" | eval "$CMD" 2>/dev/null && echo "Copied $filepath to clipboard."
     else
         echo "Error getting the real path. Please check the file or directory name."
     fi
