@@ -5,25 +5,31 @@ import { readSync, openSync, closeSync } from "fs";
 
 const SINK_NAME = "combined_bt";
 const SINK_DESC = "Combined_BT_Capture";
+let VERBOSE = false;
 
 function log(msg: string): void {
   console.log(`[bt-capture] ${msg}`);
+}
+
+function logVerbose(msg: string): void {
+  if (VERBOSE) console.log(`[bt-capture] ${msg}`);
 }
 
 function logError(msg: string): void {
   console.error(`[bt-capture] ERROR: ${msg}`);
 }
 
-function run(cmd: string): string {
-  log(`exec: ${cmd}`);
+function run(cmd: string, { quiet = false } = {}): string {
+  logVerbose(`exec: ${cmd}`);
   const result = execSync(cmd, { encoding: "utf-8" }).trim();
-  if (result) log(`output: ${result}`);
+  if (result && !quiet) log(`output: ${result}`);
+  if (result && quiet) logVerbose(`output: ${result}`);
   return result;
 }
 
-function tryRun(cmd: string): string | null {
+function tryRun(cmd: string, opts?: { quiet?: boolean }): string | null {
   try {
-    return run(cmd);
+    return run(cmd, opts);
   } catch (e) {
     logError(`command failed: ${cmd} — ${e instanceof Error ? e.message : e}`);
     return null;
@@ -55,7 +61,7 @@ function promptChoice(addrs: string[]): string {
 
 function findBluezDevice(): { input: string; output: string } | null {
   log("Searching for Bluetooth audio devices...");
-  const lines = run("pw-cli list-objects");
+  const lines = run("pw-cli list-objects", { quiet: true });
   const btAddresses = new Set<string>();
 
   for (const match of lines.matchAll(/node\.name = "bluez_input\.([\w:]+)"/g)) {
@@ -97,6 +103,28 @@ function createSink(): void {
   log(`Created null sink "${SINK_NAME}".`);
 }
 
+function waitForPorts(
+  nodeNames: string[],
+  { timeout = 5000, interval = 200 } = {}
+): boolean {
+  log(`Waiting for ports to appear for: ${nodeNames.join(", ")} (timeout ${timeout}ms)...`);
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    const lines = tryRun("pw-link -o", { quiet: true }) ?? "";
+    const allFound = nodeNames.every((name) =>
+      lines.split("\n").some((l) => l.startsWith(`${name}:`))
+    );
+    if (allFound) {
+      log("All ports registered.");
+      return true;
+    }
+    log(`Ports not ready yet, retrying in ${interval}ms...`);
+    execSync(`sleep ${interval / 1000}`);
+  }
+  logError(`Timed out waiting for ports after ${timeout}ms.`);
+  return false;
+}
+
 function link(src: string, dst: string): void {
   log(`Linking: ${src} -> ${dst}`);
   const result = tryRun(`pw-link "${src}" "${dst}"`);
@@ -107,7 +135,7 @@ function link(src: string, dst: string): void {
 
 function getOutputPorts(nodeName: string): string[] {
   log(`Getting output ports for "${nodeName}"...`);
-  const lines = run("pw-link -o");
+  const lines = run("pw-link -o", { quiet: true });
   const ports = lines.split("\n").filter((l) => l.startsWith(`${nodeName}:`));
   log(`Found ${ports.length} port(s) for "${nodeName}": ${ports.join(", ") || "none"}`);
   return ports;
@@ -193,6 +221,7 @@ Commands:
 
 Options:
   --record <file>   Start recording to a WAV file after setup
+  -v, --verbose     Show detailed command output
   -h, --help        Show this help`;
 
 function parseArgs(argv: string[]): Command {
@@ -299,8 +328,10 @@ function setup(record?: string): void {
 
   createSink();
 
-  log("Waiting 500ms for PipeWire to register ports...");
-  execSync("sleep 0.5");
+  if (!waitForPorts([SINK_NAME, device.input, device.output])) {
+    logError("Required ports did not appear in time. Aborting.");
+    process.exit(1);
+  }
 
   setupLinks(device);
 
@@ -314,7 +345,9 @@ function setup(record?: string): void {
 }
 
 function main(): void {
-  const cmd = parseArgs(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+  VERBOSE = argv.includes("-v") || argv.includes("--verbose");
+  const cmd = parseArgs(argv);
   log(`Command: ${cmd.kind}`);
 
   switch (cmd.kind) {
