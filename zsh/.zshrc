@@ -120,3 +120,5 @@ if command -v zoxide &> /dev/null; then
 else
     echo "WARN: zoxide not found. Install: sudo pacman -S zoxide"
 fi
+
+if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
