@@ -81,13 +81,13 @@ vim.lsp.enable('ruff')
 --     },
 --   },
 -- }
--- Configure basedpyright LSP
-vim.lsp.config.basedpyright = {
+-- Configure ty LSP (Astral type checker)
+vim.lsp.config.ty = {
   on_attach = custom_attach,
   capabilities = capabilities,
   single_file_support = false,
 }
-vim.lsp.enable('basedpyright')
+vim.lsp.enable('ty')
 
 -- Configure Lua LSP
 vim.lsp.config.lua_ls = {
