@@ -103,12 +103,12 @@ function stopRecording() {
   })
 }
 
-function toggleRecording() {
-  if (isRecording.get()) {
-    stopRecording()
-  } else {
-    startRecording()
-  }
+function cancelRecording() {
+  if (!isRecording.get() || isProcessing.get()) return
+
+  GLib.spawn_command_line_async("pkill -f 'ffmpeg.*pulse.*records'")
+  recordingStartTime.set(0)
+  menuVisible.set(false)
 }
 
 async function transcribeAudio(filepath: string): Promise<void> {
@@ -158,12 +158,13 @@ hyprland.connect("keyboard-layout", () => {
 })
 
 export default function Menu(monitor: Gdk.Monitor) {
-  return (
+  const win = (
     <window
       gdkmonitor={monitor}
       cssClasses={["Menu"]}
       visible={bind(menuVisible)}
       anchor={Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT}
+      keymode={Astal.Keymode.EXCLUSIVE}
       application={App}>
       <box
         cssClasses={["menu-widget"]}
@@ -171,6 +172,7 @@ export default function Menu(monitor: Gdk.Monitor) {
         orientation={Gtk.Orientation.VERTICAL}
       >
         <button
+          focusable={false}
           css_classes={bind(isIdleRunning).as(running =>
             running ? ["idle-toggle-button"] : ["idle-toggle-button", "idle-toggle-button-inactive"]
           )}
@@ -199,6 +201,7 @@ export default function Menu(monitor: Gdk.Monitor) {
         </button>
 
         <button
+          focusable={false}
           css_classes={["keyboard-layout-button"]}
           onClicked={() => {
             GLib.spawn_command_line_async("hyprctl switchxkblayout at-translated-set-2-keyboard next")
@@ -215,51 +218,80 @@ export default function Menu(monitor: Gdk.Monitor) {
           </box>
         </button>
 
+        {/* Start recording button (shown when idle) */}
         <button
-          css_classes={Variable.derive(
+          focusable={false}
+          css_classes={["record-button"]}
+          visible={Variable.derive(
             [isRecording, isProcessing],
-            (recording, processing) => {
-              if (processing) return ["record-button", "record-button-processing"]
-              if (recording) return ["record-button", "record-button-active"]
-              return ["record-button"]
-            }
+            (recording, processing) => !recording && !processing
           )()}
-          sensitive={bind(isProcessing).as(p => !p)}
-          onClicked={() => toggleRecording()}
+          onClicked={() => startRecording()}
         >
           <box spacing={10}>
-            <image
-              iconName={Variable.derive(
-                [isRecording, isProcessing],
-                (recording, processing) => {
-                  if (processing) return "emblem-synchronizing-symbolic"
-                  if (recording) return "media-playback-stop-symbolic"
-                  return "media-record-symbolic"
-                }
-              )()}
-              css_classes={bind(isProcessing).as(p => p ? ["record-icon-spinning"] : [])}
-              css="font-size: 18px"
-            />
-            <label
-              label={Variable.derive(
-                [isRecording, isProcessing],
-                (recording, processing) => {
-                  if (processing) return "Transcribing..."
-                  if (recording) return "Stop Recording"
-                  return "Record Audio"
-                }
-              )()}
-            />
-            <label
-              css_classes={["record-duration"]}
-              visible={bind(isRecording)}
-              label={bind(recordingDuration)}
-            />
+            <image iconName="media-record-symbolic" css="font-size: 18px" />
+            <label label="Record Audio" />
           </box>
         </button>
+
+        {/* Recording status + controls (shown when recording) */}
+        <box
+          css_classes={["record-button", "record-button-active"]}
+          visible={bind(isRecording)}
+          spacing={10}
+        >
+          <image iconName="media-record-symbolic" css="font-size: 18px; color: @red;" />
+          <label label={bind(recordingDuration)} css_classes={["record-duration"]} />
+          <box hexpand={true} />
+          <button
+            focusable={false}
+            css_classes={["record-action-button", "record-finish-button"]}
+            onClicked={() => stopRecording()}
+          >
+            <image iconName="checkmark-symbolic" css="font-size: 14px" />
+          </button>
+          <button
+            focusable={false}
+            css_classes={["record-action-button", "record-cancel-button"]}
+            onClicked={() => cancelRecording()}
+          >
+            <image iconName="process-stop-symbolic" css="font-size: 14px" />
+          </button>
+        </box>
+
+        {/* Processing indicator */}
+        <box
+          css_classes={["record-button", "record-button-processing"]}
+          visible={bind(isProcessing)}
+          spacing={10}
+        >
+          <image
+            iconName="emblem-synchronizing-symbolic"
+            css_classes={["record-icon-spinning"]}
+            css="font-size: 18px"
+          />
+          <label label="Transcribing..." />
+        </box>
       </box>
     </window>
-  )
+  ) as Astal.Window
+
+  const keyController = new Gtk.EventControllerKey()
+  keyController.connect("key-pressed", (_self: any, keyval: number) => {
+    if (keyval === Gdk.KEY_Return || keyval === Gdk.KEY_KP_Enter) {
+      if (isRecording.get()) stopRecording()
+      return true
+    }
+    if (keyval === Gdk.KEY_Escape) {
+      if (isRecording.get()) cancelRecording()
+      else menuVisible.set(false)
+      return true
+    }
+    return false
+  })
+  win.add_controller(keyController)
+
+  return win
 }
 
-export { isIdleRunning, keyboardLayout, isRecording, startRecording, toggleRecording, menuVisible }
+export { isIdleRunning, keyboardLayout, isRecording, startRecording, stopRecording, cancelRecording, menuVisible }

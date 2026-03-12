@@ -213,6 +213,33 @@ window {
   animation: spin 1s linear infinite;
 }
 
+.record-action-button {
+  border-radius: 6px;
+  padding: 4px 10px;
+  transition: all 200ms ease;
+}
+
+.record-finish-button {
+  background-color: alpha(@green, 0.2);
+  color: @green;
+  border: 1px solid @green;
+}
+
+.record-finish-button:hover {
+  background-color: alpha(@green, 0.35);
+}
+
+.record-cancel-button {
+  background-color: alpha(@red, 0.15);
+  color: @subtext0;
+  border: 1px solid @surface2;
+}
+
+.record-cancel-button:hover {
+  background-color: alpha(@red, 0.3);
+  color: @red;
+}
+
 .record-duration {
   font-family: "JetBrainsMono Nerd Font";
   font-size: 12px;
