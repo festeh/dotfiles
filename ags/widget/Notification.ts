@@ -74,7 +74,8 @@ export default function Notification({ notification, onHoverLost, setup }: Notif
             label: notification.summary,
             xalign: 0,
             wrap: true,
-            maxWidthChars: 35,
+            hexpand: true,
+            maxWidthChars: 50,
           }),
 
           // Body text (if available)
@@ -83,7 +84,8 @@ export default function Notification({ notification, onHoverLost, setup }: Notif
             label: notification.body,
             xalign: 0,
             wrap: true,
-            maxWidthChars: 35,
+            hexpand: true,
+            maxWidthChars: 50,
             useMarkup: true,
           }) : Widget.Box({ visible: false }),
 
