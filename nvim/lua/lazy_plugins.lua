@@ -188,6 +188,7 @@ local plugins = {
   },
   { "catppuccin/nvim",     priority = 1000 },
   { "MunifTanjim/nui.nvim" },
+  { "Glench/Vim-Jinja2-Syntax" },
 }
 
 local opts = {

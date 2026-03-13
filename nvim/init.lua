@@ -1,3 +1,10 @@
+vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
+  pattern = { "*.j2" },
+  callback = function(args)
+    vim.treesitter.stop(args.buf)
+  end,
+})
+
 local api = vim.api
 
 local modules = {
