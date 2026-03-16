@@ -6,3 +6,5 @@ ags/types
 node_modules
 ags/@girs
 /.aider*
+spotify/.token.json
+spotify/.venv

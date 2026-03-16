@@ -1,0 +1,11 @@
+[project]
+name = "spotify"
+version = "0.1.0"
+description = "Spotify playlist management via Web API"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28.1",
+]
+
+[project.scripts]
+spotify-playlist = "spotify:main"
