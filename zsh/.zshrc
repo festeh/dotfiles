@@ -100,6 +100,7 @@ autoload -U compinit;
 if [ "$(find $ZDOTDIR/.zcompdump -mtime +1)" ] ; then
     echo "zcompdump is older than a day. Regenerating..."
     compinit
+    touch $ZDOTDIR/.zcompdump # update mtime so the check doesn't trigger again today
 fi
 compinit -C
 
