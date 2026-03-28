@@ -7,6 +7,7 @@ import Soup from "gi://Soup?version=3.0"
 const focusingState = Variable("Initializing")
 const changedState = Variable(new Date())
 const durationState = Variable(0)
+const timeLeftState = Variable(0)
 const connectionState = Variable("disconnected")
 const numFocusesState = Variable(0)
 const isFocusing = Variable(true) // Track if currently focusing
@@ -20,39 +21,55 @@ let heartbeatSource: number | null = null
 const HEARTBEAT_INTERVAL = 60000 // 60 seconds
 let awaitingHeartbeatResponse = false
 
-function setFocusingState(focusing: boolean, duration: number, numFocuses: number) {
+function formatDuration(seconds: number): string {
+  if (seconds >= 60) {
+    const totalMinutes = Math.floor(seconds / 60)
+    const days = Math.floor(totalMinutes / 1440)
+    const hours = Math.floor((totalMinutes % 1440) / 60)
+    const minutes = totalMinutes % 60
+    const parts: string[] = []
+    if (days > 0) parts.push(`${days}d`)
+    if (hours > 0) parts.push(`${hours}h`)
+    if (minutes > 0) parts.push(`${minutes}m`)
+    return parts.join(" ")
+  } else if (seconds > 0) {
+    return `${seconds}s`
+  }
+  return ""
+}
+
+function setFocusingState(state: FocusState) {
   const wasFocusing = isFocusing.get()
-  if (wasFocusing !== focusing) {
-    console.log(`Focus state changed: ${wasFocusing} -> ${focusing}`)
+  if (wasFocusing !== state.focusing) {
+    console.log(`Focus state changed: ${wasFocusing} -> ${state.focusing}`)
   }
-  durationState.set(duration)
-  numFocusesState.set(numFocuses)
-  isFocusing.set(focusing)
-  const durationMinutes = Math.floor(duration / 60)
-  let durationString = ""
-  if (durationMinutes == 1) {
-    durationString = "for 1 minute"
-  } else if (durationMinutes > 1) {
-    durationString = `for ${durationMinutes} minutes`
+  durationState.set(state.since_last_change)
+  timeLeftState.set(state.focus_time_left)
+  numFocusesState.set(state.num_focuses)
+  isFocusing.set(state.focusing)
+
+  let timeString = ""
+  if (state.focusing && state.focus_time_left > 0) {
+    timeString = `[${formatDuration(state.focus_time_left)} left]`
+  } else {
+    const formatted = formatDuration(state.since_last_change)
+    if (formatted) timeString = `[${formatted}]`
   }
-  let focusingString = "Focusing"
-  if (!focusing) {
-    focusingString = "Not focusing"
-  }
-  focusingState.set(`${focusingString} ${durationString} [${numFocuses}]`)
+
+  const focusingString = state.focusing ? "Focusing" : "Not focusing"
+  focusingState.set(`${focusingString} ${timeString} [${state.num_focuses}]`)
   changedState.set(new Date())
 }
 
 function updateFocusingState() {
   const now = new Date()
   const delta = Math.floor((now.getTime() - changedState.get().getTime()) / 1000)
-  const duration = durationState.get() + delta
-  let focusing = true
-  if (focusingState.get().includes("Not focusing")) {
-    focusing = false
-  }
-  const numFocuses = numFocusesState.get()
-  setFocusingState(focusing, duration, numFocuses)
+  setFocusingState({
+    focusing: !focusingState.get().includes("Not focusing"),
+    since_last_change: durationState.get() + delta,
+    focus_time_left: Math.max(0, timeLeftState.get() - delta),
+    num_focuses: numFocusesState.get(),
+  })
 }
 
 function setupHeartbeat() {
@@ -135,12 +152,15 @@ function handleWebSocketConnection(session: Soup.Session, result: Gio.AsyncResul
   }
 }
 
-interface FocusInfo {
-  type: "focusing"
+interface FocusState {
   focusing: boolean
   since_last_change: number
   focus_time_left: number
   num_focuses: number
+}
+
+interface FocusInfo extends FocusState {
+  type: "focusing"
 }
 
 function isFocusInfo(obj: unknown): obj is FocusInfo {
@@ -158,7 +178,7 @@ function handleWebSocketMessage(_: any, type: Soup.WebsocketDataType, message: a
 
     if (isFocusInfo(parsed)) {
       awaitingHeartbeatResponse = false
-      setFocusingState(parsed.focusing, parsed.since_last_change, parsed.num_focuses)
+      setFocusingState(parsed)
     } else {
       console.error("Unknown message type:", parsed.type ?? "missing type", data)
     }
