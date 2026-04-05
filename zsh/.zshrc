@@ -96,24 +96,17 @@ else
 fi
 
 _comp_options+=(globdots)
-autoload -U compinit;
-if [ "$(find $ZDOTDIR/.zcompdump -mtime +1)" ] ; then
+autoload -U compinit
+if [[ ! -f "$ZDOTDIR/.zcompdump" ]] || [[ -n "$(find "$ZDOTDIR/.zcompdump" -mtime +1)" ]]; then
     echo "zcompdump is older than a day. Regenerating..."
     compinit
-    touch $ZDOTDIR/.zcompdump # update mtime so the check doesn't trigger again today
+    touch "$ZDOTDIR/.zcompdump"
+else
+    compinit -C
 fi
-compinit -C
 
 # scripts
 export PATH="$DOTFILES/scripts:$PATH"
-
-# pnpm
-export PNPM_HOME="/home/dlipin/.local/share/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-# pnpm end
 
 # zoxide
 if command -v zoxide &> /dev/null; then
