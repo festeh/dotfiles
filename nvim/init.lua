@@ -1,3 +1,5 @@
+require('vim._core.ui2').enable({ enable = true })
+
 vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
   pattern = { "*.j2" },
   callback = function(args)

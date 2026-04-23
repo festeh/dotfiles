@@ -1,79 +1,52 @@
-require 'nvim-treesitter.configs'.setup {
-  textobjects = {
-    select = {
-      enable = true,
-
-      -- Automatically jump forward to textobj, similar to targets.vim
-      lookahead = true,
-
-      keymaps = {
-        -- You can use the capture groups defined in textobjects.scm
-        -- ["af"] = "@function.outer",
-        -- ["if"] = "@function.inner",
-        ["ac"] = "@class.outer",
-        -- You can optionally set descriptions to the mappings (used in the desc parameter of
-        -- nvim_buf_set_keymap) which plugins like which-key display
-        ["ic"] = { query = "@class.inner", desc = "Select inner part of a class region" },
-      },
-      -- You can choose the select mode (default is charwise 'v')
-      --
-      -- Can also be a function which gets passed a table with the keys
-      -- * query_string: eg '@function.inner'
-      -- * method: eg 'v' or 'o'
-      -- and should return the mode ('v', 'V', or '<c-v>') or a table
-      -- mapping query_strings to modes.
-      selection_modes = {
-        ['@parameter.outer'] = 'v', -- charwise
-        ['@function.outer'] = 'V',  -- linewise
-        ['@class.outer'] = '<c-v>', -- blockwise
-      },
-      -- If you set this to `true` (default is `false`) then any textobject is
-      -- extended to include preceding or succeeding whitespace. Succeeding
-      -- whitespace has priority in order to act similarly to eg the built-in
-      -- `ap`.
-      --
-      -- Can also be a function which gets passed a table with the keys
-      -- * query_string: eg '@function.inner'
-      -- * selection_mode: eg 'v'
-      -- and should return true of false
-      include_surrounding_whitespace = true,
-
-
+require('nvim-treesitter-textobjects').setup {
+  select = {
+    lookahead = true,
+    selection_modes = {
+      ['@parameter.outer'] = 'v',
+      ['@function.outer']  = 'V',
+      ['@class.outer']     = '<c-v>',
     },
-    move = {
-      enable = true,
-      set_jumps = true, -- whether to set jumps in the jumplist
-      goto_next_start = {
-        ["]f"] = { query = "@call.outer", desc = "Next function call start" },
-        ["]m"] = { query = "@function.outer", desc = "Next method/function def start" },
-        ["]c"] = { query = "@class.outer", desc = "Next class start" },
-        ["]i"] = { query = "@conditional.outer", desc = "Next conditional start" },
-        ["]l"] = { query = "@loop.outer", desc = "Next loop start" },
-
-        -- You can pass a query group to use query from `queries/<lang>/<query_group>.scm file in your runtime path.
-        -- Below example nvim-treesitter's `locals.scm` and `folds.scm`. They also provide highlights.scm and indent.scm.
-        ["]s"] = { query = "@scope", query_group = "locals", desc = "Next scope" },
-        ["]z"] = { query = "@fold", query_group = "folds", desc = "Next fold" },
-      },
-      goto_previous_start = {
-        ["[f"] = { query = "@call.outer", desc = "Prev function call start" },
-        ["[m"] = { query = "@function.outer", desc = "Prev method/function def start" },
-        ["[c"] = { query = "@class.outer", desc = "Prev class start" },
-        ["[i"] = { query = "@conditional.outer", desc = "Prev conditional start" },
-        ["[l"] = { query = "@loop.outer", desc = "Prev loop start" },
-      },
-      goto_next_end = {
-        [']M'] = {
-          query = { '@function.outer', '@class.outer' },
-          desc = 'Go to end of next function/class',
-        },
-      },
-      goto_previous_end = {
-        ['[M'] = {
-          query = { '@function.outer', '@class.outer' },
-          desc = 'Go to end of previous function/class',
-        },
-      },
-    },
+    include_surrounding_whitespace = true,
+  },
+  move = {
+    set_jumps = true,
   },
 }
+
+local select = require('nvim-treesitter-textobjects.select')
+local move   = require('nvim-treesitter-textobjects.move')
+
+local function map(mode, lhs, rhs, desc)
+  vim.keymap.set(mode, lhs, rhs, { desc = desc, silent = true })
+end
+
+-- Select
+map({ 'x', 'o' }, 'ac', function() select.select_textobject('@class.outer', 'textobjects') end, 'Select outer class')
+map({ 'x', 'o' }, 'ic', function() select.select_textobject('@class.inner', 'textobjects') end, 'Select inner class')
+
+-- Move: next start
+map({ 'n', 'x', 'o' }, ']f', function() move.goto_next_start('@call.outer', 'textobjects') end,        'Next function call start')
+map({ 'n', 'x', 'o' }, ']m', function() move.goto_next_start('@function.outer', 'textobjects') end,    'Next function def start')
+map({ 'n', 'x', 'o' }, ']c', function() move.goto_next_start('@class.outer', 'textobjects') end,       'Next class start')
+map({ 'n', 'x', 'o' }, ']i', function() move.goto_next_start('@conditional.outer', 'textobjects') end, 'Next conditional start')
+map({ 'n', 'x', 'o' }, ']l', function() move.goto_next_start('@loop.outer', 'textobjects') end,        'Next loop start')
+map({ 'n', 'x', 'o' }, ']s', function() move.goto_next_start('@scope', 'locals') end,                  'Next scope')
+map({ 'n', 'x', 'o' }, ']z', function() move.goto_next_start('@fold', 'folds') end,                    'Next fold')
+
+-- Move: previous start
+map({ 'n', 'x', 'o' }, '[f', function() move.goto_previous_start('@call.outer', 'textobjects') end,        'Prev function call start')
+map({ 'n', 'x', 'o' }, '[m', function() move.goto_previous_start('@function.outer', 'textobjects') end,    'Prev function def start')
+map({ 'n', 'x', 'o' }, '[c', function() move.goto_previous_start('@class.outer', 'textobjects') end,       'Prev class start')
+map({ 'n', 'x', 'o' }, '[i', function() move.goto_previous_start('@conditional.outer', 'textobjects') end, 'Prev conditional start')
+map({ 'n', 'x', 'o' }, '[l', function() move.goto_previous_start('@loop.outer', 'textobjects') end,        'Prev loop start')
+
+-- Move: next/prev end (function or class — whichever comes first)
+local function goto_end(dir, captures)
+  return function()
+    local fn = dir == 'next' and move.goto_next_end or move.goto_previous_end
+    fn(captures, 'textobjects')
+  end
+end
+
+map({ 'n', 'x', 'o' }, ']M', goto_end('next', { '@function.outer', '@class.outer' }),     'End of next function/class')
+map({ 'n', 'x', 'o' }, '[M', goto_end('prev', { '@function.outer', '@class.outer' }),     'End of previous function/class')
