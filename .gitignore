@@ -8,3 +8,4 @@ ags/@girs
 /.aider*
 spotify/.token.json
 spotify/.venv
+__pycache__
