@@ -47,11 +47,110 @@ window {
 .layout-status-widget,
 .workspace-widget,
 .focusing-widget,
-.tray-widget {
+.tray-widget,
+.claude-status-widget {
   background-color: @surface0;
   border-radius: 10px;
   padding: 6px 12px;
   margin: 2px 4px;
+}
+
+.claude-status-widget {
+  padding: 4px 8px;
+}
+
+.claude-status-empty {
+  padding: 0;
+  margin: 0;
+  background-color: transparent;
+}
+
+.claude-session-pill {
+  background-color: @surface1;
+  border-radius: 8px;
+  padding: 2px 8px;
+  margin: 0 3px;
+  border: 1px solid @surface2;
+  transition: all 200ms ease;
+}
+
+.claude-session-pill:first-child {
+  margin-left: 0;
+}
+
+.claude-session-pill:last-child {
+  margin-right: 0;
+}
+
+.claude-session-pill {
+  transition: border-color 400ms ease, color 400ms ease, background-color 400ms ease;
+}
+
+@keyframes flash-blue {
+  0% { background-color: alpha(@blue, 0.35); }
+  100% { background-color: alpha(@blue, 0.08); }
+}
+
+@keyframes flash-green {
+  0% { background-color: alpha(@green, 0.35); }
+  100% { background-color: alpha(@green, 0.08); }
+}
+
+@keyframes flash-yellow {
+  0% { background-color: alpha(@yellow, 0.35); }
+  100% { background-color: alpha(@yellow, 0.08); }
+}
+
+@keyframes flash-gray {
+  0% { background-color: alpha(@overlay0, 0.35); }
+  100% { background-color: alpha(@overlay0, 0.08); }
+}
+
+.claude-session-running {
+  border-color: @blue;
+  color: @blue;
+  background-color: alpha(@blue, 0.08);
+  animation: flash-blue 500ms ease-out forwards;
+}
+
+@keyframes claude-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.claude-session-icon-pulsing {
+  animation: claude-pulse 1.2s ease-in-out infinite;
+}
+
+.claude-session-waiting {
+  border-color: @yellow;
+  color: @yellow;
+  background-color: alpha(@yellow, 0.08);
+  animation: flash-yellow 500ms ease-out forwards;
+}
+
+.claude-session-idle {
+  border-color: @green;
+  color: @green;
+  background-color: alpha(@green, 0.08);
+  animation: flash-green 500ms ease-out forwards;
+}
+
+.claude-session-unknown {
+  border-color: @overlay0;
+  color: @overlay0;
+  background-color: alpha(@overlay0, 0.08);
+  animation: flash-gray 500ms ease-out forwards;
+}
+
+.claude-session-icon {
+  -gtk-icon-size: 14px;
+  margin-right: 6px;
+}
+
+.claude-session-name {
+  font-size: 12px;
+  font-weight: 600;
 }
 
 /* Battery widget - normal color, red when low */

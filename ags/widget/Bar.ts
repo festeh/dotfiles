@@ -9,6 +9,7 @@ import HyprlandStatus from "./HyprlandStatus"
 import TimeDate from "./TimeDate"
 import Volume from "./Volume"
 import Coach from "./Coach"
+import ClaudeStatus from "./ClaudeStatus"
 
 
 export default function Bar(monitor: Gdk.Monitor, calendarVisible: Variable<boolean>,
@@ -32,6 +33,7 @@ export default function Bar(monitor: Gdk.Monitor, calendarVisible: Variable<bool
           children: [
             HyprlandStatus(),
             Coach(),
+            ClaudeStatus(),
           ]
         }),
         Widget.Box({
