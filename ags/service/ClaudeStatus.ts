@@ -2,7 +2,7 @@ import { Variable } from "astal"
 import GLib from "gi://GLib"
 
 const SESSIONS_FILE = GLib.get_home_dir() + "/.cache/ags-claude/sessions.json"
-const STALE_THRESHOLD_MS = 60000
+const STALE_THRESHOLD_MS = 300000
 
 export interface ClaudeSession {
   session_id: string

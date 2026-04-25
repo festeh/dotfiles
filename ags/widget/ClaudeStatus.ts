@@ -280,12 +280,20 @@ function SessionPill(session: ClaudeSession) {
   return pill
 }
 
+function widgetTooltip(sessions: ClaudeSession[]): string {
+  if (sessions.length === 0) return ""
+  return sessions
+    .map(s => `• ${sessionDisplayName(s)}: ${s.cwd} (${s.state})`)
+    .join("\n")
+}
+
 export default function ClaudeStatus() {
   return Widget.Box({
     css_classes: bind(claudeSessions).as(sessions =>
       sessions.length > 0 ? ["claude-status-widget"] : ["claude-status-widget", "claude-status-empty"]
     ),
     visible: bind(claudeSessions).as(sessions => sessions.length > 0),
+    tooltip_text: bind(claudeSessions).as(widgetTooltip),
     children: bind(claudeSessions).as(sessions =>
       sessions.map(SessionPill)
     ),
