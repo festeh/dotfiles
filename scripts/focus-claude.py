@@ -111,7 +111,7 @@ def main() -> int:
     if pid and focus_by_pid_tree(pid):
         return 0
 
-    # Nothing found — notify user
+    # Nothing found — notify user and remove stale session from AGS widget
     try:
         subprocess.run(
             ["notify-send", "Claude", f"Could not find window for {cwd}"],
@@ -121,7 +121,54 @@ def main() -> int:
     except subprocess.SubprocessError:
         pass
 
+    # Remove session from AGS sessions.json by matching claude_pid
+    _remove_session_from_ags(claude_pid_str, cwd)
+
     return 1
+
+
+def _remove_session_from_ags(claude_pid_str: str, cwd: str) -> None:
+    """Remove a stale session from the AGS sessions database."""
+    import json as _json
+    sessions_path = os.path.expanduser("~/.cache/ags-claude/sessions.json")
+    if not os.path.exists(sessions_path):
+        return
+    try:
+        with open(sessions_path, "r", encoding="utf-8") as f:
+            db = _json.load(f)
+    except (_json.JSONDecodeError, OSError):
+        return
+
+    sessions = db.get("sessions", {})
+    to_remove = None
+
+    # Try match by claude_pid first
+    if claude_pid_str and claude_pid_str not in ("null", "None", ""):
+        try:
+            pid = int(claude_pid_str)
+            for sid, sess in sessions.items():
+                if sess.get("claude_pid") == pid:
+                    to_remove = sid
+                    break
+        except ValueError:
+            pass
+
+    # Fallback: match by cwd
+    if to_remove is None:
+        for sid, sess in sessions.items():
+            if sess.get("cwd") == cwd:
+                to_remove = sid
+                break
+
+    if to_remove is not None:
+        sessions.pop(to_remove, None)
+        try:
+            tmp_path = sessions_path + ".tmp"
+            with open(tmp_path, "w", encoding="utf-8") as f:
+                _json.dump(db, f, indent=2)
+            os.replace(tmp_path, sessions_path)
+        except OSError:
+            pass
 
 
 if __name__ == "__main__":

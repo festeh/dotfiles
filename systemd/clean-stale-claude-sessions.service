@@ -1,0 +1,6 @@
+[Unit]
+Description=Clean stale Claude sessions from AGS widget
+
+[Service]
+Type=oneshot
+ExecStart=%h/dotfiles/scripts/clean-stale-claude-sessions.py

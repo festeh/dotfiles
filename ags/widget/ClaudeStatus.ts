@@ -55,16 +55,19 @@ function SessionIcon(session: ClaudeSession) {
   })
 }
 
-function truncate(str: string, max: number): string {
-  if (str.length <= max) return str
-  return str.slice(0, max) + "..."
+function sanitize(str: string, max?: number): string {
+  const cleaned = str.replace(/\n/g, " ")
+  if (max !== undefined && cleaned.length > max) {
+    return cleaned.slice(0, max) + "..."
+  }
+  return cleaned
 }
 
 function getPillLabel(session: ClaudeSession): string {
   if (session.state === "running" || session.state === "waiting") {
-    return truncate(session.action || sessionDisplayName(session), 20)
+    return sanitize(session.action || sessionDisplayName(session), 20)
   }
-  return truncate(sessionDisplayName(session), 20)
+  return sanitize(sessionDisplayName(session), 20)
 }
 
 function DetailSection(label: string, value: string, valueClass?: string) {
@@ -122,7 +125,7 @@ function DetailPopover(session: ClaudeSession, parent: Gtk.Widget): Gtk.Popover 
 
   // Prompt
   if (session.prompt) {
-    children.push(DetailSection("Prompt", session.prompt))
+    children.push(DetailSection("Prompt", sanitize(session.prompt)))
   }
 
   // Tool info
@@ -131,7 +134,7 @@ function DetailPopover(session: ClaudeSession, parent: Gtk.Widget): Gtk.Popover 
       ? `Tool: ${session.tool_name} (#${session.tool_count})`
       : `Tool: ${session.tool_name}`
 
-    const toolDetail = formatToolInput(session)
+    const toolDetail = sanitize(formatToolInput(session))
 
     children.push(
       Widget.Box({
@@ -162,17 +165,17 @@ function DetailPopover(session: ClaudeSession, parent: Gtk.Widget): Gtk.Popover 
 
   // Subagent
   if (session.agent_type) {
-    children.push(DetailSection("Subagent", session.agent_type))
+    children.push(DetailSection("Subagent", sanitize(session.agent_type)))
   }
 
   // Error
   if (session.error) {
-    children.push(DetailSection("Error", session.error, "claude-detail-error"))
+    children.push(DetailSection("Error", sanitize(session.error), "claude-detail-error"))
   }
 
   // Notification
   if (session.notification_message) {
-    children.push(DetailSection("Notification", session.notification_message))
+    children.push(DetailSection("Notification", sanitize(session.notification_message)))
   }
 
   // Last assistant message (for idle sessions)
@@ -180,9 +183,7 @@ function DetailPopover(session: ClaudeSession, parent: Gtk.Widget): Gtk.Popover 
     children.push(
       DetailSection(
         "Last response",
-        session.last_assistant_message.length > 200
-          ? session.last_assistant_message.slice(0, 200) + "..."
-          : session.last_assistant_message
+        sanitize(session.last_assistant_message, 200)
       )
     )
   }
@@ -242,7 +243,7 @@ function SessionPill(session: ClaudeSession) {
 
   const pill = Widget.Box({
     css_classes: ["claude-session-pill", `claude-session-${session.state}`],
-    tooltip_text: `${session.action} — ${session.cwd}\nLeft-click: focus window  Right-click: details`,
+    tooltip_text: `${sanitize(session.action)} — ${session.cwd}\nLeft-click: focus window  Right-click: details`,
     children: pillChildren,
   })
 
