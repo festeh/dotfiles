@@ -16,6 +16,7 @@ o.smartcase = true
 o.autowrite=true -- save file on buf change and make
 o.clipboard="unnamedplus" -- share system clipboard with vim
 o.cursorline=true
+o.wrap = true
 o.undofile=true
 o.undodir=fn.stdpath("data").."/undo"
 o.undolevels=5000
