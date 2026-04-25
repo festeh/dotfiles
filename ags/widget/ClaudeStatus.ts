@@ -1,96 +1,283 @@
 import { Widget } from "astal/gtk4"
 import { bind } from "astal"
-import { claudeSessions, sessionDisplayName, ClaudeSession } from "../service/ClaudeStatus"
+import {
+  claudeSessions,
+  sessionDisplayName,
+  formatElapsed,
+  formatToolInput,
+  getSessionById,
+  ClaudeSession,
+} from "../service/ClaudeStatus"
 import Gtk from "gi://Gtk?version=4.0"
+import Gio from "gi://Gio"
 import GLib from "gi://GLib"
 
-function stateIconName(state: string): string {
-  switch (state) {
-    case "waiting": return "dialog-warning-symbolic"
-    case "idle": return "selection-mode-symbolic"
-    case "unknown": return "dialog-question-symbolic"
-    default: return "dialog-question-symbolic"
-  }
-}
-
-// Global persistent spinner animation state
-const spinnerAreas: Gtk.DrawingArea[] = []
 let spinnerAngle = 0
-const TWO_PI = Math.PI * 2
-let spinnerTimer: number | null = null
+const spinnerAreas: Set<Gtk.DrawingArea> = new Set()
+let spinnerSource: number | null = null
 
-function ensureSpinnerTimer() {
-  if (spinnerTimer !== null) return
-  spinnerTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 40, () => {
-    spinnerAngle = (spinnerAngle + 0.2) % TWO_PI
+function startSpinnerTimer() {
+  if (spinnerSource !== null) return
+  spinnerSource = setInterval(() => {
+    spinnerAngle = (spinnerAngle + 0.15) % (2 * Math.PI)
     for (const area of spinnerAreas) {
-      if (area.get_mapped()) {
-        area.queue_draw()
-      }
+      area.queue_draw()
     }
-    return GLib.SOURCE_CONTINUE
-  })
-}
-
-function registerSpinner(area: Gtk.DrawingArea) {
-  ensureSpinnerTimer()
-  spinnerAreas.push(area)
-  area.connect("destroy", () => {
-    const idx = spinnerAreas.indexOf(area)
-    if (idx !== -1) {
-      spinnerAreas.splice(idx, 1)
-    }
-  })
-}
-
-function RunningSpinner() {
-  const area = new Gtk.DrawingArea()
-  area.set_size_request(14, 14)
-  area.set_draw_func((_, cr, width, height) => {
-    const cx = width / 2
-    const cy = height / 2
-    const radius = Math.min(width, height) / 2 - 2
-    const arcLen = Math.PI * 1.3
-
-    // Catppuccin Mocha blue ~ #89b4fa
-    cr.setSourceRGBA(0.537, 0.706, 0.98, 1.0)
-    cr.setLineWidth(2)
-    cr.setLineCap(1) // Cairo.LineCap.ROUND
-
-    cr.arc(cx, cy, radius, spinnerAngle, spinnerAngle + arcLen)
-    cr.stroke()
-  })
-  registerSpinner(area)
-  return area
+  }, 50)
 }
 
 function SessionIcon(session: ClaudeSession) {
   if (session.state === "running") {
-    return Widget.Box({
-      css_classes: ["claude-session-icon"],
-      width_request: 14,
-      height_request: 14,
-      child: RunningSpinner(),
-    })
+    const area = new Gtk.DrawingArea()
+    area.set_size_request(14, 14)
+    area.set_draw_func((widget, cr, width, height) => {
+      const color = widget.get_color()
+      cr.setSourceRGBA(color.red, color.green, color.blue, color.alpha)
+      const cx = width / 2
+      const cy = height / 2
+      const radius = Math.min(cx, cy) - 2
+      cr.setLineWidth(2)
+      cr.arc(cx, cy, radius, spinnerAngle, spinnerAngle + 1.2 * Math.PI)
+      cr.stroke()
+    }, null)
+    spinnerAreas.add(area)
+    startSpinnerTimer()
+    return area
+  }
+  const names: Record<string, string> = {
+    idle: "selection-mode-symbolic",
+    waiting: "dialog-warning-symbolic",
+    unknown: "dialog-question-symbolic",
   }
   return Widget.Image({
     css_classes: ["claude-session-icon"],
-    icon_name: stateIconName(session.state),
+    icon_name: names[session.state] || "dialog-question-symbolic",
   })
 }
 
-function SessionPill(session: ClaudeSession) {
+function truncate(str: string, max: number): string {
+  if (str.length <= max) return str
+  return str.slice(0, max) + "..."
+}
+
+function getPillLabel(session: ClaudeSession): string {
+  if (session.state === "running" || session.state === "waiting") {
+    return truncate(session.action || sessionDisplayName(session), 20)
+  }
+  return truncate(sessionDisplayName(session), 20)
+}
+
+function DetailSection(label: string, value: string, valueClass?: string) {
   return Widget.Box({
-    css_classes: ["claude-session-pill", `claude-session-${session.state}`],
-    tooltip_text: `${session.action} — ${session.cwd}`,
+    orientation: Gtk.Orientation.VERTICAL,
+    spacing: 2,
+    css_classes: ["claude-detail-section"],
     children: [
-      SessionIcon(session),
       Widget.Label({
-        css_classes: ["claude-session-name"],
-        label: sessionDisplayName(session),
+        css_classes: ["claude-detail-label"],
+        label,
+        halign: Gtk.Align.START,
+      }),
+      Widget.Label({
+        css_classes: valueClass ? ["claude-detail-value", valueClass] : ["claude-detail-value"],
+        label: value,
+        wrap: true,
+        max_width_chars: 48,
+        halign: Gtk.Align.START,
       }),
     ],
   })
+}
+
+function DetailPopover(session: ClaudeSession, parent: Gtk.Widget): Gtk.Popover {
+  const popover = new Gtk.Popover()
+  popover.set_parent(parent)
+
+  const children: Gtk.Widget[] = []
+
+  // Header: state dot + project name
+  const stateColors: Record<string, string> = {
+    running: "● ",
+    waiting: "● ",
+    idle: "● ",
+    unknown: "● ",
+  }
+
+  children.push(
+    Widget.Box({
+      spacing: 8,
+      css_classes: ["claude-detail-header"],
+      children: [
+        Widget.Label({
+          css_classes: [`claude-detail-state-${session.state}`],
+          label: `${stateColors[session.state] || "● "}${session.state.toUpperCase()}`,
+        }),
+        Widget.Label({
+          css_classes: ["claude-detail-project"],
+          label: sessionDisplayName(session),
+        }),
+      ],
+    })
+  )
+
+  // Prompt
+  if (session.prompt) {
+    children.push(DetailSection("Prompt", session.prompt))
+  }
+
+  // Tool info
+  if (session.tool_name) {
+    const toolHeader = session.tool_count > 0
+      ? `Tool: ${session.tool_name} (#${session.tool_count})`
+      : `Tool: ${session.tool_name}`
+
+    const toolDetail = formatToolInput(session)
+
+    children.push(
+      Widget.Box({
+        orientation: Gtk.Orientation.VERTICAL,
+        spacing: 2,
+        css_classes: ["claude-detail-section"],
+        children: [
+          Widget.Label({
+            css_classes: ["claude-detail-label"],
+            label: toolHeader,
+            halign: Gtk.Align.START,
+          }),
+          ...(toolDetail
+            ? [
+                Widget.Label({
+                  css_classes: ["claude-detail-value", "claude-detail-monospace"],
+                  label: toolDetail,
+                  wrap: true,
+                  max_width_chars: 48,
+                  halign: Gtk.Align.START,
+                }),
+              ]
+            : []),
+        ],
+      })
+    )
+  }
+
+  // Subagent
+  if (session.agent_type) {
+    children.push(DetailSection("Subagent", session.agent_type))
+  }
+
+  // Error
+  if (session.error) {
+    children.push(DetailSection("Error", session.error, "claude-detail-error"))
+  }
+
+  // Notification
+  if (session.notification_message) {
+    children.push(DetailSection("Notification", session.notification_message))
+  }
+
+  // Last assistant message (for idle sessions)
+  if (session.last_assistant_message && session.state === "idle") {
+    children.push(
+      DetailSection(
+        "Last response",
+        session.last_assistant_message.length > 200
+          ? session.last_assistant_message.slice(0, 200) + "..."
+          : session.last_assistant_message
+      )
+    )
+  }
+
+  // Footer metadata
+  children.push(
+    Widget.Box({
+      orientation: Gtk.Orientation.VERTICAL,
+      spacing: 4,
+      css_classes: ["claude-detail-footer"],
+      children: [
+        Widget.Label({
+          css_classes: ["claude-detail-meta"],
+          label: session.cwd,
+          wrap: true,
+          max_width_chars: 48,
+          halign: Gtk.Align.START,
+        }),
+        Widget.Label({
+          css_classes: ["claude-detail-meta"],
+          label: `Updated ${formatElapsed(session)} ago`,
+          halign: Gtk.Align.START,
+        }),
+      ],
+    })
+  )
+
+  const content = Widget.Box({
+    css_classes: ["claude-detail-popover"],
+    orientation: Gtk.Orientation.VERTICAL,
+    spacing: 10,
+    children,
+  })
+
+  popover.set_child(content)
+  return popover
+}
+
+function SessionPill(session: ClaudeSession) {
+  const pillChildren: Gtk.Widget[] = [
+    SessionIcon(session),
+    Widget.Label({
+      css_classes: ["claude-session-name"],
+      label: getPillLabel(session),
+    }),
+  ]
+
+  // Tool count badge
+  if (session.tool_count > 0) {
+    pillChildren.push(
+      Widget.Label({
+        css_classes: ["claude-session-badge"],
+        label: `${session.tool_count}`,
+      })
+    )
+  }
+
+  const pill = Widget.Box({
+    css_classes: ["claude-session-pill", `claude-session-${session.state}`],
+    tooltip_text: `${session.action} — ${session.cwd}\nLeft-click: focus window  Right-click: details`,
+    children: pillChildren,
+  })
+
+  // Left click: focus the corresponding claude window
+  const leftGesture = Gtk.GestureClick.new()
+  leftGesture.set_button(1)
+  leftGesture.connect("pressed", () => {
+    try {
+      Gio.Subprocess.new(
+        [
+          "python3",
+          GLib.get_home_dir() + "/dotfiles/scripts/focus-claude.py",
+          String(session.claude_pid || ""),
+          session.cwd,
+        ],
+        Gio.SubprocessFlags.NONE,
+      )
+    } catch {
+      // silently ignore spawn failures
+    }
+  })
+  pill.add_controller(leftGesture)
+
+  // Right click: show detail popover
+  const rightGesture = Gtk.GestureClick.new()
+  rightGesture.set_button(3)
+  rightGesture.connect("pressed", () => {
+    const fresh = getSessionById(session.session_id)
+    if (!fresh) return
+    const popover = DetailPopover(fresh, pill)
+    popover.popup()
+  })
+  pill.add_controller(rightGesture)
+
+  return pill
 }
 
 export default function ClaudeStatus() {

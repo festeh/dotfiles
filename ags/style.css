@@ -110,7 +110,6 @@ window {
   border-color: @blue;
   color: @blue;
   background-color: alpha(@blue, 0.08);
-  animation: flash-blue 500ms ease-out forwards;
 }
 
 @keyframes claude-pulse {
@@ -126,21 +125,18 @@ window {
   border-color: @yellow;
   color: @yellow;
   background-color: alpha(@yellow, 0.08);
-  animation: flash-yellow 500ms ease-out forwards;
 }
 
 .claude-session-idle {
   border-color: @green;
   color: @green;
   background-color: alpha(@green, 0.08);
-  animation: flash-green 500ms ease-out forwards;
 }
 
 .claude-session-unknown {
   border-color: @overlay0;
   color: @overlay0;
   background-color: alpha(@overlay0, 0.08);
-  animation: flash-gray 500ms ease-out forwards;
 }
 
 .claude-session-icon {
@@ -151,6 +147,103 @@ window {
 .claude-session-name {
   font-size: 12px;
   font-weight: 600;
+}
+
+.claude-session-badge {
+  font-size: 9px;
+  font-weight: 700;
+  background-color: alpha(currentColor, 0.2);
+  border-radius: 6px;
+  padding: 1px 5px;
+  margin-left: 4px;
+}
+
+/* Claude detail popover */
+.claude-detail-popover {
+  padding: 14px 16px;
+  min-width: 280px;
+  max-width: 400px;
+}
+
+.claude-detail-header {
+  margin-bottom: 4px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid @surface1;
+}
+
+.claude-detail-state-running {
+  color: @blue;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.claude-detail-state-waiting {
+  color: @yellow;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.claude-detail-state-idle {
+  color: @green;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.claude-detail-state-unknown {
+  color: @overlay0;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.claude-detail-project {
+  font-weight: 700;
+  font-size: 13px;
+  color: @text;
+}
+
+.claude-detail-section {
+  margin-top: 2px;
+}
+
+.claude-detail-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: @overlay0;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.claude-detail-value {
+  font-size: 12px;
+  color: @text;
+  line-height: 1.4;
+}
+
+.claude-detail-monospace {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  background-color: @mantle;
+  padding: 6px 8px;
+  border-radius: 6px;
+  margin-top: 4px;
+}
+
+.claude-detail-error {
+  color: @red;
+}
+
+.claude-detail-footer {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid @surface1;
+}
+
+.claude-detail-meta {
+  font-size: 10px;
+  color: @overlay1;
 }
 
 /* Battery widget - normal color, red when low */
