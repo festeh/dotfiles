@@ -450,8 +450,12 @@ window {
   min-width: 24px;
 }
 
-.workspace-widget button:hover {
-  background-color: @surface1;
+.workspace-group:hover {
+  background-color: @surface2;
+  transition: background-color 200ms ease;
+}
+
+.workspace-group:hover button:not(.focused) {
   color: @text;
 }
 
@@ -484,9 +488,6 @@ window {
   padding: 2px 6px;
 }
 
-.workspace-group .claude-session-pill:hover {
-  background-color: @surface2;
-}
 
 /* Focusing widget */
 .focusing-widget {
