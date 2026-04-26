@@ -11,48 +11,90 @@ import {
 import Gtk from "gi://Gtk?version=4.0"
 import Gio from "gi://Gio"
 import GLib from "gi://GLib"
+import Hyprland from "gi://AstalHyprland"
 
-let spinnerAngle = 0
-const spinnerAreas: Set<Gtk.DrawingArea> = new Set()
-let spinnerSource: number | null = null
+const CLAUDE_ICON_PATH = GLib.get_home_dir() + "/dotfiles/ags/assets/claude.svg"
 
-function startSpinnerTimer() {
-  if (spinnerSource !== null) return
-  spinnerSource = setInterval(() => {
-    spinnerAngle = (spinnerAngle + 0.15) % (2 * Math.PI)
-    for (const area of spinnerAreas) {
-      area.queue_draw()
+function getPpid(pid: number): number | null {
+  try {
+    const [success, content] = GLib.file_get_contents(`/proc/${pid}/status`)
+    if (!success) return null
+    const text = new TextDecoder().decode(content)
+    const match = text.match(/^PPid:\s+(\d+)/m)
+    if (!match) return null
+    const ppid = parseInt(match[1])
+    return isNaN(ppid) || ppid === 0 ? null : ppid
+  } catch { return null }
+}
+
+function buildClaudeCwdToPidMap(): Map<string, number> {
+  const result = new Map<string, number>()
+  try {
+    const dir = Gio.File.new_for_path("/proc")
+    const enumerator = dir.enumerate_children("standard::name", Gio.FileQueryInfoFlags.NONE, null)
+    let info: Gio.FileInfo | null
+    while ((info = enumerator.next_file(null)) !== null) {
+      const name = info.get_name()
+      if (!/^\d+$/.test(name)) continue
+      const pid = parseInt(name)
+      try {
+        const [ok, content] = GLib.file_get_contents(`/proc/${pid}/comm`)
+        if (!ok) continue
+        const comm = new TextDecoder().decode(content).trim()
+        if (comm !== "claude") continue
+        const target = GLib.file_read_link(`/proc/${pid}/cwd`)
+        if (target) result.set(target, pid)
+      } catch {}
     }
-  }, 50)
+    enumerator.close(null)
+  } catch {}
+  return result
+}
+
+let cwdToPidCache: { map: Map<string, number>, time: number } | null = null
+
+function getClaudePidByCwd(cwd: string): number | null {
+  const now = Date.now()
+  if (!cwdToPidCache || now - cwdToPidCache.time > 1000) {
+    cwdToPidCache = { map: buildClaudeCwdToPidMap(), time: now }
+  }
+  const map = cwdToPidCache.map
+  const direct = map.get(cwd)
+  if (direct) return direct
+  for (const [k, v] of map) {
+    if (cwd.startsWith(k + "/") || k.startsWith(cwd + "/")) return v
+  }
+  return null
+}
+
+export function findWorkspaceIdForSession(session: ClaudeSession): number | null {
+  let pid: number | null = session.claude_pid || null
+  if (!pid && session.cwd) pid = getClaudePidByCwd(session.cwd)
+  if (!pid) return null
+
+  const hypr = Hyprland.get_default()
+  const clients = hypr.get_clients()
+  let current: number | null = pid
+  for (let i = 0; i < 20 && current && current !== 1; i++) {
+    const client = clients.find(c => c.pid === current)
+    if (client) {
+      const ws = client.workspace
+      return ws ? ws.id : null
+    }
+    current = getPpid(current)
+  }
+  return null
 }
 
 function SessionIcon(session: ClaudeSession) {
-  if (session.state === "running") {
-    const area = new Gtk.DrawingArea()
-    area.set_size_request(14, 14)
-    area.set_draw_func((widget, cr, width, height) => {
-      const color = widget.get_color()
-      cr.setSourceRGBA(color.red, color.green, color.blue, color.alpha)
-      const cx = width / 2
-      const cy = height / 2
-      const radius = Math.min(cx, cy) - 2
-      cr.setLineWidth(2)
-      cr.arc(cx, cy, radius, spinnerAngle, spinnerAngle + 1.2 * Math.PI)
-      cr.stroke()
-    }, null)
-    spinnerAreas.add(area)
-    startSpinnerTimer()
-    return area
-  }
-  const names: Record<string, string> = {
-    idle: "selection-mode-symbolic",
-    waiting: "dialog-warning-symbolic",
-    unknown: "dialog-question-symbolic",
-  }
-  return Widget.Image({
-    css_classes: ["claude-session-icon"],
-    icon_name: names[session.state] || "dialog-question-symbolic",
+  const classes = ["claude-session-icon"]
+  if (session.state === "running") classes.push("claude-session-icon-pulsing")
+  const image = Widget.Image({
+    css_classes: classes,
+    file: CLAUDE_ICON_PATH,
   })
+  image.set_pixel_size(14)
+  return image
 }
 
 function sanitize(str: string, max?: number): string {
@@ -222,7 +264,7 @@ function DetailPopover(session: ClaudeSession, parent: Gtk.Widget): Gtk.Popover 
   return popover
 }
 
-function SessionPill(session: ClaudeSession) {
+export function SessionPill(session: ClaudeSession) {
   const pillChildren: Gtk.Widget[] = [
     SessionIcon(session),
     Widget.Label({
@@ -243,29 +285,9 @@ function SessionPill(session: ClaudeSession) {
 
   const pill = Widget.Box({
     css_classes: ["claude-session-pill", `claude-session-${session.state}`],
-    tooltip_text: `${sanitize(session.action)} — ${session.cwd}\nLeft-click: focus window  Right-click: details`,
+    tooltip_text: `${sanitize(session.action)} — ${session.cwd}\nRight-click: details`,
     children: pillChildren,
   })
-
-  // Left click: focus the corresponding claude window
-  const leftGesture = Gtk.GestureClick.new()
-  leftGesture.set_button(1)
-  leftGesture.connect("pressed", () => {
-    try {
-      Gio.Subprocess.new(
-        [
-          "python3",
-          GLib.get_home_dir() + "/dotfiles/scripts/focus-claude.py",
-          String(session.claude_pid || ""),
-          session.cwd,
-        ],
-        Gio.SubprocessFlags.NONE,
-      )
-    } catch {
-      // silently ignore spawn failures
-    }
-  })
-  pill.add_controller(leftGesture)
 
   // Right click: show detail popover
   const rightGesture = Gtk.GestureClick.new()
@@ -289,14 +311,15 @@ function widgetTooltip(sessions: ClaudeSession[]): string {
 }
 
 export default function ClaudeStatus() {
+  const orphans = bind(claudeSessions).as(sessions =>
+    sessions.filter(s => findWorkspaceIdForSession(s) === null)
+  )
   return Widget.Box({
-    css_classes: bind(claudeSessions).as(sessions =>
+    css_classes: orphans.as(sessions =>
       sessions.length > 0 ? ["claude-status-widget"] : ["claude-status-widget", "claude-status-empty"]
     ),
-    visible: bind(claudeSessions).as(sessions => sessions.length > 0),
-    tooltip_text: bind(claudeSessions).as(widgetTooltip),
-    children: bind(claudeSessions).as(sessions =>
-      sessions.map(SessionPill)
-    ),
+    visible: orphans.as(sessions => sessions.length > 0),
+    tooltip_text: orphans.as(widgetTooltip),
+    children: orphans.as(sessions => sessions.map(SessionPill)),
   })
 }

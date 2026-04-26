@@ -443,7 +443,7 @@ window {
 /* Workspace widget */
 .workspace-widget button {
   padding: 4px 10px;
-  margin: 0 2px;
+  margin: 0;
   border-radius: 6px;
   color: @subtext0;
   transition: all 200ms ease;
@@ -459,6 +459,33 @@ window {
   background-color: @mauve;
   color: @base;
   font-weight: bold;
+}
+
+/* Group workspace button with its claude pills as one unit */
+.workspace-group {
+  background-color: @surface1;
+  border-radius: 8px;
+  padding: 2px;
+  margin: 0 4px;
+}
+
+.workspace-group:first-child {
+  margin-left: 0;
+}
+
+.workspace-group:last-child {
+  margin-right: 0;
+}
+
+.workspace-group .claude-session-pill {
+  margin: 0 2px 0 4px;
+  border: none;
+  background-color: transparent;
+  padding: 2px 6px;
+}
+
+.workspace-group .claude-session-pill:hover {
+  background-color: @surface2;
 }
 
 /* Focusing widget */

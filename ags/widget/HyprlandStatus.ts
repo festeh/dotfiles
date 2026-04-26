@@ -1,7 +1,8 @@
 
 import Hyprland from "gi://AstalHyprland"
 import { Widget } from "astal/gtk4"
-import { bind } from "astal"
+import { claudeSessions, ClaudeSession } from "../service/ClaudeStatus"
+import { SessionPill, findWorkspaceIdForSession } from "./ClaudeStatus"
 
 
 export default function HyprlandStatus() {
@@ -19,10 +20,18 @@ export default function HyprlandStatus() {
           const filtered = workspaces.filter((ws) => !(ws.get_id() >= -99 && ws.get_id() <= -2))
           const sorted = filtered.sort((a, b) => a.get_id() - b.get_id())
 
-          // Add workspace buttons
+          // Group claude sessions by workspace id
+          const sessionsByWs = new Map<number, ClaudeSession[]>()
+          for (const s of claudeSessions.get()) {
+            const wsId = findWorkspaceIdForSession(s)
+            if (wsId === null) continue
+            if (!sessionsByWs.has(wsId)) sessionsByWs.set(wsId, [])
+            sessionsByWs.get(wsId)!.push(s)
+          }
+
           self.children = sorted.map((ws) => {
+          const id = ws.get_id()
           const getLabel = () => {
-            const id = ws.get_id()
             const name = ws.get_name()
             return name === id.toString() ? name : `<span alpha="50%">${id}</span> ${name}`
           }
@@ -62,7 +71,12 @@ export default function HyprlandStatus() {
             ws.disconnect(nameId)
           })
 
-          return button
+          const pills = (sessionsByWs.get(id) || []).map(SessionPill)
+
+          return Widget.Box({
+            css_classes: ["workspace-group"],
+            children: [button, ...pills],
+          })
         })
         } catch (error) {
           console.error("❌ Error in updateWorkspaces:", error)
@@ -73,13 +87,22 @@ export default function HyprlandStatus() {
       updateWorkspaces()
       hypr.connect("notify::workspaces", updateWorkspaces)
 
-      // Listen for workspace rename events only
-      // (create/destroy handled by notify::workspaces above)
+      // Listen for workspace/window events that affect pill placement
       hypr.connect("event", (_, eventName) => {
-        if (eventName === "renameworkspace") {
+        if (
+          eventName === "renameworkspace" ||
+          eventName === "openwindow" ||
+          eventName === "closewindow" ||
+          eventName === "movewindow" ||
+          eventName === "movewindowv2"
+        ) {
           updateWorkspaces()
         }
       })
+
+      // Re-render when claude sessions change
+      const sessionsSub = claudeSessions.subscribe(updateWorkspaces)
+      self.connect("destroy", () => sessionsSub())
     }
   })
 }
