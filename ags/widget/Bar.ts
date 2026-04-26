@@ -1,5 +1,6 @@
 import { App, Astal, Gdk, Widget } from "astal/gtk4"
 import { Variable } from "astal"
+import Gtk from "gi://Gtk?version=4.0"
 import Battery from "./Battery"
 import MenuButton from "./MenuButton"
 import IdleStatus from "./IdleStatus"
@@ -24,28 +25,36 @@ export default function Bar(monitor: Gdk.Monitor, calendarVisible: Variable<bool
       anchor: Astal.WindowAnchor.TOP | Astal.WindowAnchor.LEFT | Astal.WindowAnchor.RIGHT,
       application: App
     },
-    Widget.Box({
-      className: "bar-container",
-      children: [
-        Widget.Box({
-          hexpand: true,
-          children: [
-            HyprlandStatus(),
-            Coach(),
-          ]
-        }),
-        Widget.Box({
-          children: [
-            LayoutStatus(),
-            IdleStatus(),
-            MenuButton(menuVisible),
-            Volume(),
-            Battery(),
-            TimeDate(currentDate, calendarVisible),
-            Tray()
-          ]
-        })
-      ]
-    })
+    (() => {
+      const leftScroll = new Gtk.ScrolledWindow()
+      leftScroll.set_policy(Gtk.PolicyType.EXTERNAL, Gtk.PolicyType.NEVER)
+      leftScroll.set_propagate_natural_width(false)
+      leftScroll.set_propagate_natural_height(true)
+      leftScroll.set_hexpand(true)
+      leftScroll.set_child(Widget.Box({
+        children: [
+          HyprlandStatus(),
+          Coach(),
+        ],
+      }))
+
+      return Widget.Box({
+        className: "bar-container",
+        children: [
+          leftScroll,
+          Widget.Box({
+            children: [
+              LayoutStatus(),
+              IdleStatus(),
+              MenuButton(menuVisible),
+              Volume(),
+              Battery(),
+              TimeDate(currentDate, calendarVisible),
+              Tray()
+            ]
+          })
+        ]
+      })
+    })()
   )
 }
