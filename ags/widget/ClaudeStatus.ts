@@ -285,9 +285,23 @@ export function SessionPill(session: ClaudeSession) {
 
   const pill = Widget.Box({
     css_classes: ["claude-session-pill", `claude-session-${session.state}`],
-    tooltip_text: `${sanitize(session.action)} — ${session.cwd}\nRight-click: details`,
+    tooltip_text: `${sanitize(session.action)} — ${session.cwd}\nClick: focus workspace · Right-click: details`,
     children: pillChildren,
   })
+
+  // Left click: focus the session's hyprland workspace
+  const leftGesture = Gtk.GestureClick.new()
+  leftGesture.set_button(1)
+  leftGesture.connect("released", () => {
+    const fresh = getSessionById(session.session_id) || session
+    const wsId = findWorkspaceIdForSession(fresh)
+    if (wsId === null) return
+    const hypr = Hyprland.get_default()
+    const ws = hypr.get_workspaces().find(w => w.get_id() === wsId)
+    if (ws) ws.focus()
+    else hypr.dispatch("workspace", String(wsId))
+  })
+  pill.add_controller(leftGesture)
 
   // Right click: show detail popover
   const rightGesture = Gtk.GestureClick.new()
