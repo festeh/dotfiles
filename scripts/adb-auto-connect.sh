@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # ADB Auto-Connect via mDNS
 # Wrapper script that calls the Python implementation

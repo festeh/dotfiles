@@ -76,7 +76,6 @@ These files are:
 
 - **Always edit the template source files**, not the generated files
 - After editing templates or config.toml, run `./installer -c config` to regenerate
-- Generated files are host-specific and should not be committed to git
 - The installer checks modification times and only updates when templates are newer
 
 ## Example Workflow

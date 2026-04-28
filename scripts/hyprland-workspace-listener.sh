@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 # Hyprland event listener for workspace name updates
 # Logs to systemd journal, viewable with: journalctl -t hyprland-workspace-listener
@@ -10,7 +11,7 @@ log() {
 log "Starting Hyprland workspace listener"
 
 # Connect to Hyprland event socket
-SOCKET="/tmp/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
+SOCKET="/tmp/hypr/${HYPRLAND_INSTANCE_SIGNATURE:-}/.socket2.sock"
 
 if [[ ! -S "$SOCKET" ]]; then
     log "Error: Hyprland socket not found at $SOCKET"

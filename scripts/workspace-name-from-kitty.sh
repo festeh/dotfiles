@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 # Script to rename Hyprland workspace based on kitty tab's cwd
 # Logs to systemd journal, viewable with: journalctl -t workspace-name-from-kitty
@@ -28,8 +29,8 @@ log "Connecting to kitty instance with PID: $kitty_pid"
 
 # Get kitty tab information from this specific instance
 # Capture both stdout and stderr
-kitty_output=$(kitty @ --to unix:@kitty-$kitty_pid ls 2>&1)
-kitty_exit_code=$?
+kitty_exit_code=0
+kitty_output=$(kitty @ --to unix:@kitty-$kitty_pid ls 2>&1) || kitty_exit_code=$?
 
 if [[ $kitty_exit_code -ne 0 ]] || [[ -z "$kitty_output" ]]; then
     log "Failed to get kitty data from PID $kitty_pid (exit code: $kitty_exit_code)"
