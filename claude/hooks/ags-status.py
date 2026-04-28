@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Claude Code hook script for AGS status widget.
 
-Reads hook JSON from stdin and maintains ~/.cache/ags-claude/sessions.json
-Logs all received events to ~/.cache/ags-claude/hook.log for debugging.
+Reads hook JSON from stdin and maintains ~/.cache/ags-claude/sessions/<id>.json
+(one file per session). Logs all events to ~/.cache/ags-claude/hook.log.
 """
 
 import json
 import os
+import subprocess
 import sys
 from datetime import datetime, timezone
 
@@ -35,20 +36,30 @@ def log_event(data: dict, state: str | None, action: str | None) -> None:
         f.write(line)
 
 
-def _read_db(path: str) -> dict:
+SESSIONS_DIR = os.path.expanduser("~/.cache/ags-claude/sessions")
+
+
+def _session_path(session_id: str) -> str:
+    return os.path.join(SESSIONS_DIR, f"{session_id}.json")
+
+
+def _read_session(session_id: str) -> dict:
+    path = _session_path(session_id)
     if not os.path.exists(path):
-        return {"sessions": {}}
+        return {}
     try:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
     except (json.JSONDecodeError, OSError):
-        return {"sessions": {}}
+        return {}
 
 
-def _write_db(path: str, db: dict) -> None:
+def _write_session(session_id: str, session: dict) -> None:
+    os.makedirs(SESSIONS_DIR, exist_ok=True)
+    path = _session_path(session_id)
     tmp_path = path + ".tmp"
     with open(tmp_path, "w", encoding="utf-8") as f:
-        json.dump(db, f, indent=2)
+        json.dump(session, f, indent=2)
     os.replace(tmp_path, path)
 
 
@@ -102,13 +113,55 @@ def _tool_detail(tool_input: dict | None, tool_name: str) -> str:
     return ""
 
 
+def _read_ppid(pid: int) -> int | None:
+    try:
+        with open(f"/proc/{pid}/status", "r", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("PPid:"):
+                    return int(line.split()[1])
+    except (OSError, ValueError):
+        pass
+    return None
+
+
+def _resolve_window_address(claude_pid: int) -> str | None:
+    """Walk parents from claude_pid; return the address of the first ancestor
+    that owns a Hyprland client."""
+    try:
+        result = subprocess.run(
+            ["hyprctl", "clients", "-j"],
+            capture_output=True, text=True, timeout=2,
+        )
+        if result.returncode != 0:
+            return None
+        clients = json.loads(result.stdout)
+    except (OSError, subprocess.SubprocessError, json.JSONDecodeError):
+        return None
+
+    pid_to_addr: dict[int, str] = {}
+    for c in clients:
+        if isinstance(c, dict):
+            cpid = c.get("pid")
+            addr = c.get("address")
+            if isinstance(cpid, int) and isinstance(addr, str):
+                pid_to_addr[cpid] = addr
+
+    pid: int | None = claude_pid
+    for _ in range(20):
+        if pid is None or pid <= 1:
+            return None
+        if pid in pid_to_addr:
+            return pid_to_addr[pid]
+        pid = _read_ppid(pid)
+    return None
+
+
 def _format_action(event: str, data: dict) -> tuple[str, dict]:
     """Return (action_text, extra_fields) for a given event."""
     extras: dict = {}
 
     if event == "SessionStart":
         extras["model"] = data.get("model", "")
-        extras["claude_pid"] = os.getppid()
         return ("started", extras)
 
     if event == "UserPromptSubmit":
@@ -128,14 +181,20 @@ def _format_action(event: str, data: dict) -> tuple[str, dict]:
         tool = data.get("tool_name", "")
         extras["tool_name"] = tool
         extras["tool_input"] = _sanitize_tool_input(data.get("tool_input"), tool)
-        return ("running", extras)
+        # Empty action -> preserve the PreToolUse label so the pill keeps
+        # showing what just ran (e.g. "Bash: ls") instead of a generic "running".
+        return ("", extras)
 
     if event == "PostToolUseFailure":
         tool = data.get("tool_name", "")
         err = data.get("error", {})
+        is_interrupt = bool(data.get("is_interrupt"))
         extras["tool_name"] = tool
         extras["tool_input"] = _sanitize_tool_input(data.get("tool_input"), tool)
         extras["error"] = err.get("message", "") if isinstance(err, dict) else str(err)
+        extras["is_interrupt"] = is_interrupt
+        if is_interrupt:
+            return ("interrupted", extras)
         return (f"Error: {tool}", extras)
 
     if event == "PermissionRequest":
@@ -165,9 +224,26 @@ def _format_action(event: str, data: dict) -> tuple[str, dict]:
             return ("finished", extras)
         return (message[:40] or f"ntype: {ntype}", extras)
 
+    if event == "PostToolBatch":
+        return ("thinking…", extras)
+
     if event == "Stop":
         extras["last_assistant_message"] = data.get("last_assistant_message", "")
         return ("finished", extras)
+
+    if event == "PreCompact":
+        trigger = data.get("trigger", "")
+        custom = data.get("custom_instructions", "")
+        extras["compact_trigger"] = trigger
+        if custom:
+            return (f"compacting: {custom[:30]}", extras)
+        return (f"compacting ({trigger})" if trigger else "compacting...", extras)
+
+    if event == "PostCompact":
+        trigger = data.get("trigger", "")
+        extras["compact_trigger"] = trigger
+        extras["compact_summary"] = data.get("compact_summary", "")
+        return ("compacted", extras)
 
     if event == "SessionEnd":
         return ("", extras)
@@ -176,17 +252,15 @@ def _format_action(event: str, data: dict) -> tuple[str, dict]:
     return (f"event: {event}", extras)
 
 
-def _update_tool_count(db: dict, session_id: str, event: str) -> int:
-    session = db["sessions"].get(session_id, {})
+def _update_tool_count(existing: dict, event: str) -> int:
     if event == "UserPromptSubmit":
         return 0
     if event == "PreToolUse":
-        return session.get("tool_count", 0) + 1
-    return session.get("tool_count", 0)
+        return existing.get("tool_count", 0) + 1
+    return existing.get("tool_count", 0)
 
 
 def _upsert_session(
-    path: str,
     session_id: str,
     state: str,
     action: str,
@@ -196,10 +270,9 @@ def _upsert_session(
     extras: dict,
     event: str,
 ) -> None:
-    db = _read_db(path)
-    existing = db["sessions"].get(session_id, {})
+    existing = _read_session(session_id)
 
-    tool_count = _update_tool_count(db, session_id, event)
+    tool_count = _update_tool_count(existing, event)
 
     # Preserve prompt across the turn unless a new one arrives
     prompt = extras.get("prompt") or existing.get("prompt", "")
@@ -217,10 +290,13 @@ def _upsert_session(
         tool_input = extras.get("tool_input") or existing.get("tool_input")
         error = extras.get("error") or existing.get("error")
 
+    # An empty action from _format_action means "preserve the current label".
+    effective_action = action if action else existing.get("action", "")
+
     session = {
         "session_id": session_id,
         "state": state,
-        "action": action,
+        "action": effective_action,
         "cwd": cwd,
         "transcript": transcript,
         "updated_at": now,
@@ -232,21 +308,21 @@ def _upsert_session(
         "error": error,
         "notification_message": extras.get("notification_message") or existing.get("notification_message"),
         "last_assistant_message": extras.get("last_assistant_message") or existing.get("last_assistant_message"),
+        "claude_pid": os.getppid(),
+        "window_address": existing.get("window_address") or _resolve_window_address(os.getppid()),
     }
 
     # Clean None values
     session = {k: v for k, v in session.items() if v is not None}
 
-    db["sessions"][session_id] = session
-    _write_db(path, db)
+    _write_session(session_id, session)
 
 
-def _remove_session(path: str, session_id: str) -> None:
-    if not os.path.exists(path):
-        return
-    db = _read_db(path)
-    db["sessions"].pop(session_id, None)
-    _write_db(path, db)
+def _remove_session(session_id: str) -> None:
+    try:
+        os.unlink(_session_path(session_id))
+    except FileNotFoundError:
+        pass
 
 
 def main() -> None:
@@ -260,17 +336,19 @@ def main() -> None:
     if not event or not session_id:
         return
 
-    cache_dir = os.path.expanduser("~/.cache/ags-claude")
-    os.makedirs(cache_dir, exist_ok=True)
-    file_path = os.path.join(cache_dir, "sessions.json")
-
     cwd = data.get("cwd", "")
     transcript = data.get("transcript_path", "")
     now = datetime.now(timezone.utc).isoformat()
 
     if event == "SessionEnd":
         log_event(data, None, "removed")
-        _remove_session(file_path, session_id)
+        _remove_session(session_id)
+        return
+
+    # SessionStart fires with source="compact" right after a compaction; skip it
+    # so we preserve the "running"/"compacted" state set by PostCompact.
+    if event == "SessionStart" and data.get("source") == "compact":
+        log_event(data, None, "skipped (compact)")
         return
 
     action, extras = _format_action(event, data)
@@ -297,13 +375,17 @@ def main() -> None:
             state = "unknown"
     elif event == "Stop":
         state = "idle"
+    elif event == "PreCompact":
+        state = "compacting"
+    elif event == "PostCompact":
+        state = "running"
     elif event == "PostToolUseFailure":
-        state = "unknown"
+        state = "idle" if extras.get("is_interrupt") else "unknown"
     else:
         state = "unknown"
 
     log_event(data, state, action)
-    _upsert_session(file_path, session_id, state, action, cwd, transcript, now, extras, event)
+    _upsert_session(session_id, state, action, cwd, transcript, now, extras, event)
 
 
 if __name__ == "__main__":

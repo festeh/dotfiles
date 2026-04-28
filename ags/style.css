@@ -46,22 +46,11 @@ window {
 .idle-status-widget,
 .layout-status-widget,
 .workspace-widget,
-.tray-widget,
-.claude-status-widget {
+.tray-widget {
   background-color: @surface0;
   border-radius: 10px;
   padding: 6px 12px;
   margin: 2px 4px;
-}
-
-.claude-status-widget {
-  padding: 4px 8px;
-}
-
-.claude-status-empty {
-  padding: 0;
-  margin: 0;
-  background-color: transparent;
 }
 
 .claude-session-pill {
@@ -132,6 +121,12 @@ window {
   background-color: alpha(@green, 0.08);
 }
 
+.claude-session-compacting {
+  border-color: @peach;
+  color: @peach;
+  background-color: alpha(@peach, 0.08);
+}
+
 .claude-session-unknown {
   border-color: @overlay0;
   color: @overlay0;
@@ -161,7 +156,6 @@ window {
 .claude-detail-popover {
   padding: 14px 16px;
   min-width: 280px;
-  max-width: 400px;
 }
 
 .claude-detail-header {
@@ -186,6 +180,13 @@ window {
 
 .claude-detail-state-idle {
   color: @green;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.claude-detail-state-compacting {
+  color: @peach;
   font-weight: 700;
   font-size: 11px;
   letter-spacing: 0.5px;

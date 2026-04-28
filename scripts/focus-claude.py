@@ -128,47 +128,38 @@ def main() -> int:
 
 
 def _remove_session_from_ags(claude_pid_str: str, cwd: str) -> None:
-    """Remove a stale session from the AGS sessions database."""
+    """Remove a stale session from the AGS per-session cache."""
     import json as _json
-    sessions_path = os.path.expanduser("~/.cache/ags-claude/sessions.json")
-    if not os.path.exists(sessions_path):
-        return
-    try:
-        with open(sessions_path, "r", encoding="utf-8") as f:
-            db = _json.load(f)
-    except (_json.JSONDecodeError, OSError):
+    sessions_dir = os.path.expanduser("~/.cache/ags-claude/sessions")
+    if not os.path.isdir(sessions_dir):
         return
 
-    sessions = db.get("sessions", {})
-    to_remove = None
-
-    # Try match by claude_pid first
+    target_pid: int | None = None
     if claude_pid_str and claude_pid_str not in ("null", "None", ""):
         try:
-            pid = int(claude_pid_str)
-            for sid, sess in sessions.items():
-                if sess.get("claude_pid") == pid:
-                    to_remove = sid
-                    break
+            target_pid = int(claude_pid_str)
         except ValueError:
-            pass
+            target_pid = None
 
-    # Fallback: match by cwd
-    if to_remove is None:
-        for sid, sess in sessions.items():
-            if sess.get("cwd") == cwd:
-                to_remove = sid
-                break
-
-    if to_remove is not None:
-        sessions.pop(to_remove, None)
+    for name in os.listdir(sessions_dir):
+        if not name.endswith(".json"):
+            continue
+        path = os.path.join(sessions_dir, name)
         try:
-            tmp_path = sessions_path + ".tmp"
-            with open(tmp_path, "w", encoding="utf-8") as f:
-                _json.dump(db, f, indent=2)
-            os.replace(tmp_path, sessions_path)
-        except OSError:
-            pass
+            with open(path, "r", encoding="utf-8") as f:
+                sess = _json.load(f)
+        except (_json.JSONDecodeError, OSError):
+            continue
+        match = (
+            (target_pid is not None and sess.get("claude_pid") == target_pid)
+            or (target_pid is None and sess.get("cwd") == cwd)
+        )
+        if match:
+            try:
+                os.unlink(path)
+            except OSError:
+                pass
+            return
 
 
 if __name__ == "__main__":
