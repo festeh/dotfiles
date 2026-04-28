@@ -9,7 +9,6 @@ import Tray from "./Tray"
 import HyprlandStatus from "./HyprlandStatus"
 import TimeDate from "./TimeDate"
 import Volume from "./Volume"
-import Coach from "./Coach"
 
 
 export default function Bar(monitor: Gdk.Monitor, calendarVisible: Variable<boolean>,
@@ -34,7 +33,6 @@ export default function Bar(monitor: Gdk.Monitor, calendarVisible: Variable<bool
       leftScroll.set_child(Widget.Box({
         children: [
           HyprlandStatus(),
-          Coach(),
         ],
       }))
 

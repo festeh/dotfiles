@@ -46,7 +46,6 @@ window {
 .idle-status-widget,
 .layout-status-widget,
 .workspace-widget,
-.focusing-widget,
 .tray-widget,
 .claude-status-widget {
   background-color: @surface0;
@@ -488,15 +487,6 @@ window {
   padding: 2px 6px;
 }
 
-
-/* Focusing widget */
-.focusing-widget {
-  color: @text;
-}
-
-.focusing-widget.not-focusing {
-  color: @red;
-}
 
 /* Tray widget */
 .tray-widget button {
