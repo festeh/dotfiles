@@ -1,0 +1,129 @@
+{
+  "additional-repositories": ["multilib"],
+  "archinstall-language": "English",
+  "audio_config": {
+    "audio": "pipewire"
+  },
+  "bootloader": "Systemd-boot",
+  "config_version": "3.0.0",
+  "debug": false,
+  "disk_config": {
+    "config_type": "default_layout",
+    "device_modifications": [
+      {
+        "device": "/dev/nvme0n1",
+        "wipe": true,
+        "partitions": [
+          {
+            "btrfs": [],
+            "flags": ["boot", "esp"],
+            "fs_type": "fat32",
+            "mount_options": [],
+            "mountpoint": "/boot",
+            "size": {
+              "sector_size": null,
+              "unit": "MiB",
+              "value": 1024
+            },
+            "start": {
+              "sector_size": null,
+              "unit": "MiB",
+              "value": 1
+            },
+            "status": "create",
+            "type": "primary"
+          },
+          {
+            "btrfs": [
+              { "name": "@",          "mountpoint": "/" },
+              { "name": "@home",      "mountpoint": "/home" },
+              { "name": "@log",       "mountpoint": "/var/log" },
+              { "name": "@pkg",       "mountpoint": "/var/cache/pacman/pkg" },
+              { "name": "@.snapshots","mountpoint": "/.snapshots" }
+            ],
+            "flags": [],
+            "fs_type": "btrfs",
+            "mount_options": ["compress=zstd", "ssd", "noatime"],
+            "mountpoint": null,
+            "size": {
+              "sector_size": null,
+              "unit": "Percent",
+              "value": 100
+            },
+            "start": {
+              "sector_size": null,
+              "unit": "MiB",
+              "value": 1025
+            },
+            "status": "create",
+            "type": "primary"
+          }
+        ]
+      }
+    ]
+  },
+  "hostname": "desktop",
+  "kernels": ["linux"],
+  "locale_config": {
+    "kb_layout": "us",
+    "sys_enc": "UTF-8",
+    "sys_lang": "en_US.UTF-8"
+  },
+  "mirror_config": {
+    "mirror_regions": {
+      "Germany": [
+        "https://geo.mirror.pkgbuild.com/$repo/os/$arch",
+        "https://mirror.pkgbuild.com/$repo/os/$arch"
+      ]
+    }
+  },
+  "network_config": {
+    "type": "nm"
+  },
+  "ntp": true,
+  "packages": [
+    "base-devel",
+    "git",
+    "vim",
+    "sudo",
+    "openssh",
+    "zsh",
+    "curl",
+    "wget",
+    "rsync",
+    "htop",
+    "man-db",
+    "man-pages",
+    "linux-headers",
+    "nvidia-open",
+    "nvidia-utils",
+    "nvidia-settings",
+    "lib32-nvidia-utils",
+    "vulkan-icd-loader",
+    "lib32-vulkan-icd-loader",
+    "egl-wayland",
+    "libva-nvidia-driver"
+  ],
+  "parallel_downloads": 5,
+  "profile_config": {
+    "gfx_driver": "Nvidia (open-source kernel module for newer GPUs, Turing+)",
+    "greeter": null,
+    "profile": {
+      "main": "Minimal",
+      "details": [],
+      "custom_settings": {}
+    }
+  },
+  "services": ["NetworkManager", "sshd"],
+  "swap": true,
+  "timezone": "Europe/Berlin",
+  "version": "3.0.0",
+  "custom_commands": [
+    "curl -fsSL https://raw.githubusercontent.com/festeh/dotfiles/master/bootstrap.sh -o /home/dima/bootstrap.sh",
+    "chown dima:dima /home/dima/bootstrap.sh",
+    "chmod +x /home/dima/bootstrap.sh",
+    "echo 'options nvidia_drm modeset=1 fbdev=1' > /etc/modprobe.d/nvidia.conf",
+    "sed -i 's/^MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' /etc/mkinitcpio.conf",
+    "mkinitcpio -P"
+  ]
+}
