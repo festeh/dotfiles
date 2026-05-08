@@ -53,6 +53,7 @@ window {
   margin: 2px 4px;
 }
 
+.agent-session-pill,
 .claude-session-pill {
   background-color: @surface1;
   border-radius: 8px;
@@ -62,14 +63,17 @@ window {
   transition: all 200ms ease;
 }
 
+.agent-session-pill:first-child,
 .claude-session-pill:first-child {
   margin-left: 0;
 }
 
+.agent-session-pill:last-child,
 .claude-session-pill:last-child {
   margin-right: 0;
 }
 
+.agent-session-pill,
 .claude-session-pill {
   transition: border-color 400ms ease, color 400ms ease, background-color 400ms ease;
 }
@@ -94,10 +98,20 @@ window {
   100% { background-color: alpha(@overlay0, 0.08); }
 }
 
+.agent-session-running,
 .claude-session-running {
   border-color: @blue;
   color: @blue;
   background-color: alpha(@blue, 0.08);
+}
+
+@keyframes agent-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.agent-session-icon-pulsing {
+  animation: agent-pulse 1.2s ease-in-out infinite;
 }
 
 @keyframes claude-pulse {
@@ -109,40 +123,47 @@ window {
   animation: claude-pulse 1.2s ease-in-out infinite;
 }
 
+.agent-session-waiting,
 .claude-session-waiting {
   border-color: @yellow;
   color: @yellow;
   background-color: alpha(@yellow, 0.08);
 }
 
+.agent-session-idle,
 .claude-session-idle {
   border-color: @green;
   color: @green;
   background-color: alpha(@green, 0.08);
 }
 
+.agent-session-compacting,
 .claude-session-compacting {
   border-color: @peach;
   color: @peach;
   background-color: alpha(@peach, 0.08);
 }
 
+.agent-session-unknown,
 .claude-session-unknown {
   border-color: @overlay0;
   color: @overlay0;
   background-color: alpha(@overlay0, 0.08);
 }
 
+.agent-session-icon,
 .claude-session-icon {
   -gtk-icon-size: 14px;
   margin-right: 6px;
 }
 
+.agent-session-name,
 .claude-session-name {
   font-size: 12px;
   font-weight: 600;
 }
 
+.agent-session-badge,
 .claude-session-badge {
   font-size: 9px;
   font-weight: 700;
@@ -152,18 +173,21 @@ window {
   margin-left: 4px;
 }
 
-/* Claude detail popover */
+/* Agent detail popover */
+.agent-detail-popover,
 .claude-detail-popover {
   padding: 14px 16px;
   min-width: 280px;
 }
 
+.agent-detail-header,
 .claude-detail-header {
   margin-bottom: 4px;
   padding-bottom: 8px;
   border-bottom: 1px solid @surface1;
 }
 
+.agent-detail-state-running,
 .claude-detail-state-running {
   color: @blue;
   font-weight: 700;
@@ -171,6 +195,7 @@ window {
   letter-spacing: 0.5px;
 }
 
+.agent-detail-state-waiting,
 .claude-detail-state-waiting {
   color: @yellow;
   font-weight: 700;
@@ -178,6 +203,7 @@ window {
   letter-spacing: 0.5px;
 }
 
+.agent-detail-state-idle,
 .claude-detail-state-idle {
   color: @green;
   font-weight: 700;
@@ -185,6 +211,7 @@ window {
   letter-spacing: 0.5px;
 }
 
+.agent-detail-state-compacting,
 .claude-detail-state-compacting {
   color: @peach;
   font-weight: 700;
@@ -192,6 +219,7 @@ window {
   letter-spacing: 0.5px;
 }
 
+.agent-detail-state-unknown,
 .claude-detail-state-unknown {
   color: @overlay0;
   font-weight: 700;
@@ -199,16 +227,19 @@ window {
   letter-spacing: 0.5px;
 }
 
+.agent-detail-project,
 .claude-detail-project {
   font-weight: 700;
   font-size: 13px;
   color: @text;
 }
 
+.agent-detail-section,
 .claude-detail-section {
   margin-top: 2px;
 }
 
+.agent-detail-label,
 .claude-detail-label {
   font-size: 10px;
   font-weight: 600;
@@ -217,12 +248,14 @@ window {
   letter-spacing: 0.6px;
 }
 
+.agent-detail-value,
 .claude-detail-value {
   font-size: 12px;
   color: @text;
   line-height: 1.4;
 }
 
+.agent-detail-monospace,
 .claude-detail-monospace {
   font-family: "JetBrainsMono Nerd Font", monospace;
   background-color: @mantle;
@@ -231,16 +264,19 @@ window {
   margin-top: 4px;
 }
 
+.agent-detail-error,
 .claude-detail-error {
   color: @red;
 }
 
+.agent-detail-footer,
 .claude-detail-footer {
   margin-top: 4px;
   padding-top: 8px;
   border-top: 1px solid @surface1;
 }
 
+.agent-detail-meta,
 .claude-detail-meta {
   font-size: 10px;
   color: @overlay1;
@@ -465,7 +501,7 @@ window {
   font-weight: bold;
 }
 
-/* Group workspace button with its claude pills as one unit */
+/* Group workspace button with its agent pills as one unit */
 .workspace-group {
   background-color: @surface1;
   border-radius: 8px;
@@ -481,6 +517,7 @@ window {
   margin-right: 0;
 }
 
+.workspace-group .agent-session-pill,
 .workspace-group .claude-session-pill {
   margin: 0 2px 0 4px;
   border: none;

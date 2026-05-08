@@ -1,0 +1,8 @@
+{
+  "session_id": "test-codex-session",
+  "hook_event_name": "SessionStart",
+  "source": "startup",
+  "cwd": "/home/dima/dotfiles",
+  "transcript_path": "/home/dima/.codex/sessions/test.jsonl",
+  "model": "gpt-5.5"
+}

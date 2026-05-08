@@ -9,3 +9,4 @@ ags/@girs
 spotify/.token.json
 spotify/.venv
 __pycache__
+*.py[cod]

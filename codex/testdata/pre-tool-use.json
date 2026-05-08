@@ -1,0 +1,12 @@
+{
+  "session_id": "test-codex-session",
+  "turn_id": "test-turn",
+  "hook_event_name": "PreToolUse",
+  "cwd": "/home/dima/dotfiles",
+  "transcript_path": "/home/dima/.codex/sessions/test.jsonl",
+  "model": "gpt-5.5",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "ls ags"
+  }
+}

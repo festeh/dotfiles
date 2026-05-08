@@ -1,0 +1,9 @@
+{
+  "session_id": "test-codex-session",
+  "turn_id": "test-turn",
+  "hook_event_name": "Stop",
+  "cwd": "/home/dima/dotfiles",
+  "transcript_path": "/home/dima/.codex/sessions/test.jsonl",
+  "model": "gpt-5.5",
+  "last_assistant_message": "Implemented Codex AGS widget support."
+}
