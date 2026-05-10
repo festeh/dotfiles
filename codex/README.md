@@ -19,7 +19,7 @@ Enable Codex hooks in `~/.codex/config.toml`:
 
 ```toml
 [features]
-codex_hooks = true
+hooks = true
 ```
 
 Then symlink the hook configuration:

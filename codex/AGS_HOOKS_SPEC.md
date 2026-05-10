@@ -81,7 +81,7 @@ Codex hooks are currently gated by:
 
 ```toml
 [features]
-codex_hooks = true
+hooks = true
 ```
 
 Codex discovers hooks from `hooks.json` or inline `[hooks]` tables next to active config layers, including `~/.codex/hooks.json`, `~/.codex/config.toml`, `<repo>/.codex/hooks.json`, and `<repo>/.codex/config.toml`.
@@ -133,7 +133,7 @@ References:
 | `ags/widget/ClaudeStatus.ts` | Refactor to use `AgentStatus.ts` without changing exported Claude symbols. |
 | `ags/widget/HyprlandStatus.ts` | Import `codexSessions`, group them by workspace, and render Codex pills next to Claude pills. |
 | `ags/style.css` | Generalize shared pill/detail styles to `.agent-session-*`; keep provider-specific accent classes only where needed. |
-| `bootstrap.sh` / host setup docs | Optional: symlink `codex/hooks.json` into `~/.codex/hooks.json` and ensure `[features].codex_hooks = true`. |
+| `bootstrap.sh` / host setup docs | Optional: symlink `codex/hooks.json` into `~/.codex/hooks.json` and ensure `[features].hooks = true`. |
 
 Do the AGS refactor as part of the Codex implementation, not as a later cleanup. Keep the existing Claude exports stable so the first refactor is behavior-preserving.
 
@@ -325,7 +325,7 @@ ln -sf ~/dotfiles/codex/hooks.json ~/.codex/hooks.json
 
 ```toml
 [features]
-codex_hooks = true
+hooks = true
 ```
 
 This repo should not overwrite the user's whole Codex config.
