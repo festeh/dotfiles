@@ -49,6 +49,7 @@ export default function HyprlandStatus() {
 
           self.children = sorted.map((ws) => {
             const id = ws.get_id()
+            const focusWorkspace = () => hypr.dispatch("workspace", String(id))
             const getLabel = () => {
               const name = ws.get_name()
               return name === id.toString() ? name : `<span alpha="50%">${id}</span> ${name}`
@@ -59,7 +60,7 @@ export default function HyprlandStatus() {
                 label: getLabel(),
                 use_markup: true,
               }),
-              onClicked: () => ws.focus(),
+              onClicked: focusWorkspace,
             })
 
             // Update css_classes based on focused workspace
@@ -93,10 +94,17 @@ export default function HyprlandStatus() {
               .sort((a, b) => b.updatedAt - a.updatedAt)
               .map(entry => entry.pill)
 
-            return Widget.Box({
+            const group = Widget.Box({
               css_classes: ["workspace-group"],
               children: [button, ...pills],
             })
+
+            const groupGesture = Gtk.GestureClick.new()
+            groupGesture.set_button(1)
+            groupGesture.connect("released", focusWorkspace)
+            group.add_controller(groupGesture)
+
+            return group
           })
         } catch (error) {
           console.error("❌ Error in updateWorkspaces:", error)

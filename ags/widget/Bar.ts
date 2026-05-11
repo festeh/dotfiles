@@ -37,19 +37,29 @@ export default function Bar(monitor: Gdk.Monitor, calendarVisible: Variable<bool
       }))
 
       return Widget.Box({
-        className: "bar-container",
+        css_classes: ["bar-container"],
+        orientation: Gtk.Orientation.VERTICAL,
         children: [
-          leftScroll,
           Widget.Box({
+            css_classes: ["bar-main-row"],
             children: [
-              LayoutStatus(),
-              IdleStatus(),
-              MenuButton(menuVisible),
-              Volume(),
-              Battery(),
-              TimeDate(currentDate, calendarVisible),
-              Tray()
+              leftScroll,
+              Widget.Box({
+                children: [
+                  LayoutStatus(),
+                  IdleStatus(),
+                  MenuButton(menuVisible),
+                  Volume(),
+                  Battery(),
+                  TimeDate(currentDate, calendarVisible),
+                  Tray()
+                ]
+              })
             ]
+          }),
+          Widget.Box({
+            css_classes: ["bar-extra-row"],
+            setup: (self) => self.set_size_request(-1, 22),
           })
         ]
       })

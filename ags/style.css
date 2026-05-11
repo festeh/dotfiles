@@ -38,6 +38,10 @@ window {
   color: @text;
 }
 
+.bar-extra-row {
+  min-height: 22px;
+}
+
 /* All widgets with rounded boxes */
 .battery-widget,
 .volume-widget,
