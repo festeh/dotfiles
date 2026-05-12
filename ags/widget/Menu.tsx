@@ -2,6 +2,7 @@ import { App, Astal, Gdk, Gtk } from "astal/gtk4"
 import { Variable, bind } from "astal"
 import { Widget } from "astal/gtk4"
 import GLib from "gi://GLib"
+import Graphene from "gi://Graphene"
 import Hyprland from "gi://AstalHyprland"
 
 const RECORDS_DIR = "/tmp/records"
@@ -158,18 +159,29 @@ hyprland.connect("keyboard-layout", () => {
 })
 
 export default function Menu(monitor: Gdk.Monitor) {
+  let contentBox: Gtk.Box
   const win = (
     <window
       gdkmonitor={monitor}
       cssClasses={["Menu"]}
       visible={bind(menuVisible)}
-      anchor={Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT}
-      keymode={Astal.Keymode.EXCLUSIVE}
+      anchor={
+        Astal.WindowAnchor.TOP |
+        Astal.WindowAnchor.BOTTOM |
+        Astal.WindowAnchor.LEFT |
+        Astal.WindowAnchor.RIGHT
+      }
+      exclusivity={Astal.Exclusivity.IGNORE}
+      layer={Astal.Layer.OVERLAY}
+      keymode={Astal.Keymode.ON_DEMAND}
       application={App}>
       <box
+        setup={(self: Gtk.Box) => { contentBox = self }}
         cssClasses={["menu-widget"]}
         spacing={5}
         orientation={Gtk.Orientation.VERTICAL}
+        halign={Gtk.Align.END}
+        valign={Gtk.Align.START}
       >
         <button
           focusable={false}
@@ -290,6 +302,17 @@ export default function Menu(monitor: Gdk.Monitor) {
     return false
   })
   win.add_controller(keyController)
+
+  const clickController = new Gtk.GestureClick({ button: 0 })
+  clickController.connect("pressed", (_self: any, _n: number, x: number, y: number) => {
+    if (!contentBox) return
+    const [, rect] = contentBox.compute_bounds(win)
+    const point = new Graphene.Point({ x, y })
+    if (!rect.contains_point(point)) {
+      menuVisible.set(false)
+    }
+  })
+  win.add_controller(clickController)
 
   return win
 }

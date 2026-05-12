@@ -8,7 +8,7 @@ export default function MenuButton(menuVisible: Variable<boolean>) {
     child: Widget.Image({
       iconName: "pan-down-symbolic",
       css: "font-size: 18px",
-      margin: 0
+      margin: 0,
     }),
     onClicked: () => {
       menuVisible.set(!menuVisible.get())
