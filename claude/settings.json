@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:docs.astral.sh)",
+      "Bash(uv sync:*)",
+      "Bash(uv run ruff check:*)",
+      "Bash(uv run:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(python3:*)",
+      "WebFetch(domain:miniflux.app)",
+      "Bash(gcloud storage ls:*)",
+      "Bash(gcloud storage cat:*)",
+      "Bash(gcloud storage du:*)",
+      "Bash(gcloud config get-value:*)",
+      "Bash(gcloud projects list:*)",
+      "Bash(gcloud auth list:*)"
+    ],
+    "defaultMode": "auto"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+          }
+        ]
+      }
+    ],
+    "PostToolBatch": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "input=$(cat); cwd=$(echo \"$input\" | jq -r '.workspace.current_dir'); branch=$(cd \"$cwd\" && git -c core.filemode=false branch --show-current 2>/dev/null); used=$(echo \"$input\" | jq -r '.context_window.used_percentage // empty'); location=$(if [ -n \"$branch\" ]; then echo \"git:$branch\"; else echo \"$cwd\"; fi); if [ -n \"$used\" ]; then printf \"%s | ctx:%d%%\" \"$location\" \"$used\"; else echo \"$location\"; fi"
+  },
+  "enabledPlugins": {
+    "clangd-lsp@claude-plugins-official": true,
+    "rust-analyzer-lsp@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "openai-codex": {
+      "source": {
+        "source": "github",
+        "repo": "openai/codex-plugin-cc"
+      }
+    }
+  },
+  "alwaysThinkingEnabled": true,
+  "cleanupPeriodDays": 10000,
+  "effortLevel": "xhigh",
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "dark",
+  "skipAutoPermissionPrompt": true,
+  "voiceEnabled": true,
+  "feedbackSurveyState": {
+    "lastShownTime": 1754070055493
+  },
+  "tui": "fullscreen"
+}

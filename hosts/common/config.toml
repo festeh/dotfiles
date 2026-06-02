@@ -21,3 +21,7 @@ name = "~/.config/kitty"
 [symlinks.mise]
 target = "mise"
 name = "~/.config/mise"
+
+[symlinks.claude_settings]
+target = "claude/settings.json"
+name = "~/.claude/settings.json"
