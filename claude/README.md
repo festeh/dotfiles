@@ -55,5 +55,5 @@ Each pill briefly flashes its color on state change, then settles to a subtle ti
 ## Notes
 
 - The hook script is symlinked from `~/.claude/hooks/ags-status.py` → `~/dotfiles/claude/hooks/ags-status.py`
-- `~/.claude/settings.json` is **not** tracked in this repo — configure hooks there manually
+- `~/.claude/settings.json` is tracked in this repo at `claude/settings.json` and symlinked back (installer entry `symlinks.claude_settings` in `hosts/common/config.toml`). Note: Claude Code mutates this file at runtime (survey state, theme/effort toggles, etc.), so expect occasional diffs.
 - Idle sessions never go stale; running/waiting sessions are cleaned up after 60s of silence
