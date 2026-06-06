@@ -11,6 +11,8 @@ import {
 } from "../service/AgentStatus"
 import { focusSessionKittyTab } from "../service/KittyTabs"
 
+const TICKET_RE = /\b[A-Z][A-Z0-9]+-\d+\b/
+
 export interface AgentWidgetConfig<T extends AgentSession> {
   provider: "claude" | "codex"
   iconPath: string
@@ -85,6 +87,7 @@ function isUsefulIdentityLabel(label: string, session: AgentSession, config: Age
   const homeName = basename(GLib.get_home_dir()).toLowerCase()
 
   if (lower === cwdName || lower === homeName || lower === "~") return false
+  if (lower === "main" || lower === "master") return false
   if (lower === "bash" || lower === "zsh" || lower === "fish") return false
   if (lower === "thinking" || lower === "thinking..." || lower === "finished") return false
   if (lower === "needs input" || lower === "idle" || lower === "running") return false
@@ -93,6 +96,26 @@ function isUsefulIdentityLabel(label: string, session: AgentSession, config: Age
 }
 
 function sessionIdentityLabel<T extends AgentSession>(session: T, config: AgentWidgetConfig<T>): string {
+  const branchLabel = normalizeIdentityLabel(session.git_branch)
+  if (branchLabel) {
+    const branchTicket = branchLabel.match(TICKET_RE)
+    if (branchTicket) return branchTicket[0]
+
+    const lowerBranch = branchLabel.toLowerCase()
+    if (lowerBranch === "main" || lowerBranch === "master") {
+      return config.service.sessionDisplayName(session)
+    }
+
+    return branchLabel
+  }
+
+  const ticketSources = [session.kitty_tab_title, session.kitty_window_title, session.prompt]
+
+  for (const source of ticketSources) {
+    const match = normalizeIdentityLabel(source).match(TICKET_RE)
+    if (match) return match[0]
+  }
+
   const candidates = [
     session.kitty_tab_title,
     session.kitty_window_title,
@@ -122,10 +145,6 @@ function formatIdleElapsed(session: AgentSession): string {
     if (e < 3600) return `${Math.floor(e / 60)}m`
     return `${Math.floor(e / 3600)}h`
   } catch { return "idle" }
-}
-
-function getIdlePillLabel<T extends AgentSession>(session: T, config: AgentWidgetConfig<T>): string {
-  return `${sanitize(sessionIdentityLabel(session, config), 15)} ${formatIdleElapsed(session)}`
 }
 
 function DetailSection(
@@ -296,7 +315,7 @@ export function AgentSessionPill<T extends AgentSession>(
   const labelWidget = session.state === "idle"
     ? Widget.Label({
         css_classes: prefixed(config, "session-name"),
-        label: bind(config.service.idleTick).as(() => getIdlePillLabel(session, config)),
+        label: sanitize(sessionIdentityLabel(session, config), 15),
         xalign: 0,
       })
     : Widget.Label({
@@ -306,7 +325,19 @@ export function AgentSessionPill<T extends AgentSession>(
 
   const pillChildren: Gtk.Widget[] = [SessionIcon(session, config), labelWidget]
 
-  if (session.tool_count > 0) {
+  if (session.state === "idle") {
+    pillChildren.push(
+      Widget.Label({
+        css_classes: prefixed(config, "session-badge"),
+        label: bind(config.service.idleTick).as(() => formatIdleElapsed(session)),
+      })
+    )
+  } else if (
+    session.tool_count > 0 ||
+    session.state === "running" ||
+    session.state === "waiting" ||
+    session.state === "compacting"
+  ) {
     pillChildren.push(
       Widget.Label({
         css_classes: prefixed(config, "session-badge"),

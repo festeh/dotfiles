@@ -10,6 +10,7 @@ export interface AgentSession {
   state: AgentState
   action: string
   cwd: string
+  git_branch?: string
   transcript: string
   updated_at: string
   prompt?: string
@@ -79,6 +80,7 @@ function normalizeSession(raw: any, config: AgentStatusConfig): AgentSession {
     state: raw.state || "unknown",
     action: raw.action || "",
     cwd: raw.cwd || "",
+    git_branch: typeof raw.git_branch === "string" ? raw.git_branch : undefined,
     transcript: raw.transcript || "",
     updated_at: raw.updated_at || "",
     prompt: raw.prompt || undefined,

@@ -69,6 +69,24 @@ def _basename(path: str) -> str:
     return os.path.basename(path.rstrip("/")) or path
 
 
+def _git_branch(cwd: str) -> str | None:
+    if not cwd:
+        return None
+    try:
+        result = subprocess.run(
+            ["git", "-C", cwd, "branch", "--show-current"],
+            capture_output=True,
+            text=True,
+            timeout=0.5,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+    branch = result.stdout.strip()
+    return branch or None
+
+
 def _sanitize_tool_input(tool_input: dict | None, tool_name: str) -> dict:
     """Extract only the interesting fields from tool_input to keep JSON small."""
     if not tool_input:
@@ -298,6 +316,7 @@ def _upsert_session(
         "state": state,
         "action": effective_action,
         "cwd": cwd,
+        "git_branch": _git_branch(cwd) or existing.get("git_branch"),
         "transcript": transcript,
         "updated_at": now,
         "prompt": prompt,

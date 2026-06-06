@@ -86,6 +86,24 @@ def _truncate(value: str, limit: int) -> str:
     return value[:limit] + "..." if len(value) > limit else value
 
 
+def _git_branch(cwd: str) -> str | None:
+    if not cwd:
+        return None
+    try:
+        result = subprocess.run(
+            ["git", "-C", cwd, "branch", "--show-current"],
+            capture_output=True,
+            text=True,
+            timeout=0.5,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+    branch = result.stdout.strip()
+    return branch or None
+
+
 def _sanitize_tool_input(tool_input: Any, tool_name: str) -> dict[str, Any]:
     if not isinstance(tool_input, dict):
         return {}
@@ -318,6 +336,7 @@ def _upsert_session(
         "state": state,
         "action": effective_action,
         "cwd": data.get("cwd", ""),
+        "git_branch": _git_branch(str(data.get("cwd", ""))) or existing.get("git_branch"),
         "transcript": data.get("transcript_path") or "",
         "updated_at": _now(),
         "prompt": prompt,
