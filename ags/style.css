@@ -170,44 +170,6 @@ window {
   background-color: alpha(@blue, 0.08);
 }
 
-@keyframes agent-pulse {
-  0%, 49% { opacity: 1; }
-  50%, 100% { opacity: 0.25; }
-}
-
-.agent-session-icon-pulsing {
-  animation: agent-pulse 1.4s step-end infinite;
-}
-
-@keyframes claude-pulse {
-  0%, 49% { opacity: 1; }
-  50%, 100% { opacity: 0.25; }
-}
-
-.claude-session-icon-pulsing {
-  animation: claude-pulse 1.4s step-end infinite;
-}
-
-@keyframes running-pill-pulse {
-  0%, 49% { background-color: alpha(@blue, 0.08); }
-  50%, 100% { background-color: alpha(@blue, 0.22); }
-}
-
-@keyframes compacting-pill-pulse {
-  0%, 49% { background-color: alpha(@peach, 0.08); }
-  50%, 100% { background-color: alpha(@peach, 0.22); }
-}
-
-.agent-session-running.agent-session-pulsing,
-.claude-session-running.claude-session-pulsing {
-  animation: running-pill-pulse 1.4s step-end infinite;
-}
-
-.agent-session-compacting.agent-session-pulsing,
-.claude-session-compacting.claude-session-pulsing {
-  animation: compacting-pill-pulse 1.4s step-end infinite;
-}
-
 .agent-session-waiting,
 .claude-session-waiting {
   border-color: @yellow;
@@ -563,12 +525,28 @@ window {
 
 /* Workspace widget */
 .workspace-widget button {
-  padding: 4px 10px;
+  padding: 3px 4px;
   margin: 0;
   border-radius: 6px;
   color: @subtext0;
   transition: all 200ms ease;
-  min-width: 24px;
+  min-width: 28px;
+}
+
+.workspace-button-content {
+  min-width: 0;
+}
+
+.workspace-id-label {
+  font-family: "JetBrainsMono Nerd Font";
+  font-size: 12px;
+  margin-bottom: 0;
+  min-width: 8px;
+}
+
+.workspace-app-icon {
+  -gtk-icon-size: 17px;
+  margin-top: -1px;
 }
 
 .workspace-group:hover {
@@ -590,8 +568,12 @@ window {
 .workspace-group {
   background-color: @surface1;
   border-radius: 8px;
-  padding: 2px;
+  padding: 0;
   margin: 0 4px;
+}
+
+.workspace-group-with-pills button {
+  border-radius: 8px 0 0 8px;
 }
 
 .workspace-group:first-child {
@@ -604,10 +586,46 @@ window {
 
 .workspace-group .agent-session-pill,
 .workspace-group .claude-session-pill {
-  margin: 0 2px 0 4px;
+  margin: 0;
   border: none;
-  background-color: transparent;
+  border-radius: 0;
+  padding: 2px 0 2px 6px;
+}
+
+.workspace-group .agent-session-pill:last-child,
+.workspace-group .claude-session-pill:last-child {
+  border-radius: 0 8px 8px 0;
+}
+
+.workspace-group .agent-session-badge,
+.workspace-group .claude-session-badge {
+  border-radius: 0 6px 6px 0;
+  margin-left: 6px;
   padding: 2px 6px;
+}
+
+.workspace-group .agent-session-running,
+.workspace-group .claude-session-running {
+  background-color: alpha(@blue, 0.34);
+  color: @text;
+}
+
+.workspace-group .agent-session-waiting,
+.workspace-group .claude-session-waiting {
+  background-color: alpha(@yellow, 0.28);
+  color: @text;
+}
+
+.workspace-group .agent-session-compacting,
+.workspace-group .claude-session-compacting {
+  background-color: alpha(@peach, 0.3);
+  color: @text;
+}
+
+.workspace-group .agent-session-idle,
+.workspace-group .claude-session-idle {
+  background-color: alpha(@green, 0.12);
+  color: @green;
 }
 
 

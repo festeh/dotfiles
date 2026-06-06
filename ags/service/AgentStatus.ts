@@ -27,6 +27,12 @@ export interface AgentSession {
   window_address?: string
   claude_pid?: number
   codex_pid?: number
+  kitty_os_window_pid?: number
+  kitty_os_window_index?: number
+  kitty_tab_id?: number
+  kitty_tab_index?: number
+  kitty_window_id?: number
+  kitty_window_index?: number
 }
 
 export interface AgentStatusConfig {
@@ -99,6 +105,12 @@ function sessionPid(session: AgentSession, config: AgentStatusConfig): number | 
   return typeof pid === "number" ? pid : undefined
 }
 
+export function agentSessionPid(session: AgentSession): number | null {
+  if (typeof session.codex_pid === "number") return session.codex_pid
+  if (typeof session.claude_pid === "number") return session.claude_pid
+  return null
+}
+
 function readText(path: string): string | null {
   try {
     const [ok, content] = GLib.file_get_contents(path)
@@ -123,6 +135,34 @@ function processMatches(pid: number, processNames: string[]): boolean {
   const executable = (slash >= 0 ? command.slice(slash + 1) : command).toLowerCase()
 
   return processNames.some(name => executable.includes(name))
+}
+
+export function readParentPid(pid: number): number | null {
+  try {
+    const text = readText(`/proc/${pid}/status`)
+    if (text === null) return null
+
+    for (const line of text.split("\n")) {
+      if (!line.startsWith("PPid:")) continue
+      const value = Number.parseInt(line.split(/\s+/)[1], 10)
+      return Number.isNaN(value) ? null : value
+    }
+  } catch {}
+
+  return null
+}
+
+export function ancestorPids(pid: number): Set<number> {
+  const pids = new Set<number>()
+  let current: number | null = pid
+
+  for (let i = 0; i < 25; i++) {
+    if (current === null || current <= 1 || pids.has(current)) break
+    pids.add(current)
+    current = readParentPid(current)
+  }
+
+  return pids
 }
 
 function liveProcessSessions<T extends AgentSession>(

@@ -1,6 +1,7 @@
 /// <reference path="./@girs/gjs.d.ts" />
 /// <reference path="./@girs/dom.d.ts" />
 /// <reference path="./@girs/astal-4.0.d.ts" />
+/// <reference path="./@girs/astalapps-0.1.d.ts" />
 /// <reference path="./@girs/astalbattery-0.1.d.ts" />
 /// <reference path="./@girs/astalhyprland-0.1.d.ts" />
 /// <reference path="./@girs/astalnotifd-0.1.d.ts" />

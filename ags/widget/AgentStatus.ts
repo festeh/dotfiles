@@ -6,7 +6,10 @@ import GLib from "gi://GLib"
 import {
   AgentSession,
   AgentStatusService,
+  agentSessionPid,
+  ancestorPids,
 } from "../service/AgentStatus"
+import { focusSessionKittyTab } from "../service/KittyTabs"
 
 export interface AgentWidgetConfig<T extends AgentSession> {
   provider: "claude" | "codex"
@@ -25,45 +28,10 @@ export function findWorkspaceIdForAgentSession(session: AgentSession): number | 
     if (workspaceId !== null) return workspaceId
   }
 
-  const pid = sessionProcessPid(session)
+  const pid = agentSessionPid(session)
   if (pid === null) return null
 
   return findWorkspaceIdByPid(hypr, pid)
-}
-
-function sessionProcessPid(session: AgentSession): number | null {
-  if (typeof session.codex_pid === "number") return session.codex_pid
-  if (typeof session.claude_pid === "number") return session.claude_pid
-  return null
-}
-
-function readParentPid(pid: number): number | null {
-  try {
-    const [ok, content] = GLib.file_get_contents(`/proc/${pid}/status`)
-    if (!ok) return null
-
-    const text = new TextDecoder().decode(content)
-    for (const line of text.split("\n")) {
-      if (!line.startsWith("PPid:")) continue
-      const value = Number.parseInt(line.split(/\s+/)[1], 10)
-      return Number.isNaN(value) ? null : value
-    }
-  } catch {}
-
-  return null
-}
-
-function ancestorPids(pid: number): Set<number> {
-  const pids = new Set<number>()
-  let current: number | null = pid
-
-  for (let i = 0; i < 25; i++) {
-    if (current === null || current <= 1 || pids.has(current)) break
-    pids.add(current)
-    current = readParentPid(current)
-  }
-
-  return pids
 }
 
 function findWorkspaceIdByPid(hypr: ReturnType<typeof Hyprland.get_default>, pid: number): number | null {
@@ -78,9 +46,6 @@ function prefixed(config: AgentWidgetConfig<any>, suffix: string): string[] {
 
 function SessionIcon<T extends AgentSession>(session: T, config: AgentWidgetConfig<T>) {
   const classes = prefixed(config, "session-icon")
-  if (session.state === "running" || session.state === "compacting") {
-    classes.push("agent-session-icon-pulsing", `${config.classPrefix}-session-icon-pulsing`)
-  }
   const image = Widget.Image({
     css_classes: classes,
     file: config.iconPath,
@@ -310,9 +275,6 @@ export function AgentSessionPill<T extends AgentSession>(
     `agent-session-${session.state}`,
     `${config.classPrefix}-session-${session.state}`,
   ]
-  if (session.state === "running" || session.state === "compacting") {
-    pillClasses.push("agent-session-pulsing", `${config.classPrefix}-session-pulsing`)
-  }
 
   const pill = Widget.Box({
     css_classes: pillClasses,
@@ -323,13 +285,19 @@ export function AgentSessionPill<T extends AgentSession>(
   const leftGesture = Gtk.GestureClick.new()
   leftGesture.set_button(1)
   leftGesture.connect("released", () => {
-    const fresh = config.service.getSessionById(session.session_id) || session
+    const diskSession = config.service.getSessionById(session.session_id)
+    const fresh = diskSession ? { ...session, ...diskSession } : session
     const wsId = findWorkspaceIdForAgentSession(fresh)
     if (wsId === null) return
     const hypr = Hyprland.get_default()
     const ws = hypr.get_workspaces().find(w => w.get_id() === wsId)
     if (ws) ws.focus()
     else hypr.dispatch("workspace", String(wsId))
+
+    GLib.timeout_add(GLib.PRIORITY_DEFAULT, 50, () => {
+      focusSessionKittyTab(fresh)
+      return GLib.SOURCE_REMOVE
+    })
   })
   pill.add_controller(leftGesture)
 
