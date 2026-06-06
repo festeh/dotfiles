@@ -39,7 +39,8 @@ window {
 }
 
 .bar-extra-row {
-  min-height: 22px;
+  min-height: 26px;
+  padding: 0 0 2px 4px;
 }
 
 /* All widgets with rounded boxes */
@@ -49,12 +50,72 @@ window {
 .idle-widget,
 .idle-status-widget,
 .layout-status-widget,
-.workspace-widget,
 .tray-widget {
   background-color: @surface0;
   border-radius: 10px;
   padding: 6px 12px;
   margin: 2px 4px;
+}
+
+.workspace-widget {
+  background-color: transparent;
+  padding: 0;
+  margin: 2px 4px;
+}
+
+.google-status {
+  margin: 0;
+  padding: 0;
+}
+
+.gmail-widget,
+.calendar-status-widget {
+  background-color: @surface0;
+  border-radius: 8px;
+  padding: 0 8px;
+  margin: 0;
+  color: @subtext1;
+  min-height: 22px;
+  min-width: 52px;
+}
+
+.gmail-content,
+.calendar-status-content {
+  min-height: 22px;
+  min-width: 36px;
+}
+
+.gmail-widget image,
+.calendar-status-widget image {
+  -gtk-icon-size: 14px;
+}
+
+.gmail-widget label,
+.calendar-status-widget label {
+  font-size: 12px;
+}
+
+.gmail-unread {
+  color: @red;
+}
+
+.calendar-status-busy {
+  color: @peach;
+}
+
+.calendar-status-next {
+  color: @blue;
+}
+
+.calendar-status-free {
+  color: @green;
+}
+
+.gmail-setup,
+.gmail-error,
+.calendar-status-setup,
+.calendar-status-error {
+  color: @yellow;
 }
 
 .agent-session-pill,
@@ -110,21 +171,41 @@ window {
 }
 
 @keyframes agent-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.25; }
 }
 
 .agent-session-icon-pulsing {
-  animation: agent-pulse 1.2s ease-in-out infinite;
+  animation: agent-pulse 1.4s step-end infinite;
 }
 
 @keyframes claude-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.25; }
 }
 
 .claude-session-icon-pulsing {
-  animation: claude-pulse 1.2s ease-in-out infinite;
+  animation: claude-pulse 1.4s step-end infinite;
+}
+
+@keyframes running-pill-pulse {
+  0%, 49% { background-color: alpha(@blue, 0.08); }
+  50%, 100% { background-color: alpha(@blue, 0.22); }
+}
+
+@keyframes compacting-pill-pulse {
+  0%, 49% { background-color: alpha(@peach, 0.08); }
+  50%, 100% { background-color: alpha(@peach, 0.22); }
+}
+
+.agent-session-running.agent-session-pulsing,
+.claude-session-running.claude-session-pulsing {
+  animation: running-pill-pulse 1.4s step-end infinite;
+}
+
+.agent-session-compacting.agent-session-pulsing,
+.claude-session-compacting.claude-session-pulsing {
+  animation: compacting-pill-pulse 1.4s step-end infinite;
 }
 
 .agent-session-waiting,

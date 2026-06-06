@@ -304,13 +304,18 @@ export function AgentSessionPill<T extends AgentSession>(
     )
   }
 
+  const pillClasses = [
+    "agent-session-pill",
+    `${config.classPrefix}-session-pill`,
+    `agent-session-${session.state}`,
+    `${config.classPrefix}-session-${session.state}`,
+  ]
+  if (session.state === "running" || session.state === "compacting") {
+    pillClasses.push("agent-session-pulsing", `${config.classPrefix}-session-pulsing`)
+  }
+
   const pill = Widget.Box({
-    css_classes: [
-      "agent-session-pill",
-      `${config.classPrefix}-session-pill`,
-      `agent-session-${session.state}`,
-      `${config.classPrefix}-session-${session.state}`,
-    ],
+    css_classes: pillClasses,
     tooltip_text: `${sanitize(session.action)} - ${session.cwd}\nClick: focus workspace - Right-click: details`,
     children: pillChildren,
   })

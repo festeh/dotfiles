@@ -2,6 +2,9 @@ i3/status.conf
 nvim/core/local.lua
 zsh/local.sh
 ags/types
+ags/gmail
+ags/credentials.json
+ags/token.json
 .env
 node_modules
 ags/@girs
