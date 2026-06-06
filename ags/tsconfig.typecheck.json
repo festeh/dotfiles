@@ -1,0 +1,28 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "jsxImportSource": "astal/gtk4",
+        "paths": {
+            "astal": [
+                "./type-shims/astal/index.d.ts"
+            ],
+            "astal/binding": [
+                "./type-shims/astal/binding.d.ts"
+            ],
+            "astal/gtk4": [
+                "./type-shims/astal/gtk4/index.d.ts"
+            ],
+            "astal/gtk4/jsx-runtime": [
+                "./type-shims/astal/gtk4/jsx-runtime.d.ts"
+            ]
+        }
+    },
+    "include": [
+        "env.d.ts",
+        "type-shims/**/*.d.ts",
+        "app.ts",
+        "service/**/*.ts",
+        "widget/**/*.ts",
+        "widget/**/*.tsx"
+    ]
+}

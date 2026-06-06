@@ -33,14 +33,6 @@ if (monitor === null) {
   throw new Error("No monitor found")
 }
 
-function initWidgets(monitor: Gdk.Monitor) {
-  return [
-    Bar(monitor, calendarVisible, currentDate),
-    Calendar(monitor, calendarVisible, currentDate),
-    Notifications(monitor)
-  ]
-}
-
 App.start({
   css: style,
   requestHandler(request: string, response: (res: string) => void) {

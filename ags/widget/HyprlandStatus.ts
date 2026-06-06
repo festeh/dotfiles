@@ -7,13 +7,14 @@ import { SessionPill as ClaudeSessionPill, findWorkspaceIdForSession as findClau
 import { SessionPill as CodexSessionPill, findWorkspaceIdForSession as findCodexWorkspaceId } from "./CodexStatus"
 import Gtk from "gi://Gtk?version=4.0"
 
+type AstalBox = Gtk.Box & { children: Gtk.Widget[] }
 
 export default function HyprlandStatus() {
   const hypr = Hyprland.get_default()
 
   return Widget.Box({
     css_classes: ["workspace-widget"],
-    setup: (self) => {
+    setup: (self: AstalBox) => {
       const updateWorkspaces = () => {
         try {
           self.children = []

@@ -1,25 +1,22 @@
 import { App, Astal, Gdk, Gtk } from "astal/gtk4"
 import { Variable, bind } from "astal"
 import { Widget } from "astal/gtk4"
+import Gio from "gi://Gio"
 import GLib from "gi://GLib"
 import Graphene from "gi://Graphene"
 import Hyprland from "gi://AstalHyprland"
 
 const RECORDS_DIR = "/tmp/records"
+const SIGTERM = 15
+
+function decodeBytes(bytes: Uint8Array | null): string {
+  return bytes === null ? "" : new TextDecoder().decode(bytes)
+}
 
 function checkSwayidle(): boolean {
   try {
-    const [success, stdout, stderr] = GLib.spawn_command_line_sync("pgrep swayidle")
-    return stdout.length > 0
-  } catch (error) {
-    return false
-  }
-}
-
-function checkRecording(): boolean {
-  try {
-    const [success, stdout] = GLib.spawn_command_line_sync("pgrep -f 'ffmpeg.*pulse.*records'")
-    return stdout.length > 0
+    const [, stdout] = GLib.spawn_command_line_sync("pgrep swayidle")
+    return (stdout?.length ?? 0) > 0
   } catch (error) {
     return false
   }
@@ -42,7 +39,7 @@ function getCurrentKeyboardLayout(): string {
   try {
     const [success, stdout] = GLib.spawn_command_line_sync("hyprctl devices -j")
     if (success) {
-      const devices = JSON.parse(new TextDecoder().decode(stdout))
+      const devices = JSON.parse(decodeBytes(stdout))
       // Filter out virtual keyboards (like wtype) and find the main physical keyboard
       const realKeyboard = devices.keyboards.find((kb: any) =>
         kb.main && !kb.name.includes("virtual")
@@ -59,17 +56,108 @@ function getCurrentKeyboardLayout(): string {
   return "Unknown"
 }
 
-const isIdleRunning = Variable<boolean>(checkSwayidle()).poll(1000, () => checkSwayidle())
+let swayidleProcess: Gio.Subprocess | null = null
+let recordingProcess: Gio.Subprocess | null = null
+let expectedRecordingExit: Gio.Subprocess | null = null
+let pendingTranscriptionPath: string | null = null
+let recordingDurationTimer = 0
+
+const isIdleRunning = Variable<boolean>(checkSwayidle())
 const keyboardLayout = Variable<string>(getCurrentKeyboardLayout())
-const isRecording = Variable<boolean>(checkRecording()).poll(500, () => checkRecording())
+const isRecording = Variable<boolean>(false)
 const isProcessing = Variable<boolean>(false)
 const recordingStartTime = Variable<number>(0)
-const recordingDuration = Variable<string>("00:00").poll(1000, () => {
-  if (!isRecording.get()) return "00:00"
-  return formatDuration(getRecordingDuration())
-})
+const recordingDuration = Variable<string>("00:00")
 const lastRecordedFile = Variable<string>("")
 const menuVisible = Variable<boolean>(false)
+
+function startRecordingDurationTimer() {
+  if (recordingDurationTimer !== 0) return
+
+  recordingDuration.set(formatDuration(getRecordingDuration()))
+  recordingDurationTimer = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 1, () => {
+    if (!isRecording.get()) {
+      recordingDurationTimer = 0
+      return GLib.SOURCE_REMOVE
+    }
+
+    recordingDuration.set(formatDuration(getRecordingDuration()))
+    return GLib.SOURCE_CONTINUE
+  })
+}
+
+function stopRecordingDurationTimer() {
+  if (recordingDurationTimer !== 0) {
+    GLib.source_remove(recordingDurationTimer)
+    recordingDurationTimer = 0
+  }
+  recordingDuration.set("00:00")
+}
+
+function resetRecordingState() {
+  isRecording.set(false)
+  recordingStartTime.set(0)
+  stopRecordingDurationTimer()
+}
+
+function watchRecordingProcess(process: Gio.Subprocess, filepath: string) {
+  process.wait_async(null, (proc, result) => {
+    try {
+      process.wait_finish(result)
+    } catch (error) {
+      if (recordingProcess === process && expectedRecordingExit !== process) {
+        console.error("Recording process exited with an error:", error)
+      }
+    }
+
+    const shouldTranscribe = pendingTranscriptionPath === filepath
+    if (expectedRecordingExit === process) {
+      expectedRecordingExit = null
+    }
+    if (recordingProcess === process) {
+      recordingProcess = null
+      resetRecordingState()
+    }
+    if (pendingTranscriptionPath === filepath) {
+      pendingTranscriptionPath = null
+    }
+    if (shouldTranscribe) {
+      transcribeAudio(filepath)
+    }
+  })
+}
+
+function startSwayidle() {
+  if (swayidleProcess !== null) return
+
+  const process = Gio.Subprocess.new(
+    ["swayidle", "-w", "timeout", "1500", "systemctl", "hibernate"],
+    Gio.SubprocessFlags.NONE,
+  )
+  swayidleProcess = process
+  isIdleRunning.set(true)
+  process.wait_async(null, (_proc, result) => {
+    try {
+      process.wait_finish(result)
+    } catch {
+      // A SIGTERM from the toggle is an expected stop path.
+    }
+    if (swayidleProcess === process) {
+      swayidleProcess = null
+      isIdleRunning.set(false)
+    }
+  })
+}
+
+function stopSwayidle() {
+  if (swayidleProcess !== null) {
+    swayidleProcess.send_signal(SIGTERM)
+    swayidleProcess = null
+  } else {
+    GLib.spawn_command_line_async("pkill swayidle")
+  }
+  isIdleRunning.set(false)
+}
 
 function getLanguageCode(): string {
   const layout = keyboardLayout.get().toLowerCase()
@@ -79,36 +167,40 @@ function getLanguageCode(): string {
 }
 
 function startRecording() {
-  if (isRecording.get() || isProcessing.get()) return
+  if (recordingProcess !== null || isRecording.get() || isProcessing.get()) return
 
-  GLib.spawn_command_line_sync(`mkdir -p ${RECORDS_DIR}`)
+  GLib.mkdir_with_parents(RECORDS_DIR, 0o755)
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
   const filename = `${RECORDS_DIR}/record_${timestamp}.wav`
   lastRecordedFile.set(filename)
-  GLib.spawn_command_line_async(`ffmpeg -f pulse -i default -ac 1 -acodec pcm_s16le -ar 16000 ${filename}`)
+  recordingProcess = Gio.Subprocess.new(
+    ["ffmpeg", "-f", "pulse", "-i", "default", "-ac", "1", "-acodec", "pcm_s16le", "-ar", "16000", filename],
+    Gio.SubprocessFlags.STDOUT_SILENCE | Gio.SubprocessFlags.STDERR_SILENCE,
+  )
   recordingStartTime.set(Date.now())
+  isRecording.set(true)
+  startRecordingDurationTimer()
+  watchRecordingProcess(recordingProcess, filename)
 }
 
 function stopRecording() {
-  if (!isRecording.get() || isProcessing.get()) return
+  if (recordingProcess === null || !isRecording.get() || isProcessing.get()) return
 
-  GLib.spawn_command_line_async("pkill -f 'ffmpeg.*pulse.*records'")
   const filepath = lastRecordedFile.get()
-  recordingStartTime.set(0)
+  pendingTranscriptionPath = filepath
+  expectedRecordingExit = recordingProcess
+  recordingProcess.send_signal(SIGTERM)
+  resetRecordingState()
   menuVisible.set(false)
-  GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
-    if (filepath) {
-      transcribeAudio(filepath)
-    }
-    return false
-  })
 }
 
 function cancelRecording() {
-  if (!isRecording.get() || isProcessing.get()) return
+  if (recordingProcess === null || !isRecording.get() || isProcessing.get()) return
 
-  GLib.spawn_command_line_async("pkill -f 'ffmpeg.*pulse.*records'")
-  recordingStartTime.set(0)
+  pendingTranscriptionPath = null
+  expectedRecordingExit = recordingProcess
+  recordingProcess.send_signal(SIGTERM)
+  resetRecordingState()
   menuVisible.set(false)
 }
 
@@ -119,8 +211,8 @@ async function transcribeAudio(filepath: string): Promise<void> {
     const [success, stdout, stderr] = GLib.spawn_command_line_sync(
       `curl -s -X POST https://silence.dimalip.in/speak -F "audio=@${filepath}" -F "file_format=pcm_s16le_16" -F "language_code=${langCode}"`
     )
-    if (success && stdout.length > 0) {
-      const response = JSON.parse(new TextDecoder().decode(stdout))
+    if (success && (stdout?.length ?? 0) > 0) {
+      const response = JSON.parse(decodeBytes(stdout))
       if (response.text) {
         // Copy to clipboard
         const escapedText = response.text.replace(/'/g, "'\\''")
@@ -136,7 +228,7 @@ async function transcribeAudio(filepath: string): Promise<void> {
         )
       }
     } else {
-      const errorMsg = new TextDecoder().decode(stderr)
+      const errorMsg = decodeBytes(stderr)
       GLib.spawn_command_line_async(
         `notify-send -a "Audio Transcription" -u critical "ASR Error" "Failed to transcribe audio"`
       )
@@ -191,9 +283,9 @@ export default function Menu(monitor: Gdk.Monitor) {
           onClicked={() => {
             const running = isIdleRunning.get()
             if (running) {
-              GLib.spawn_command_line_async("pkill swayidle")
+              stopSwayidle()
             } else {
-              GLib.spawn_command_line_async('bash -c "swayidle -w timeout 1500 \'systemctl hibernate\' &"')
+              startSwayidle()
             }
           }}
         >

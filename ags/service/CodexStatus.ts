@@ -14,6 +14,7 @@ const codexStatus = createAgentStatusService<CodexSession>({
   pidField: "codex_pid",
   defaultName: "codex",
   staleThresholdMs: 300000,
+  liveProcessNames: ["codex"],
 })
 
 export const codexSessions = codexStatus.sessions

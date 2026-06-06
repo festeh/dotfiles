@@ -2,6 +2,7 @@ import { Widget } from "astal/gtk4"
 import { bind } from "astal"
 import Gtk from "gi://Gtk?version=4.0"
 import Hyprland from "gi://AstalHyprland"
+import GLib from "gi://GLib"
 import {
   AgentSession,
   AgentStatusService,
@@ -16,9 +17,59 @@ export interface AgentWidgetConfig<T extends AgentSession> {
 }
 
 export function findWorkspaceIdForAgentSession(session: AgentSession): number | null {
-  if (!session.window_address) return null
-  const client = Hyprland.get_default().get_client(session.window_address)
-  return client?.workspace?.id ?? null
+  const hypr = Hyprland.get_default()
+
+  if (session.window_address) {
+    const client = hypr.get_client(session.window_address)
+    const workspaceId = client?.get_workspace()?.get_id() ?? client?.workspace?.id ?? null
+    if (workspaceId !== null) return workspaceId
+  }
+
+  const pid = sessionProcessPid(session)
+  if (pid === null) return null
+
+  return findWorkspaceIdByPid(hypr, pid)
+}
+
+function sessionProcessPid(session: AgentSession): number | null {
+  if (typeof session.codex_pid === "number") return session.codex_pid
+  if (typeof session.claude_pid === "number") return session.claude_pid
+  return null
+}
+
+function readParentPid(pid: number): number | null {
+  try {
+    const [ok, content] = GLib.file_get_contents(`/proc/${pid}/status`)
+    if (!ok) return null
+
+    const text = new TextDecoder().decode(content)
+    for (const line of text.split("\n")) {
+      if (!line.startsWith("PPid:")) continue
+      const value = Number.parseInt(line.split(/\s+/)[1], 10)
+      return Number.isNaN(value) ? null : value
+    }
+  } catch {}
+
+  return null
+}
+
+function ancestorPids(pid: number): Set<number> {
+  const pids = new Set<number>()
+  let current: number | null = pid
+
+  for (let i = 0; i < 25; i++) {
+    if (current === null || current <= 1 || pids.has(current)) break
+    pids.add(current)
+    current = readParentPid(current)
+  }
+
+  return pids
+}
+
+function findWorkspaceIdByPid(hypr: ReturnType<typeof Hyprland.get_default>, pid: number): number | null {
+  const pids = ancestorPids(pid)
+  const client = hypr.get_clients().find((client) => pids.has(client.get_pid()))
+  return client?.get_workspace()?.get_id() ?? null
 }
 
 function prefixed(config: AgentWidgetConfig<any>, suffix: string): string[] {

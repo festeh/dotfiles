@@ -4,8 +4,12 @@
         "experimentalDecorators": true,
         "jsx": "react-jsx",
         "jsxImportSource": "/usr/share/astal/gjs/gtk4",
+        "lib": [
+            "ES2022"
+        ],
         "module": "ES2022",
         "moduleResolution": "Bundler",
+        "noEmit": true,
         "paths": {
             "astal": [
                 "/usr/share/astal/gjs"
@@ -14,7 +18,19 @@
                 "/usr/share/astal/gjs/*"
             ]
         },
+        "skipLibCheck": true,
         "strict": true,
         "target": "ES2022"
-    }
+    },
+    "include": [
+        "env.d.ts",
+        "app.ts",
+        "service/**/*.ts",
+        "widget/**/*.ts",
+        "widget/**/*.tsx"
+    ],
+    "exclude": [
+        "@girs/**",
+        "node_modules/**"
+    ]
 }

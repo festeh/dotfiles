@@ -1,9 +1,10 @@
-import { App, Widget, Gdk, Gtk } from "astal/gtk4";
+import { App, Widget, Gtk } from "astal/gtk4";
 import AstalTray from "gi://AstalTray?version=0.1";
-import { GLib, Variable, bind } from "astal";
+import Gio from "gi://Gio"
+import { Variable, bind } from "astal";
 
 
-const createMenu = (menuModel, actionGroup): Gtk.PopoverMenu => {
+const createMenu = (menuModel: Gio.MenuModel, actionGroup: Gio.ActionGroup): Gtk.PopoverMenu => {
     const menu = Gtk.PopoverMenu.new_from_model(menuModel);
     menu.insert_action_group('dbusmenu', actionGroup);
     return menu;

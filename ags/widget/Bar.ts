@@ -59,7 +59,7 @@ export default function Bar(monitor: Gdk.Monitor, calendarVisible: Variable<bool
           }),
           Widget.Box({
             css_classes: ["bar-extra-row"],
-            setup: (self) => self.set_size_request(-1, 22),
+            setup: (self: Gtk.Box) => self.set_size_request(-1, 22),
           })
         ]
       })

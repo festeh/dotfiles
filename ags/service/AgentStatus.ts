@@ -35,6 +35,7 @@ export interface AgentStatusConfig {
   pidField: "claude_pid" | "codex_pid"
   defaultName: string
   staleThresholdMs?: number
+  liveProcessNames?: string[]
 }
 
 export interface AgentStatusService<T extends AgentSession> {
@@ -48,6 +49,7 @@ export interface AgentStatusService<T extends AgentSession> {
 }
 
 const DEFAULT_STALE_THRESHOLD_MS = 300000
+const retainedDirectoryMonitors: Gio.FileMonitor[] = []
 
 function basename(path: string, fallback: string): string {
   if (!path) return fallback
@@ -97,7 +99,87 @@ function sessionPid(session: AgentSession, config: AgentStatusConfig): number | 
   return typeof pid === "number" ? pid : undefined
 }
 
-function readSessions<T extends AgentSession>(config: AgentStatusConfig): T[] {
+function readText(path: string): string | null {
+  try {
+    const [ok, content] = GLib.file_get_contents(path)
+    if (!ok) return null
+    return new TextDecoder().decode(content)
+  } catch {
+    return null
+  }
+}
+
+function isNumeric(value: string): boolean {
+  return /^\d+$/.test(value)
+}
+
+function processMatches(pid: number, processNames: string[]): boolean {
+  const comm = readText(`/proc/${pid}/comm`)?.trim().toLowerCase() || ""
+  if (processNames.some(name => comm.includes(name))) return true
+
+  const cmdline = readText(`/proc/${pid}/cmdline`) || ""
+  const command = cmdline.split("\0").find(Boolean) || ""
+  const slash = command.lastIndexOf("/")
+  const executable = (slash >= 0 ? command.slice(slash + 1) : command).toLowerCase()
+
+  return processNames.some(name => executable.includes(name))
+}
+
+function liveProcessSessions<T extends AgentSession>(
+  config: AgentStatusConfig,
+  existing: T[],
+  firstSeen: Map<number, string>,
+): T[] {
+  const processNames = (config.liveProcessNames || []).map(name => name.toLowerCase())
+  if (processNames.length === 0) return []
+
+  const existingPids = new Set(existing.map(session => sessionPid(session, config)).filter(Boolean))
+  const seenPids = new Set<number>()
+  const sessions: T[] = []
+
+  try {
+    const proc = Gio.File.new_for_path("/proc")
+    const enumerator = proc.enumerate_children("standard::name", Gio.FileQueryInfoFlags.NONE, null)
+    let info: Gio.FileInfo | null
+    while ((info = enumerator.next_file(null)) !== null) {
+      const name = info.get_name()
+      if (!isNumeric(name)) continue
+
+      const pid = Number.parseInt(name, 10)
+      if (existingPids.has(pid) || !processMatches(pid, processNames)) continue
+
+      if (!firstSeen.has(pid)) firstSeen.set(pid, new Date().toISOString())
+      seenPids.add(pid)
+
+      const session: AgentSession = {
+        session_id: `${config.provider}-process-${pid}`,
+        state: "idle",
+        action: "opened",
+        cwd: "",
+        transcript: "",
+        updated_at: firstSeen.get(pid)!,
+        tool_count: 0,
+        source: "process",
+      }
+      session[config.pidField] = pid
+      sessions.push(session as T)
+    }
+    enumerator.close(null)
+  } catch {
+    return []
+  }
+
+  for (const pid of firstSeen.keys()) {
+    if (!seenPids.has(pid) && !existingPids.has(pid)) firstSeen.delete(pid)
+  }
+
+  return sessions
+}
+
+function readSessions<T extends AgentSession>(
+  config: AgentStatusConfig,
+  liveProcessFirstSeen: Map<number, string>,
+): T[] {
   if (!GLib.file_test(config.sessionsDir, GLib.FileTest.IS_DIR)) return []
   const thresholdMs = config.staleThresholdMs ?? DEFAULT_STALE_THRESHOLD_MS
   const sessions: T[] = []
@@ -131,8 +213,10 @@ function readSessions<T extends AgentSession>(config: AgentStatusConfig): T[] {
     enumerator.close(null)
   } catch { return [] }
 
-  return sessions
+  const fileSessions = sessions
     .filter(s => !isStale(s, thresholdMs))
+
+  return [...fileSessions, ...liveProcessSessions(config, fileSessions, liveProcessFirstSeen)]
     .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
 }
 
@@ -154,30 +238,74 @@ export function createAgentStatusService<T extends AgentSession = AgentSession>(
   config: AgentStatusConfig,
 ): AgentStatusService<T> {
   const sessions = Variable<T[]>([])
+  const liveProcessFirstSeen = new Map<number, string>()
+  let refreshSource = 0
+  let staleRefreshSource = 0
 
   function refreshSessions(): void {
-    const fresh = readSessions<T>(config)
+    const fresh = readSessions<T>(config, liveProcessFirstSeen)
+    scheduleStaleRefresh(fresh)
     if (!sameSessions(sessions.get(), fresh)) {
       sessions.set(fresh)
     }
+  }
+
+  function scheduleRefresh(delayMs = 50): void {
+    if (refreshSource !== 0) return
+    refreshSource = GLib.timeout_add(GLib.PRIORITY_DEFAULT, delayMs, () => {
+      refreshSource = 0
+      refreshSessions()
+      return GLib.SOURCE_REMOVE
+    })
+  }
+
+  function scheduleStaleRefresh(currentSessions: T[]): void {
+    if (staleRefreshSource !== 0) {
+      GLib.source_remove(staleRefreshSource)
+      staleRefreshSource = 0
+    }
+
+    const thresholdMs = config.staleThresholdMs ?? DEFAULT_STALE_THRESHOLD_MS
+    const now = Date.now()
+    let nextDelay: number | null = null
+
+    for (const session of currentSessions) {
+      if (session.state === "idle") continue
+      const updated = new Date(session.updated_at).getTime()
+      if (Number.isNaN(updated)) continue
+      const delay = Math.max(1000, updated + thresholdMs - now + 100)
+      nextDelay = nextDelay === null ? delay : Math.min(nextDelay, delay)
+    }
+
+    if (nextDelay !== null) {
+      staleRefreshSource = GLib.timeout_add(GLib.PRIORITY_DEFAULT, nextDelay, () => {
+        staleRefreshSource = 0
+        refreshSessions()
+        return GLib.SOURCE_REMOVE
+      })
+    }
+  }
+
+  function isSessionWritePath(path: string | null): boolean {
+    if (path === null) return false
+    return path.endsWith(".json") || /\.json\.\d+\.tmp$/.test(path)
   }
 
   GLib.mkdir_with_parents(config.sessionsDir, 0o755)
 
   const dirFile = Gio.File.new_for_path(config.sessionsDir)
   const monitor = dirFile.monitor_directory(Gio.FileMonitorFlags.NONE, null)
+  retainedDirectoryMonitors.push(monitor)
   monitor.set_rate_limit(50)
-  monitor.connect("changed", (_m, file, _other, _event) => {
-    const path = file.get_path()
-    if (path && path.endsWith(".json")) refreshSessions()
+  monitor.connect("changed", (_m, file, other, _event) => {
+    if (isSessionWritePath(file.get_path()) || isSessionWritePath(other?.get_path() ?? null)) {
+      scheduleRefresh()
+    }
   })
 
-  GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
-    refreshSessions()
-    return GLib.SOURCE_CONTINUE
-  })
-
-  Hyprland.get_default().connect("client-removed", () => refreshSessions())
+  const hypr = Hyprland.get_default()
+  hypr.connect("client-added", () => scheduleRefresh())
+  hypr.connect("client-removed", () => scheduleRefresh())
 
   refreshSessions()
 
