@@ -2,6 +2,7 @@
 import Hyprland from "gi://AstalHyprland"
 import { Widget } from "astal/gtk4"
 import AstalApps from "gi://AstalApps?version=0.1"
+import GLib from "gi://GLib"
 import { claudeSessions } from "../service/ClaudeStatus"
 import { codexSessions } from "../service/CodexStatus"
 import {
@@ -109,8 +110,13 @@ export default function HyprlandStatus() {
   return Widget.Box({
     css_classes: ["workspace-widget"],
     setup: (self: AstalBox) => {
+      const buttonContentUpdaters = new Map<number, () => void>()
+      let updateSource = 0
+      let buttonUpdateSource = 0
+
       const updateWorkspaces = () => {
         try {
+          buttonContentUpdaters.clear()
           self.children = []
 
           // Get all workspaces, filter and sort
@@ -193,6 +199,7 @@ export default function HyprlandStatus() {
               button.child = workspaceButtonChild(ws)
               button.tooltip_text = workspaceTooltip(ws)
             }
+            buttonContentUpdaters.set(id, updateButtonContent)
 
             // Set initial state
             updateClass()
@@ -207,6 +214,9 @@ export default function HyprlandStatus() {
             button.connect("destroy", () => {
               hypr.disconnect(focusId)
               ws.disconnect(nameId)
+              if (buttonContentUpdaters.get(id) === updateButtonContent) {
+                buttonContentUpdaters.delete(id)
+              }
             })
 
             const pills = (pillsByWs.get(id) || [])
@@ -239,31 +249,55 @@ export default function HyprlandStatus() {
         }
       }
 
+      const scheduleUpdateWorkspaces = () => {
+        if (updateSource !== 0) return
+        updateSource = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 80, () => {
+          updateSource = 0
+          updateWorkspaces()
+          return GLib.SOURCE_REMOVE
+        })
+      }
+
+      const scheduleButtonContentUpdate = () => {
+        if (buttonUpdateSource !== 0) return
+        buttonUpdateSource = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 120, () => {
+          buttonUpdateSource = 0
+          for (const updateButtonContent of buttonContentUpdaters.values()) {
+            updateButtonContent()
+          }
+          return GLib.SOURCE_REMOVE
+        })
+      }
+
       // Update initially and when workspaces change
       updateWorkspaces()
-      hypr.connect("notify::workspaces", updateWorkspaces)
+      const workspacesId = hypr.connect("notify::workspaces", scheduleUpdateWorkspaces)
 
       // Listen for workspace/window events that affect pill placement
-      hypr.connect("event", (_, eventName) => {
+      const eventId = hypr.connect("event", (_, eventName) => {
         if (
-          eventName === "renameworkspace" ||
-          eventName === "activewindow" ||
-          eventName === "activewindowv2" ||
-          eventName === "windowtitle" ||
-          eventName === "windowtitlev2" ||
           eventName === "openwindow" ||
           eventName === "closewindow" ||
           eventName === "movewindow" ||
           eventName === "movewindowv2"
         ) {
-          updateWorkspaces()
+          scheduleUpdateWorkspaces()
+        } else if (
+          eventName === "activewindow" ||
+          eventName === "activewindowv2"
+        ) {
+          scheduleButtonContentUpdate()
         }
       })
 
       // Re-render when agent sessions change
-      const claudeSessionsSub = claudeSessions.subscribe(updateWorkspaces)
-      const codexSessionsSub = codexSessions.subscribe(updateWorkspaces)
+      const claudeSessionsSub = claudeSessions.subscribe(scheduleUpdateWorkspaces)
+      const codexSessionsSub = codexSessions.subscribe(scheduleUpdateWorkspaces)
       self.connect("destroy", () => {
+        if (updateSource !== 0) GLib.source_remove(updateSource)
+        if (buttonUpdateSource !== 0) GLib.source_remove(buttonUpdateSource)
+        hypr.disconnect(workspacesId)
+        hypr.disconnect(eventId)
         claudeSessionsSub()
         codexSessionsSub()
       })

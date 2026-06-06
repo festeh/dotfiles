@@ -12,10 +12,12 @@ type HyprlandClient = ReturnType<HyprlandInstance["get_clients"]>[number]
 interface KittyWindow {
   id?: number
   pid?: number
+  title?: string
 }
 
 interface KittyTab {
   id?: number
+  title?: string
   windows?: KittyWindow[]
 }
 
@@ -28,8 +30,10 @@ export interface AgentKittyPlacement {
   osWindowIndex: number
   tabId: number
   tabIndex: number
+  tabTitle?: string
   windowId: number
   windowIndex: number
+  windowTitle?: string
   verifiedAt: number
 }
 
@@ -98,8 +102,10 @@ function findPlacementInLayout(
           osWindowIndex,
           tabId: tab.id,
           tabIndex,
+          tabTitle: typeof tab.title === "string" ? tab.title : undefined,
           windowId: window.id,
           windowIndex,
+          windowTitle: typeof window.title === "string" ? window.title : undefined,
           verifiedAt,
         }
       }
@@ -220,8 +226,10 @@ export function withKittyPlacement<T extends AgentSession>(
     kitty_os_window_index: placement.osWindowIndex,
     kitty_tab_id: placement.tabId,
     kitty_tab_index: placement.tabIndex,
+    kitty_tab_title: placement.tabTitle,
     kitty_window_id: placement.windowId,
     kitty_window_index: placement.windowIndex,
+    kitty_window_title: placement.windowTitle,
   }
 }
 

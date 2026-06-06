@@ -57,7 +57,7 @@ def _read_session(session_id: str) -> dict:
 def _write_session(session_id: str, session: dict) -> None:
     os.makedirs(SESSIONS_DIR, exist_ok=True)
     path = _session_path(session_id)
-    tmp_path = path + ".tmp"
+    tmp_path = f"{path}.{os.getpid()}.tmp"
     with open(tmp_path, "w", encoding="utf-8") as f:
         json.dump(session, f, indent=2)
     os.replace(tmp_path, path)

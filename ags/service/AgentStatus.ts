@@ -31,8 +31,10 @@ export interface AgentSession {
   kitty_os_window_index?: number
   kitty_tab_id?: number
   kitty_tab_index?: number
+  kitty_tab_title?: string
   kitty_window_id?: number
   kitty_window_index?: number
+  kitty_window_title?: string
 }
 
 export interface AgentStatusConfig {

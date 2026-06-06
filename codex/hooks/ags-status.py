@@ -304,7 +304,12 @@ def _upsert_session(
         approval_reason = extras.get("approval_reason") or existing.get("approval_reason")
 
     codex_pid = _find_codex_pid(os.getppid())
-    window_address = _resolve_window_address(codex_pid) or existing.get("window_address")
+    existing_pid = existing.get("codex_pid")
+    existing_window_address = existing.get("window_address")
+    if isinstance(existing_window_address, str) and existing_pid == codex_pid:
+        window_address = existing_window_address
+    else:
+        window_address = _resolve_window_address(codex_pid) or existing_window_address
     effective_action = action if action else existing.get("action", "")
 
     session = {

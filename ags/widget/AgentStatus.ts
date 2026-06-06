@@ -62,23 +62,70 @@ function sanitize(str: string | undefined, max?: number): string {
   return cleaned
 }
 
-function getPillLabel<T extends AgentSession>(session: T, config: AgentWidgetConfig<T>): string {
-  if (session.state === "running" || session.state === "waiting" || session.state === "compacting") {
-    return sanitize(session.action || config.service.sessionDisplayName(session), 20)
+function basename(path: string): string {
+  if (!path) return ""
+  const trimmed = path.replace(/\/+$/, "")
+  const slash = trimmed.lastIndexOf("/")
+  return slash >= 0 ? trimmed.slice(slash + 1) || trimmed : trimmed
+}
+
+function normalizeIdentityLabel(value: string | undefined): string {
+  return (value || "")
+    .replace(/\n/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/^[^\p{L}\p{N}~./_-]+/u, "")
+    .trim()
+}
+
+function isUsefulIdentityLabel(label: string, session: AgentSession, config: AgentWidgetConfig<any>): boolean {
+  if (!label) return false
+
+  const lower = label.toLowerCase()
+  const cwdName = config.service.sessionDisplayName(session).toLowerCase()
+  const homeName = basename(GLib.get_home_dir()).toLowerCase()
+
+  if (lower === cwdName || lower === homeName || lower === "~") return false
+  if (lower === "bash" || lower === "zsh" || lower === "fish") return false
+  if (lower === "thinking" || lower === "thinking..." || lower === "finished") return false
+  if (lower === "needs input" || lower === "idle" || lower === "running") return false
+
+  return true
+}
+
+function sessionIdentityLabel<T extends AgentSession>(session: T, config: AgentWidgetConfig<T>): string {
+  const candidates = [
+    session.kitty_tab_title,
+    session.kitty_window_title,
+    session.prompt,
+  ]
+
+  for (const candidate of candidates) {
+    const label = normalizeIdentityLabel(candidate)
+    if (isUsefulIdentityLabel(label, session, config)) return label
   }
-  return sanitize(config.service.sessionDisplayName(session), 20)
+
+  return config.service.sessionDisplayName(session)
+}
+
+function getPillLabel<T extends AgentSession>(session: T, config: AgentWidgetConfig<T>): string {
+  const label = sessionIdentityLabel(session, config)
+  if (session.state === "waiting") return `input: ${sanitize(label, 14)}`
+  if (session.state === "compacting") return `compact: ${sanitize(label, 12)}`
+  return sanitize(label, 20)
 }
 
 function formatIdleElapsed(session: AgentSession): string {
   try {
     const updated = new Date(session.updated_at).getTime()
     const e = Math.floor((Date.now() - updated) / 1000)
-    let s: string
-    if (e < 60) s = `${e}s`
-    else if (e < 3600) s = `${Math.floor(e / 60)}m`
-    else s = `${Math.floor(e / 3600)}h`
-    return `${s} idle`
+    if (e < 60) return `${e}s`
+    if (e < 3600) return `${Math.floor(e / 60)}m`
+    return `${Math.floor(e / 3600)}h`
   } catch { return "idle" }
+}
+
+function getIdlePillLabel<T extends AgentSession>(session: T, config: AgentWidgetConfig<T>): string {
+  return `${sanitize(sessionIdentityLabel(session, config), 15)} ${formatIdleElapsed(session)}`
 }
 
 function DetailSection(
@@ -135,7 +182,7 @@ function DetailPopover<T extends AgentSession>(
         }),
         Widget.Label({
           css_classes: prefixed(config, "detail-project"),
-          label: config.service.sessionDisplayName(session),
+          label: sessionIdentityLabel(session, config),
         }),
       ],
     })
@@ -249,8 +296,7 @@ export function AgentSessionPill<T extends AgentSession>(
   const labelWidget = session.state === "idle"
     ? Widget.Label({
         css_classes: prefixed(config, "session-name"),
-        label: bind(config.service.idleTick).as(() => formatIdleElapsed(session)),
-        width_chars: 7,
+        label: bind(config.service.idleTick).as(() => getIdlePillLabel(session, config)),
         xalign: 0,
       })
     : Widget.Label({
