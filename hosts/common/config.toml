@@ -25,3 +25,7 @@ name = "~/.config/mise"
 [symlinks.claude_settings]
 target = "claude/settings.json"
 name = "~/.claude/settings.json"
+
+[symlinks.ccs]
+target = "ccs"
+name = "~/.config/ccs"
