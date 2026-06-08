@@ -88,6 +88,7 @@ function workspaceButtonChild(ws: HyprlandWorkspace): Gtk.Widget {
   return Widget.Box({
     css_classes: ["workspace-button-content"],
     spacing: iconName ? 3 : 0,
+    halign: Gtk.Align.CENTER,
     valign: Gtk.Align.CENTER,
     children,
   })
