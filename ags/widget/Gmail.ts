@@ -5,8 +5,8 @@ import GLib from "gi://GLib"
 import Gtk from "gi://Gtk?version=4.0"
 
 const GOOGLE_POLL_SECONDS = 180
-const GMAIL_URL = "https://mail.google.com/mail/u/0/#inbox"
-const CALENDAR_URL = "https://calendar.google.com/calendar/u/0/r"
+const GMAIL_URL = "https://mail.google.com/mail/u/1/#inbox"
+const CALENDAR_URL = "https://calendar.google.com/calendar/u/1/r"
 const GOOGLE_HELPER = `${SRC}/scripts/gmail-unread.py`
 const HOME = GLib.get_home_dir()
 const UV_CANDIDATES = [
@@ -324,6 +324,13 @@ export default function Gmail() {
         }),
         onClicked: () => {
           openUrl(GMAIL_URL)
+        },
+        setup: (self: Gtk.Button) => {
+          // Right click forces an immediate Gmail/Calendar refresh.
+          const rightClick = Gtk.GestureClick.new()
+          rightClick.set_button(3)
+          rightClick.connect("released", () => refreshGmail())
+          self.add_controller(rightClick)
         },
       }),
       Widget.Button({
