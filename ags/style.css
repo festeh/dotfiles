@@ -72,16 +72,19 @@ window {
 .calendar-status-widget {
   background-color: @surface0;
   border-radius: 8px;
-  padding: 0 8px;
+  padding: 0 9px;
   margin: 0;
   color: @subtext1;
   min-height: 22px;
-  min-width: 52px;
+  min-width: 0;
 }
 
 .gmail-content,
 .calendar-status-content {
   min-height: 22px;
+}
+
+.calendar-status-content {
   min-width: 36px;
 }
 
@@ -108,7 +111,7 @@ window {
 }
 
 .calendar-status-free {
-  color: @green;
+  color: @subtext1;
 }
 
 .gmail-setup,

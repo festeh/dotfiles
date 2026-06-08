@@ -21,12 +21,12 @@ from typing import Any
 
 
 SCOPES = [
-    "https://www.googleapis.com/auth/gmail.labels",
     "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/calendar.events.readonly",
 ]
 CALENDAR_LOOKBACK_HOURS = 8
 CALENDAR_LOOKAHEAD_HOURS = 12
+GMAIL_OTHER_BUCKET = "Other"
 
 
 def xdg_config_home() -> Path:
@@ -186,6 +186,7 @@ def setup_payload(message: str) -> dict[str, Any]:
     return {
         "status": "setup",
         "unread": 0,
+        "labels": [],
         "message": message,
         "calendar": calendar_setup(message),
     }
@@ -195,6 +196,7 @@ def error_payload(message: str) -> dict[str, Any]:
     return {
         "status": "error",
         "unread": 0,
+        "labels": [],
         "message": message,
         "calendar": calendar_error(message),
     }
@@ -213,6 +215,7 @@ def load_credentials(credentials_path: Path, token_path: Path, authorize: bool):
                 return None, {
                     "status": "setup",
                     "unread": 0,
+                    "labels": [],
                     "message": "Run with --setup to recreate the Google token with the current scopes",
                     "calendar": calendar_setup("Run with --setup to recreate the Google token with the current scopes"),
                 }
@@ -229,6 +232,7 @@ def load_credentials(credentials_path: Path, token_path: Path, authorize: bool):
             return None, {
                 "status": "setup",
                 "unread": 0,
+                "labels": [],
                 "message": "Run with --setup to create a Google token",
                 "calendar": calendar_setup("Run with --setup to create a Google token"),
             }
@@ -259,10 +263,93 @@ def setup_google(credentials_path: Path, token_path: Path, source_path: Path | N
     return google_status(credentials_path, token_path, authorize=False)
 
 
-def gmail_unread_count(creds: Any, build: Any) -> int:
+def gmail_unread_inbox_message_ids(service: Any, query: str | None = None) -> set[str]:
+    message_ids: list[str] = []
+    page_token: str | None = None
+
+    while True:
+        request_args = {
+            "userId": "me",
+            "labelIds": ["INBOX", "UNREAD"],
+            "maxResults": 100,
+            "pageToken": page_token,
+            "fields": "messages/id,nextPageToken",
+        }
+        if query is not None:
+            request_args["q"] = query
+
+        request = service.users().messages().list(**request_args)
+        result = request.execute()
+
+        for message in result.get("messages", []):
+            if not isinstance(message, dict):
+                continue
+
+            message_id = message.get("id")
+            if isinstance(message_id, str):
+                message_ids.append(message_id)
+
+        next_token = result.get("nextPageToken")
+        if not isinstance(next_token, str) or not next_token:
+            return set(message_ids)
+
+        page_token = next_token
+
+
+def load_bucket_queries(credentials_path: Path) -> list[tuple[str, str]]:
+    """Read optional unread-bucket filters from the (out-of-repo) credentials file.
+
+    Expected shape in credentials.json:
+        "buckets": [{"name": "Jira", "query": "from:..."}, ...]
+    Google's auth libs only read the "installed" key, so this extra key is
+    harmless there and keeps employer-specific sender domains out of the
+    tracked dotfiles repo.
+    """
+    try:
+        payload = read_json(credentials_path)
+    except (OSError, json.JSONDecodeError):
+        return []
+
+    raw_buckets = payload.get("buckets") if isinstance(payload, dict) else None
+    if not isinstance(raw_buckets, list):
+        return []
+
+    buckets: list[tuple[str, str]] = []
+    for item in raw_buckets:
+        if not isinstance(item, dict):
+            continue
+        name = item.get("name")
+        query = item.get("query")
+        if isinstance(name, str) and isinstance(query, str) and name and query:
+            buckets.append((name, query))
+
+    return buckets
+
+
+def gmail_unread_status(creds: Any, build: Any, bucket_queries: list[tuple[str, str]]) -> dict[str, Any]:
     service = build("gmail", "v1", credentials=creds, cache_discovery=False)
-    label = service.users().labels().get(userId="me", id="INBOX").execute()
-    return int(label.get("messagesUnread", 0))
+    message_ids = gmail_unread_inbox_message_ids(service)
+    unread = len(message_ids)
+    if unread == 0:
+        return {"unread": 0, "labels": []}
+
+    remaining_ids = set(message_ids)
+    buckets: list[dict[str, Any]] = []
+    for name, query in bucket_queries:
+        bucket_ids = gmail_unread_inbox_message_ids(service, query)
+        count = len(bucket_ids & remaining_ids)
+        if count > 0:
+            buckets.append({"name": name, "unread": count})
+
+        remaining_ids -= bucket_ids
+
+    if remaining_ids:
+        buckets.append({"name": GMAIL_OTHER_BUCKET, "unread": len(remaining_ids)})
+
+    return {
+        "unread": unread,
+        "labels": buckets,
+    }
 
 
 def parse_event_time(value: Any) -> datetime | None:
@@ -364,7 +451,7 @@ def google_status(credentials_path: Path, token_path: Path, authorize: bool) -> 
     _Request, _Credentials, _InstalledAppFlow, build, HttpError = import_google_libs()
 
     try:
-        unread = gmail_unread_count(creds, build)
+        gmail = gmail_unread_status(creds, build, load_bucket_queries(credentials_path))
     except HttpError as error:
         return error_payload(str(error))
 
@@ -375,7 +462,8 @@ def google_status(credentials_path: Path, token_path: Path, authorize: bool) -> 
 
     return {
         "status": "ok",
-        "unread": unread,
+        "unread": gmail["unread"],
+        "labels": gmail["labels"],
         "message": "ok",
         "calendar": calendar,
     }

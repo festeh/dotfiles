@@ -20,6 +20,11 @@ const UV_CANDIDATES = [
 type GmailStatus = "loading" | "ok" | "setup" | "error"
 type CalendarStatus = "loading" | "free" | "busy" | "next" | "setup" | "error"
 
+type GmailLabelBucket = {
+  name: string
+  unread: number
+}
+
 type CalendarState = {
   status: CalendarStatus
   label: string
@@ -33,6 +38,7 @@ type CalendarState = {
 type GmailState = {
   status: GmailStatus
   unread: number
+  labels: GmailLabelBucket[]
   message: string
   calendar: CalendarState
 }
@@ -47,6 +53,7 @@ const loadingCalendar: CalendarState = {
 const gmail = Variable<GmailState>({
   status: "loading",
   unread: 0,
+  labels: [],
   message: "Loading Gmail",
   calendar: loadingCalendar,
 })
@@ -78,10 +85,31 @@ function calendarIconName(state: CalendarState): string {
   return "x-office-calendar-symbolic"
 }
 
+function sanitizeLabel(value: string, maxLength = 18): string {
+  const compact = value.replace(/\s+/g, " ").trim()
+  if (compact.length <= maxLength) return compact
+  return `${compact.slice(0, Math.max(0, maxLength - 3))}...`
+}
+
+function gmailBucketsText(labels: GmailLabelBucket[]): string {
+  return labels
+    .filter((label) => label.unread > 0)
+    .map((label) => `${sanitizeLabel(label.name)} ${label.unread}`)
+    .join(" ")
+}
+
+function gmailBucketsTooltipText(labels: GmailLabelBucket[]): string {
+  return labels
+    .filter((label) => label.unread > 0)
+    .map((label) => `${label.name} ${label.unread}`)
+    .join(", ")
+}
+
 function gmailLabelText(state: GmailState): string {
   if (state.status === "loading") return "..."
   if (state.status === "setup" || state.status === "error") return "!"
-  return String(state.unread)
+  if (state.unread === 0) return "Empty"
+  return gmailBucketsText(state.labels) || `Other ${state.unread}`
 }
 
 function calendarLabelText(state: CalendarState): string {
@@ -92,6 +120,8 @@ function calendarLabelText(state: CalendarState): string {
 
 function gmailTooltipText(state: GmailState): string {
   if (state.status === "ok") {
+    const buckets = gmailBucketsTooltipText(state.labels)
+    if (buckets) return `Unread Gmail: ${buckets}`
     return state.unread === 1 ? "1 unread Gmail message" : `${state.unread} unread Gmail messages`
   }
   return state.message
@@ -141,6 +171,21 @@ function parseCalendar(value: unknown, fallbackMessage: string): CalendarState {
   }
 }
 
+function parseGmailLabels(value: unknown): GmailLabelBucket[] {
+  if (!Array.isArray(value)) return []
+
+  return value.flatMap((item): GmailLabelBucket[] => {
+    if (item === null || typeof item !== "object") return []
+
+    const candidate = item as Partial<GmailLabelBucket>
+    const name = typeof candidate.name === "string" ? candidate.name.trim() : ""
+    const unread = typeof candidate.unread === "number" ? Math.trunc(candidate.unread) : 0
+    if (!name || unread <= 0) return []
+
+    return [{ name, unread }]
+  })
+}
+
 function parseState(stdout: string, stderr: string): GmailState {
   try {
     const value = JSON.parse(stdout) as Partial<GmailState>
@@ -152,6 +197,7 @@ function parseState(stdout: string, stderr: string): GmailState {
     return {
       status,
       unread: typeof value.unread === "number" ? value.unread : 0,
+      labels: parseGmailLabels(value.labels),
       message,
       calendar: parseCalendar(value.calendar, message),
     }
@@ -160,6 +206,7 @@ function parseState(stdout: string, stderr: string): GmailState {
     return {
       status: "error",
       unread: 0,
+      labels: [],
       message,
       calendar: {
         status: "error",
@@ -179,6 +226,7 @@ function refreshGmail(): void {
     gmail.set({
       status: "setup",
       unread: 0,
+      labels: [],
       message: "uv is not available to the AGS service",
       calendar: {
         status: "setup",
@@ -203,6 +251,7 @@ function refreshGmail(): void {
     gmail.set({
       status: "error",
       unread: 0,
+      labels: [],
       message,
       calendar: {
         status: "error",
@@ -224,6 +273,7 @@ function refreshGmail(): void {
       gmail.set({
         status: "error",
         unread: 0,
+        labels: [],
         message,
         calendar: {
           status: "error",
