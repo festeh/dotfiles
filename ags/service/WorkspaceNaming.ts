@@ -4,6 +4,7 @@ import GLib from "gi://GLib"
 
 const KITTY_REQUEST_TIMEOUT_MS = 1500
 const WORKSPACE_UPDATE_DELAY_MS = 150
+const WINDOW_TITLE_WORKSPACE_UPDATE_MIN_INTERVAL_MS = 5000
 
 Gio._promisify(Gio.SocketClient.prototype, "connect_async", "connect_finish")
 Gio._promisify(Gio.InputStream.prototype, "read_bytes_async", "read_bytes_finish")
@@ -34,6 +35,7 @@ class WorkspaceNamingService {
   private rerunUpdates = new Set<number>()
   private windowWorkspaces = new Map<string, number>()
   private activeKittyByWorkspace = new Map<number, KittyClientRef>()
+  private nextTitleWorkspaceUpdate = new Map<number, number>()
 
   constructor() {
     this.refreshWindowWorkspaceCache()
@@ -91,16 +93,8 @@ class WorkspaceNamingService {
         }
 
         case "windowtitlev2": {
-          const client = this.clientByAddress(parts[0])
-          if (client?.get_class() !== "kitty") break
-
-          const workspaceId = client.get_workspace()?.get_id()
-          if (workspaceId !== undefined) {
-            const activeKitty = this.syncActiveKittyForWorkspace(workspaceId)
-            if (activeKitty?.address === normalizeAddress(client.get_address())) {
-              this.scheduleWorkspaceUpdate(workspaceId)
-            }
-          }
+          const workspaceId = this.activeKittyWorkspaceForAddress(parts[0])
+          if (workspaceId !== null) this.scheduleTitleWorkspaceUpdate(workspaceId)
           break
         }
 
@@ -155,6 +149,26 @@ class WorkspaceNamingService {
 
     this.activeKittyByWorkspace.delete(workspaceId)
     return null
+  }
+
+  private activeKittyWorkspaceForAddress(address: string): number | null {
+    const normalized = normalizeAddress(address)
+    for (const [workspaceId, activeKitty] of this.activeKittyByWorkspace) {
+      if (activeKitty.address === normalized) return workspaceId
+    }
+    return null
+  }
+
+  private scheduleTitleWorkspaceUpdate(workspaceId: number) {
+    const now = Date.now()
+    const nextAllowed = this.nextTitleWorkspaceUpdate.get(workspaceId) ?? 0
+    if (now < nextAllowed) return
+
+    this.nextTitleWorkspaceUpdate.set(
+      workspaceId,
+      now + WINDOW_TITLE_WORKSPACE_UPDATE_MIN_INTERVAL_MS,
+    )
+    this.scheduleWorkspaceUpdate(workspaceId)
   }
 
   private clientByAddress(address: string) {

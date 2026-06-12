@@ -114,6 +114,14 @@ export default function HyprlandStatus() {
       const buttonContentUpdaters = new Map<number, () => void>()
       let updateSource = 0
       let buttonUpdateSource = 0
+      const focusedClientAddress = () => {
+        try {
+          return hypr.get_focused_client()?.get_address() || ""
+        } catch {
+          return ""
+        }
+      }
+      let lastFocusedClientAddress = focusedClientAddress()
 
       const updateWorkspaces = () => {
         try {
@@ -275,7 +283,7 @@ export default function HyprlandStatus() {
       const workspacesId = hypr.connect("notify::workspaces", scheduleUpdateWorkspaces)
 
       // Listen for workspace/window events that affect pill placement
-      const eventId = hypr.connect("event", (_, eventName) => {
+      const eventId = hypr.connect("event", (_, eventName, args) => {
         if (
           eventName === "openwindow" ||
           eventName === "closewindow" ||
@@ -287,7 +295,13 @@ export default function HyprlandStatus() {
           eventName === "activewindow" ||
           eventName === "activewindowv2"
         ) {
-          scheduleButtonContentUpdate()
+          const address = eventName === "activewindowv2"
+            ? args.split(",", 1)[0]
+            : focusedClientAddress()
+          if (address !== lastFocusedClientAddress) {
+            lastFocusedClientAddress = address
+            scheduleButtonContentUpdate()
+          }
         }
       })
 
