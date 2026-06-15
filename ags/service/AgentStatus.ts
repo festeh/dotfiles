@@ -58,6 +58,7 @@ export interface AgentStatusService<T extends AgentSession> {
 }
 
 const DEFAULT_STALE_THRESHOLD_MS = 300000
+const PID_LIVENESS_CHECK_MS = 5000
 const retainedDirectoryMonitors: Gio.FileMonitor[] = []
 
 function basename(path: string, fallback: string): string {
@@ -272,6 +273,18 @@ function sameSessions<T extends AgentSession>(a: T[], b: T[]): boolean {
   return true
 }
 
+function hasTrackedSessionPid<T extends AgentSession>(currentSessions: T[], config: AgentStatusConfig): boolean {
+  return currentSessions.some(session => sessionPid(session, config) !== undefined)
+}
+
+function hasDeadTrackedSessionPid<T extends AgentSession>(currentSessions: T[], config: AgentStatusConfig): boolean {
+  for (const session of currentSessions) {
+    const pid = sessionPid(session, config)
+    if (pid !== undefined && !GLib.file_test(`/proc/${pid}`, GLib.FileTest.IS_DIR)) return true
+  }
+  return false
+}
+
 export const idleTick = Variable<number>(0)
 GLib.timeout_add(GLib.PRIORITY_DEFAULT, 5000, () => {
   idleTick.set(idleTick.get() + 1)
@@ -285,10 +298,12 @@ export function createAgentStatusService<T extends AgentSession = AgentSession>(
   const liveProcessFirstSeen = new Map<number, string>()
   let refreshSource = 0
   let staleRefreshSource = 0
+  let pidLivenessSource = 0
 
   function refreshSessions(): void {
     const fresh = readSessions<T>(config, liveProcessFirstSeen)
     scheduleStaleRefresh(fresh)
+    ensurePidLivenessCheck(fresh)
     if (!sameSessions(sessions.get(), fresh)) {
       sessions.set(fresh)
     }
@@ -300,6 +315,28 @@ export function createAgentStatusService<T extends AgentSession = AgentSession>(
       refreshSource = 0
       refreshSessions()
       return GLib.SOURCE_REMOVE
+    })
+  }
+
+  function ensurePidLivenessCheck(currentSessions: T[]): void {
+    if (pidLivenessSource !== 0 || !hasTrackedSessionPid(currentSessions, config)) return
+
+    pidLivenessSource = GLib.timeout_add(GLib.PRIORITY_DEFAULT, PID_LIVENESS_CHECK_MS, () => {
+      const current = sessions.get()
+      if (!hasTrackedSessionPid(current, config)) {
+        pidLivenessSource = 0
+        return GLib.SOURCE_REMOVE
+      }
+
+      if (hasDeadTrackedSessionPid(current, config)) {
+        refreshSessions()
+        if (!hasTrackedSessionPid(sessions.get(), config)) {
+          pidLivenessSource = 0
+          return GLib.SOURCE_REMOVE
+        }
+      }
+
+      return GLib.SOURCE_CONTINUE
     })
   }
 

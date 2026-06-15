@@ -5,8 +5,9 @@ import GLib from "gi://GLib"
 import Gtk from "gi://Gtk?version=4.0"
 
 const GOOGLE_POLL_SECONDS = 180
-const GMAIL_URL = "https://mail.google.com/mail/u/1/#inbox"
-const CALENDAR_URL = "https://calendar.google.com/calendar/u/1/r"
+const GOOGLE_ACCOUNT_INDEX = "1"
+const GMAIL_URL = `https://mail.google.com/mail/u/${GOOGLE_ACCOUNT_INDEX}/#inbox`
+const CALENDAR_URL = `https://calendar.google.com/calendar/u/${GOOGLE_ACCOUNT_INDEX}/r`
 const GOOGLE_HELPER = `${SRC}/scripts/gmail-unread.py`
 const HOME = GLib.get_home_dir()
 const UV_CANDIDATES = [
@@ -59,6 +60,27 @@ const gmail = Variable<GmailState>({
 })
 
 let refreshRunning = false
+let reauthRunning = false
+
+function setupState(message: string): GmailState {
+  return {
+    status: "setup",
+    unread: 0,
+    labels: [],
+    message,
+    calendar: { status: "setup", label: "!", title: "", message },
+  }
+}
+
+function errorState(message: string): GmailState {
+  return {
+    status: "error",
+    unread: 0,
+    labels: [],
+    message,
+    calendar: { status: "error", label: "!", title: "", message },
+  }
+}
 
 function executablePath(candidate: string): string | null {
   if (!candidate.includes("/")) return GLib.find_program_in_path(candidate)
@@ -218,49 +240,23 @@ function parseState(stdout: string, stderr: string): GmailState {
   }
 }
 
-function refreshGmail(): void {
-  if (refreshRunning) return
-
+function runHelper(extraArgs: string[], done: () => void): void {
   const uv = findUv()
   if (uv === null) {
-    gmail.set({
-      status: "setup",
-      unread: 0,
-      labels: [],
-      message: "uv is not available to the AGS service",
-      calendar: {
-        status: "setup",
-        label: "!",
-        title: "",
-        message: "uv is not available to the AGS service",
-      },
-    })
+    gmail.set(setupState("uv is not available to the AGS service"))
+    done()
     return
   }
-
-  refreshRunning = true
 
   let process: Gio.Subprocess
   try {
     process = Gio.Subprocess.new(
-      [uv, "run", "--script", GOOGLE_HELPER],
+      [uv, "run", "--script", GOOGLE_HELPER, ...extraArgs],
       Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE,
     )
   } catch (error) {
-    const message = String(error)
-    gmail.set({
-      status: "error",
-      unread: 0,
-      labels: [],
-      message,
-      calendar: {
-        status: "error",
-        label: "!",
-        title: "",
-        message,
-      },
-    })
-    refreshRunning = false
+    gmail.set(errorState(String(error)))
+    done()
     return
   }
 
@@ -269,27 +265,48 @@ function refreshGmail(): void {
       const [, stdout, stderr] = process.communicate_utf8_finish(result)
       gmail.set(parseState(stdout, stderr))
     } catch (error) {
-      const message = String(error)
-      gmail.set({
-        status: "error",
-        unread: 0,
-        labels: [],
-        message,
-        calendar: {
-          status: "error",
-          label: "!",
-          title: "",
-          message,
-        },
-      })
+      gmail.set(errorState(String(error)))
     } finally {
-      refreshRunning = false
+      done()
     }
+  })
+}
+
+function refreshGmail(): void {
+  // A reauth flow blocks on the browser consent; don't poll over it.
+  if (refreshRunning || reauthRunning) return
+  refreshRunning = true
+  runHelper([], () => {
+    refreshRunning = false
+  })
+}
+
+// Re-run the interactive OAuth flow (opens a browser consent once). Needed when
+// the refresh token is revoked/expired, which cannot be refreshed silently.
+function reauthorizeGoogle(): void {
+  if (reauthRunning) return
+  reauthRunning = true
+  gmail.set({ ...gmail.get(), message: "Opening Google sign-in…" })
+  runHelper(["--authorize"], () => {
+    reauthRunning = false
   })
 }
 
 function openUrl(url: string): void {
   GLib.spawn_command_line_async(`xdg-open ${GLib.shell_quote(url)}`)
+}
+
+function workCalendarUrl(url: string): string {
+  if (!/^https:\/\/(?:www\.google\.com|calendar\.google\.com)\/calendar\//.test(url)) return url
+  if (/[?&]authuser=/.test(url)) {
+    return url.replace(/([?&]authuser=)[^&#]*/, `$1${GOOGLE_ACCOUNT_INDEX}`)
+  }
+
+  const hashIndex = url.indexOf("#")
+  const base = hashIndex === -1 ? url : url.slice(0, hashIndex)
+  const hash = hashIndex === -1 ? "" : url.slice(hashIndex)
+  const separator = base.includes("?") ? "&" : "?"
+  return `${base}${separator}authuser=${GOOGLE_ACCOUNT_INDEX}${hash}`
 }
 
 refreshGmail()
@@ -323,7 +340,12 @@ export default function Gmail() {
           ],
         }),
         onClicked: () => {
-          openUrl(GMAIL_URL)
+          const state = gmail.get()
+          if (state.status === "setup" || state.status === "error") {
+            reauthorizeGoogle()
+          } else {
+            openUrl(GMAIL_URL)
+          }
         },
         setup: (self: Gtk.Button) => {
           // Right click forces an immediate Gmail/Calendar refresh.
@@ -353,7 +375,11 @@ export default function Gmail() {
         }),
         onClicked: () => {
           const calendar = gmail.get().calendar
-          openUrl(calendar.url ?? CALENDAR_URL)
+          if (calendar.status === "setup" || calendar.status === "error") {
+            reauthorizeGoogle()
+          } else {
+            openUrl(workCalendarUrl(calendar.url ?? CALENDAR_URL))
+          }
         },
       }),
     ],

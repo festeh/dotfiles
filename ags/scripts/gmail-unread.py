@@ -155,13 +155,14 @@ def ensure_credentials(credentials_path: Path, source_path: Path | None) -> str:
 
 
 def import_google_libs():
+    from google.auth.exceptions import RefreshError
     from google.auth.transport.requests import Request
     from google.oauth2.credentials import Credentials
     from google_auth_oauthlib.flow import InstalledAppFlow
     from googleapiclient.discovery import build
     from googleapiclient.errors import HttpError
 
-    return Request, Credentials, InstalledAppFlow, build, HttpError
+    return Request, Credentials, InstalledAppFlow, build, HttpError, RefreshError
 
 
 def calendar_setup(message: str) -> dict[str, Any]:
@@ -206,7 +207,7 @@ def load_credentials(credentials_path: Path, token_path: Path, authorize: bool):
     if not credentials_path.exists():
         return None, setup_payload(f"Missing Google OAuth credentials at {credentials_path}")
 
-    Request, Credentials, InstalledAppFlow, _build, _HttpError = import_google_libs()
+    Request, Credentials, InstalledAppFlow, _build, _HttpError, RefreshError = import_google_libs()
 
     creds = None
     if token_path.exists():
@@ -225,7 +226,20 @@ def load_credentials(credentials_path: Path, token_path: Path, authorize: bool):
             creds = Credentials.from_authorized_user_file(str(token_path), SCOPES)
 
     if creds and creds.expired and creds.refresh_token:
-        creds.refresh(Request())
+        try:
+            creds.refresh(Request())
+        except RefreshError as error:
+            # The refresh token itself is revoked/expired (e.g. an OAuth app in
+            # "Testing" expires it after 7 days, or a Workspace admin revoked it).
+            # This cannot be refreshed silently — only a fresh browser consent fixes it.
+            creds = None
+            if not authorize:
+                return None, setup_payload("Google access expired — click to re-authorize")
+
+            # --setup / --authorize: drop the dead token and re-run the browser flow.
+            if token_path.exists():
+                token_path.unlink()
+            log(f"Google refresh token revoked ({error}); starting re-authorization")
 
     if not creds or not creds.valid:
         if not authorize:
@@ -448,7 +462,7 @@ def google_status(credentials_path: Path, token_path: Path, authorize: bool) -> 
     if setup_payload is not None:
         return setup_payload
 
-    _Request, _Credentials, _InstalledAppFlow, build, HttpError = import_google_libs()
+    _Request, _Credentials, _InstalledAppFlow, build, HttpError, _RefreshError = import_google_libs()
 
     try:
         gmail = gmail_unread_status(creds, build, load_bucket_queries(credentials_path))
