@@ -1,8 +1,14 @@
-# ccs — Claude Code session browser (~/projects/ccs)
-# Flags passed to `claude` when resuming a session with Enter/r.
+# ccs — Claude Code & Codex session browser (~/projects/ccs)
+# Per-agent flags applied when resuming a session with Enter/r.
 
-[resume]
+[resume.claude]
 # Reasoning effort: low, medium, high, xhigh, max (claude --effort)
 effort = "xhigh"
 # Skip all permission prompts (claude --dangerously-skip-permissions)
+yolo = true
+
+[resume.codex]
+# Reasoning effort: minimal, low, medium, high, xhigh (-c model_reasoning_effort=…)
+effort = "xhigh"
+# Skip all approval prompts & sandbox (codex --dangerously-bypass-approvals-and-sandbox)
 yolo = true
