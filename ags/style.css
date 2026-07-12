@@ -69,8 +69,7 @@ window {
 }
 
 .gmail-widget,
-.calendar-status-widget,
-.sentry-first-responder-widget {
+.calendar-status-widget {
   background-color: @surface0;
   border-radius: 8px;
   padding: 0 9px;
@@ -81,8 +80,7 @@ window {
 }
 
 .gmail-content,
-.calendar-status-content,
-.sentry-first-responder-content {
+.calendar-status-content {
   min-height: 22px;
 }
 
@@ -91,14 +89,12 @@ window {
 }
 
 .gmail-widget image,
-.calendar-status-widget image,
-.sentry-first-responder-widget image {
+.calendar-status-widget image {
   -gtk-icon-size: 14px;
 }
 
 .gmail-widget label,
-.calendar-status-widget label,
-.sentry-first-responder-widget label {
+.calendar-status-widget label {
   font-size: 12px;
 }
 
@@ -123,26 +119,6 @@ window {
 .calendar-status-setup,
 .calendar-status-error {
   color: @yellow;
-}
-
-.sentry-first-responder-running {
-  color: @blue;
-}
-
-.sentry-first-responder-ok {
-  color: @green;
-}
-
-.sentry-first-responder-attention {
-  color: @yellow;
-}
-
-.sentry-first-responder-error {
-  color: @red;
-}
-
-.sentry-first-responder-missing {
-  color: @overlay1;
 }
 
 .agent-session-pill,

@@ -132,14 +132,14 @@ function isNumeric(value: string): boolean {
 
 function processMatches(pid: number, processNames: string[]): boolean {
   const comm = readText(`/proc/${pid}/comm`)?.trim().toLowerCase() || ""
-  if (processNames.some(name => comm.includes(name))) return true
+  if (processNames.some(name => comm === name)) return true
 
   const cmdline = readText(`/proc/${pid}/cmdline`) || ""
   const command = cmdline.split("\0").find(Boolean) || ""
   const slash = command.lastIndexOf("/")
   const executable = (slash >= 0 ? command.slice(slash + 1) : command).toLowerCase()
 
-  return processNames.some(name => executable.includes(name))
+  return processNames.some(name => executable === name)
 }
 
 export function readParentPid(pid: number): number | null {

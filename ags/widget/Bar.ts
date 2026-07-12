@@ -10,7 +10,6 @@ import HyprlandStatus from "./HyprlandStatus"
 import TimeDate from "./TimeDate"
 import Volume from "./Volume"
 import Gmail from "./Gmail"
-import SentryFirstResponderStatus from "./SentryFirstResponderStatus"
 
 
 export default function Bar(monitor: Gdk.Monitor, calendarVisible: Variable<boolean>,
@@ -64,7 +63,6 @@ export default function Bar(monitor: Gdk.Monitor, calendarVisible: Variable<bool
             setup: (self: Gtk.Box) => self.set_size_request(-1, 22),
             children: [
               Gmail(),
-              SentryFirstResponderStatus(),
             ],
           })
         ]
