@@ -28,6 +28,7 @@ export interface AgentSession {
   window_address?: string
   claude_pid?: number
   codex_pid?: number
+  kimi_pid?: number
   kitty_os_window_pid?: number
   kitty_os_window_index?: number
   kitty_tab_id?: number
@@ -39,9 +40,9 @@ export interface AgentSession {
 }
 
 export interface AgentStatusConfig {
-  provider: "claude" | "codex"
+  provider: "claude" | "codex" | "kimi"
   sessionsDir: string
-  pidField: "claude_pid" | "codex_pid"
+  pidField: "claude_pid" | "codex_pid" | "kimi_pid"
   defaultName: string
   staleThresholdMs?: number
   liveProcessNames?: string[]
@@ -113,6 +114,7 @@ function sessionPid(session: AgentSession, config: AgentStatusConfig): number | 
 export function agentSessionPid(session: AgentSession): number | null {
   if (typeof session.codex_pid === "number") return session.codex_pid
   if (typeof session.claude_pid === "number") return session.claude_pid
+  if (typeof session.kimi_pid === "number") return session.kimi_pid
   return null
 }
 

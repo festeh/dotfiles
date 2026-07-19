@@ -5,6 +5,7 @@ import AstalApps from "gi://AstalApps?version=0.1"
 import GLib from "gi://GLib"
 import { claudeSessions } from "../service/ClaudeStatus"
 import { codexSessions } from "../service/CodexStatus"
+import { kimiSessions } from "../service/KimiStatus"
 import {
   AgentKittyPlacement,
   getAgentKittyPlacements,
@@ -13,6 +14,7 @@ import {
 } from "../service/KittyTabs"
 import { SessionPill as ClaudeSessionPill, findWorkspaceIdForSession as findClaudeWorkspaceId } from "./ClaudeStatus"
 import { SessionPill as CodexSessionPill, findWorkspaceIdForSession as findCodexWorkspaceId } from "./CodexStatus"
+import { SessionPill as KimiSessionPill, findWorkspaceIdForSession as findKimiWorkspaceId } from "./KimiStatus"
 import Gtk from "gi://Gtk?version=4.0"
 
 type AstalBox = Gtk.Box & { children: Gtk.Widget[] }
@@ -156,9 +158,11 @@ export default function HyprlandStatus() {
 
           const visibleClaudeSessions = claudeSessions.get().filter(s => isVisibleAgentState(s.state))
           const visibleCodexSessions = codexSessions.get().filter(s => isVisibleAgentState(s.state))
+          const visibleKimiSessions = kimiSessions.get().filter(s => isVisibleAgentState(s.state))
           const kittyPlacements = getAgentKittyPlacements(hypr, [
             ...visibleClaudeSessions,
             ...visibleCodexSessions,
+            ...visibleKimiSessions,
           ])
 
           for (const s of visibleClaudeSessions) {
@@ -184,6 +188,19 @@ export default function HyprlandStatus() {
               parseUpdatedAt(s.updated_at),
               placement,
               CodexSessionPill(withKittyPlacement(s, placement)),
+            )
+          }
+
+          for (const s of visibleKimiSessions) {
+            if (!isVisibleAgentState(s.state)) continue
+            const wsId = findKimiWorkspaceId(s)
+            if (wsId === null) continue
+            const placement = kittyPlacements.get(s.session_id)
+            addPill(
+              wsId,
+              parseUpdatedAt(s.updated_at),
+              placement,
+              KimiSessionPill(withKittyPlacement(s, placement)),
             )
           }
 
@@ -308,6 +325,7 @@ export default function HyprlandStatus() {
       // Re-render when agent sessions change
       const claudeSessionsSub = claudeSessions.subscribe(scheduleUpdateWorkspaces)
       const codexSessionsSub = codexSessions.subscribe(scheduleUpdateWorkspaces)
+      const kimiSessionsSub = kimiSessions.subscribe(scheduleUpdateWorkspaces)
       self.connect("destroy", () => {
         if (updateSource !== 0) GLib.source_remove(updateSource)
         if (buttonUpdateSource !== 0) GLib.source_remove(buttonUpdateSource)
@@ -315,6 +333,7 @@ export default function HyprlandStatus() {
         hypr.disconnect(eventId)
         claudeSessionsSub()
         codexSessionsSub()
+        kimiSessionsSub()
       })
     }
   })

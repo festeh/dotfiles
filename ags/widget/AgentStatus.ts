@@ -14,7 +14,7 @@ import { focusSessionKittyTab } from "../service/KittyTabs"
 const TICKET_RE = /\b[A-Z][A-Z0-9]+-\d+\b/
 
 export interface AgentWidgetConfig<T extends AgentSession> {
-  provider: "claude" | "codex"
+  provider: "claude" | "codex" | "kimi"
   iconPath: string
   classPrefix: string
   title: string
