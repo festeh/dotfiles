@@ -46,6 +46,7 @@ window {
 /* All widgets with rounded boxes */
 .battery-widget,
 .volume-widget,
+.network-widget,
 .time-widget,
 .idle-widget,
 .idle-status-widget,
@@ -357,6 +358,33 @@ window {
 }
 
 .volume-widget button.muted {
+  color: @red;
+}
+
+/* Network widget */
+.network-widget {
+  color: @text;
+}
+
+.network-selector-title {
+  font-weight: 700;
+}
+
+.network-ap-row {
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: all 200ms ease;
+}
+
+.network-ap-row:hover {
+  background-color: @surface1;
+}
+
+.network-ap-row.active {
+  color: @mauve;
+}
+
+.network-selector-status {
   color: @red;
 }
 

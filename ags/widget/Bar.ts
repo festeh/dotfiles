@@ -9,6 +9,7 @@ import Tray from "./Tray"
 import HyprlandStatus from "./HyprlandStatus"
 import TimeDate from "./TimeDate"
 import Volume from "./Volume"
+import Network from "./Network"
 import Gmail from "./Gmail"
 
 
@@ -51,6 +52,7 @@ export default function Bar(monitor: Gdk.Monitor, calendarVisible: Variable<bool
                   IdleStatus(),
                   MenuButton(menuVisible),
                   Volume(),
+                  Network(),
                   Battery(),
                   TimeDate(currentDate, calendarVisible),
                   Tray()
