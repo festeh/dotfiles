@@ -271,6 +271,9 @@ function SelectorPopover(net: AstalNetwork.Network, pill: Gtk.Widget): Gtk.Popov
   const popover = new Gtk.Popover()
   popover.set_parent(pill)
   popover.set_child(root)
+  // Popover expand propagates from its content: in a full-width layer-shell
+  // bar the pill box would grow to share the window's spare width while open.
+  popover.set_hexpand(false)
   return popover
 }
 
