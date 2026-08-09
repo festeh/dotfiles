@@ -7,17 +7,43 @@ import Notification from "./Notification";
 const TIMEOUT_DELAY = 30000 // 30 seconds
 const RECOVERY_WINDOW = 5 * 60 * 1000 // 5 minutes
 
+type CancellableTimer = {
+  cancel: () => void
+}
+
 class NotificationHistory implements Subscribable {
   private map: Map<number, Gtk.Widget> = new Map()
+  private timers: Map<number, CancellableTimer> = new Map()
   private subs: Variable<Array<Gtk.Widget>> = Variable([])
 
   private notifiy() {
     this.subs.set([...this.map.values()].reverse())
   }
 
+  private cancelTimer(id: number) {
+    this.timers.get(id)?.cancel()
+    this.timers.delete(id)
+  }
+
+  private scheduleDismiss(notification: Notifd.Notification) {
+    const { id } = notification
+    const timer = timeout(TIMEOUT_DELAY, () => {
+      // A replacement may have installed a newer timer for the same ID.
+      if (this.timers.get(id) !== timer) return
+
+      this.timers.delete(id)
+      notification.dismiss()
+    }) as CancellableTimer
+
+    this.timers.set(id, timer)
+  }
+
   private show(notification: Notifd.Notification) {
     const requiresManualDismiss = notification.urgency === Notifd.Urgency.CRITICAL
+    this.cancelTimer(notification.id)
+
     const dismiss = () => {
+      this.cancelTimer(notification.id)
       // Defer dismissal to avoid mutating the widget tree during a GTK event.
       timeout(1, () => notification.dismiss())
     }
@@ -30,9 +56,7 @@ class NotificationHistory implements Subscribable {
 
       setup: () => {
         if (!requiresManualDismiss) {
-          timeout(TIMEOUT_DELAY, () => {
-            notification.dismiss()
-          })
+          this.scheduleDismiss(notification)
         }
       }
     }))
@@ -85,6 +109,8 @@ class NotificationHistory implements Subscribable {
   }
 
   private delete(key: number) {
+    this.cancelTimer(key)
+
     const widget = this.map.get(key)
     if (!widget) {
       this.map.delete(key)
