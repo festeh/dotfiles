@@ -1,5 +1,6 @@
 import { Gdk, Gtk, Widget } from "astal/gtk4"
 import GdkPixbuf from "gi://GdkPixbuf"
+import Gio from "gi://Gio"
 import GLib from "gi://GLib"
 import Pango from "gi://Pango"
 import Notifd from "gi://AstalNotifd"
@@ -10,6 +11,13 @@ type NotificationProps = {
   onHoverLost?: () => void
   setup?: () => void
 }
+
+type DesktopIdentity = {
+  icon: Gio.Icon | null
+  name: string | null
+}
+
+const desktopIdentityCache = new Map<string, DesktopIdentity>()
 
 function urgencyClass(urgency: Notifd.Urgency) {
   switch (urgency) {
@@ -51,7 +59,27 @@ function isLocalPath(path: string | null | undefined) {
     !path!.includes("..")
 }
 
-function appIcon(notification: Notifd.Notification): Gtk.Widget {
+function desktopIdentity(desktopEntry: string): DesktopIdentity {
+  const entry = desktopEntry.trim()
+  if (!entry) return { icon: null, name: null }
+
+  const cached = desktopIdentityCache.get(entry)
+  if (cached) return cached
+
+  const desktopId = entry.endsWith(".desktop") ? entry : `${entry}.desktop`
+  const app = Gio.AppInfo.get_all().find(info =>
+    info.get_id()?.toLocaleLowerCase() === desktopId.toLocaleLowerCase()
+  )
+  const identity = {
+    icon: app?.get_icon() || null,
+    name: app?.get_display_name() || null,
+  }
+
+  desktopIdentityCache.set(entry, identity)
+  return identity
+}
+
+function appIcon(notification: Notifd.Notification, desktopIcon: Gio.Icon | null): Gtk.Widget {
   if (isLocalPath(notification.appIcon)) {
     try {
       const pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(localPath(notification.appIcon), 28, 28, true)
@@ -65,9 +93,32 @@ function appIcon(notification: Notifd.Notification): Gtk.Widget {
     }
   }
 
+  const iconName = notification.appIcon?.trim()
+  const display = Gdk.Display.get_default()
+  if (iconName && !isLocalPath(iconName) &&
+      (!display || Gtk.IconTheme.get_for_display(display).has_icon(iconName))) {
+    return Widget.Image({
+      css_classes: ["notification-icon"],
+      iconName,
+      pixelSize: 24,
+      widthRequest: 28,
+      heightRequest: 28,
+    })
+  }
+
+  if (desktopIcon) {
+    return Widget.Image({
+      css_classes: ["notification-icon"],
+      gicon: desktopIcon,
+      pixelSize: 24,
+      widthRequest: 28,
+      heightRequest: 28,
+    })
+  }
+
   return Widget.Image({
     css_classes: ["notification-icon"],
-    iconName: notification.appIcon || "dialog-information-symbolic",
+    iconName: "dialog-information-symbolic",
     pixelSize: 24,
     widthRequest: 28,
     heightRequest: 28,
@@ -159,9 +210,12 @@ function progressValue(notification: Notifd.Notification): number | null {
 
 export default function Notification({ notification, onDismiss, onHoverLost, setup }: NotificationProps): Gtk.Widget {
   const sentAt = notificationDate(notification.time)
+  const identity = desktopIdentity(notification.desktopEntry)
+  const appName = notification.appName?.trim() || identity.name || "Notification"
   const image = notificationImage(notification)
   const progress = progressValue(notification)
   const hasBody = Boolean(notification.body?.trim())
+  const defaultAction = notification.actions?.find(action => action.id === "default")
   const validActions = notification.actions?.filter(action =>
     Boolean(action.label?.trim()) && Boolean(action.id)
   ) || []
@@ -175,10 +229,10 @@ export default function Notification({ notification, onDismiss, onHoverLost, set
         css_classes: ["notification-header"],
         spacing: 8,
         children: [
-          appIcon(notification),
+          appIcon(notification, identity.icon),
           Widget.Label({
             css_classes: ["notification-app-name"],
-            label: notification.appName || "Notification",
+            label: appName,
             xalign: 0,
             hexpand: true,
             ellipsize: Pango.EllipsizeMode.END,
@@ -203,7 +257,7 @@ export default function Notification({ notification, onDismiss, onHoverLost, set
 
       Widget.Label({
         css_classes: ["notification-summary"],
-        label: notification.summary || notification.appName || "Notification",
+        label: notification.summary || appName,
         xalign: 0,
         wrap: true,
         ellipsize: Pango.EllipsizeMode.END,
@@ -243,6 +297,26 @@ export default function Notification({ notification, onDismiss, onHoverLost, set
       }) : Widget.Box({ visible: false }),
     ],
   })
+
+  if (defaultAction) {
+    box.add_css_class("notification-actionable")
+    box.set_cursor_from_name("pointer")
+
+    const click = new Gtk.GestureClick()
+    click.set_button(1)
+    click.connect("released", (_gesture, _presses, x, y) => {
+      let target = box.pick(x, y, Gtk.PickFlags.DEFAULT)
+
+      // Let close and explicit action buttons handle their own clicks.
+      while (target && target !== box) {
+        if (target instanceof Gtk.Button) return
+        target = target.get_parent()
+      }
+
+      notification.invoke(defaultAction.id)
+    })
+    box.add_controller(click)
+  }
 
   // Keep the existing dismissal behavior for now; timer/hover semantics belong
   // to the notification lifecycle batch rather than this visual pass.

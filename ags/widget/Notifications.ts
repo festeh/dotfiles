@@ -5,12 +5,7 @@ import Notifd from "gi://AstalNotifd"
 import Notification from "./Notification";
 
 const TIMEOUT_DELAY = 30000 // 30 seconds
-
-// List of app names that should not auto-dismiss
-const PERSISTENT_APPS: string[] = [
-  // Add app names here that should never auto-dismiss
-  // Example: "Spotify", "Discord", etc.
-]
+const RECOVERY_WINDOW = 5 * 60 * 1000 // 5 minutes
 
 class NotificationHistory implements Subscribable {
   private map: Map<number, Gtk.Widget> = new Map()
@@ -18,6 +13,29 @@ class NotificationHistory implements Subscribable {
 
   private notifiy() {
     this.subs.set([...this.map.values()].reverse())
+  }
+
+  private show(notification: Notifd.Notification) {
+    const requiresManualDismiss = notification.urgency === Notifd.Urgency.CRITICAL
+    const dismiss = () => {
+      // Defer dismissal to avoid mutating the widget tree during a GTK event.
+      timeout(1, () => notification.dismiss())
+    }
+
+    this.set(notification.id, Notification({
+      notification,
+      onDismiss: dismiss,
+
+      onHoverLost: requiresManualDismiss ? undefined : dismiss,
+
+      setup: () => {
+        if (!requiresManualDismiss) {
+          timeout(TIMEOUT_DELAY, () => {
+            notification.dismiss()
+          })
+        }
+      }
+    }))
   }
 
   constructor() {
@@ -28,30 +46,35 @@ class NotificationHistory implements Subscribable {
 
     notifd.connect("notified", (_, id) => {
       const notification = notifd.get_notification(id)!
-      const isPersistent = PERSISTENT_APPS.includes(notification.appName || "")
-      const dismiss = () => {
-        // Defer dismissal to avoid mutating the widget tree during a GTK event.
-        timeout(1, () => notification.dismiss())
-      }
-
-      this.set(id, Notification({
-        notification,
-        onDismiss: dismiss,
-
-        onHoverLost: dismiss,
-
-        setup: () => {
-          if (!isPersistent) {
-            timeout(TIMEOUT_DELAY, () => {
-              notification.dismiss()
-            })
-          }
-        }
-      }))
+      this.show(notification)
     })
 
     notifd.connect("resolved", (_, id) => {
       this.delete(id)
+    })
+
+    // Astal restores unresolved notifications from disk, but does not emit a
+    // new "notified" signal for them. Recover only recent notifications so a
+    // restart cannot flood the screen with a stale backlog.
+    const restored = [...notifd.get_notifications()]
+    timeout(1, () => {
+      const now = Date.now()
+      for (const notification of restored) {
+        // A notification emitted again or resolved during startup has already
+        // been handled by the live signal listeners above.
+        if (this.map.has(notification.id) || !notifd.get_notification(notification.id)) continue
+
+        const sentAt = notification.time > 1_000_000_000_000
+          ? notification.time
+          : notification.time * 1000
+        const age = notification.time ? Math.max(0, now - sentAt) : Infinity
+
+        if (notification.urgency === Notifd.Urgency.CRITICAL || age <= RECOVERY_WINDOW) {
+          this.show(notification)
+        } else {
+          notification.dismiss()
+        }
+      }
     })
   }
 
