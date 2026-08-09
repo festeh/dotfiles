@@ -29,14 +29,16 @@ class NotificationHistory implements Subscribable {
     notifd.connect("notified", (_, id) => {
       const notification = notifd.get_notification(id)!
       const isPersistent = PERSISTENT_APPS.includes(notification.appName || "")
+      const dismiss = () => {
+        // Defer dismissal to avoid mutating the widget tree during a GTK event.
+        timeout(1, () => notification.dismiss())
+      }
 
       this.set(id, Notification({
         notification,
+        onDismiss: dismiss,
 
-        // Defer dismissal to next event loop iteration to avoid GTK4 crash during event processing
-        onHoverLost: () => {
-          timeout(1, () => notification.dismiss())
-        },
+        onHoverLost: dismiss,
 
         setup: () => {
           if (!isPersistent) {

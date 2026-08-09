@@ -1,123 +1,204 @@
-import { Widget } from "astal/gtk4"
-import { Gtk } from "astal/gtk4"
-import { bind, Variable } from "astal"
+import { Gtk, Widget } from "astal/gtk4"
+import GdkPixbuf from "gi://GdkPixbuf"
+import GLib from "gi://GLib"
+import Pango from "gi://Pango"
 import Notifd from "gi://AstalNotifd"
 
 type NotificationProps = {
   notification: Notifd.Notification
+  onDismiss?: () => void
   onHoverLost?: () => void
   setup?: () => void
 }
 
-export default function Notification({ notification, onHoverLost, setup }: NotificationProps): Gtk.Widget {
-  // Check if appIcon is a file path or icon name
-  const isFilePath = notification.appIcon?.startsWith("/") || notification.appIcon?.startsWith("~")
-  const hasValidIcon = notification.appIcon && notification.appIcon !== ""
+function urgencyClass(urgency: Notifd.Urgency) {
+  switch (urgency) {
+    case Notifd.Urgency.LOW:
+      return "notification-low"
+    case Notifd.Urgency.CRITICAL:
+      return "notification-critical"
+    default:
+      return "notification-normal"
+  }
+}
 
-  // Check if image is valid (file path exists and is safe)
-  const hasValidImage = notification.image &&
-                        notification.image.trim() !== "" &&
-                        (notification.image.startsWith("/") || notification.image.startsWith("~")) &&
-                        !notification.image.includes("..") // Prevent path traversal
+function notificationDate(unixTime: number) {
+  if (!unixTime) return new Date()
 
-  // Filter out invalid/empty actions (must have both label and id, and label must not be empty)
-  const validActions = notification.actions?.filter(action => {
-    const hasValidLabel = action.label && action.label.trim() !== ""
-    const hasValidId = action.id && action.id !== ""
-    return hasValidLabel && hasValidId
-  }) || []
+  // Astal currently reports seconds, but accepting milliseconds here keeps the
+  // timestamp resilient to senders which provide an already-converted value.
+  return new Date(unixTime > 1_000_000_000_000 ? unixTime : unixTime * 1000)
+}
+
+function relativeTime(date: Date) {
+  const elapsedSeconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000))
+
+  if (elapsedSeconds < 60) return "now"
+  if (elapsedSeconds < 3600) return `${Math.floor(elapsedSeconds / 60)}m`
+  if (elapsedSeconds < 86400) return `${Math.floor(elapsedSeconds / 3600)}h`
+  if (elapsedSeconds < 604800) return `${Math.floor(elapsedSeconds / 86400)}d`
+
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" })
+}
+
+function localPath(path: string) {
+  return path.startsWith("~/") ? `${GLib.get_home_dir()}${path.slice(1)}` : path
+}
+
+function isLocalPath(path: string | null | undefined) {
+  return Boolean(path?.trim()) &&
+    (path!.startsWith("/") || path!.startsWith("~/")) &&
+    !path!.includes("..")
+}
+
+function appIcon(notification: Notifd.Notification): Gtk.Widget {
+  if (isLocalPath(notification.appIcon)) {
+    try {
+      const pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(localPath(notification.appIcon), 28, 28, true)
+      const picture = Gtk.Picture.new_for_pixbuf(pixbuf)
+      picture.add_css_class("notification-icon")
+      picture.set_size_request(28, 28)
+      picture.set_content_fit(Gtk.ContentFit.CONTAIN)
+      return picture
+    } catch (error) {
+      console.warn(`Could not load notification icon: ${error}`)
+    }
+  }
+
+  return Widget.Image({
+    css_classes: ["notification-icon"],
+    iconName: notification.appIcon || "dialog-information-symbolic",
+    pixelSize: 24,
+    widthRequest: 28,
+    heightRequest: 28,
+  })
+}
+
+function notificationImage(notification: Notifd.Notification): Gtk.Widget | null {
+  if (!isLocalPath(notification.image)) return null
+
+  try {
+    // Scale the source before handing it to Gtk.Picture so a very large image
+    // cannot dictate the natural width of the notification window.
+    const pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(localPath(notification.image), 350, 140, true)
+    const picture = Gtk.Picture.new_for_pixbuf(pixbuf)
+    picture.add_css_class("notification-image")
+    picture.set_hexpand(true)
+    picture.set_vexpand(true)
+    picture.set_can_shrink(true)
+    picture.set_content_fit(Gtk.ContentFit.CONTAIN)
+    picture.set_alternative_text(notification.summary || `${notification.appName} notification image`)
+
+    // Gtk.Picture otherwise requests enough height to preserve a square
+    // image's natural ratio. The frame makes the media area a stable banner.
+    const frame = Gtk.AspectFrame.new(0.5, 0.5, 2.5, false)
+    frame.add_css_class("notification-image-frame")
+    frame.set_hexpand(true)
+    frame.set_overflow(Gtk.Overflow.HIDDEN)
+    frame.set_child(picture)
+    return frame
+  } catch (error) {
+    console.warn(`Could not load notification image: ${error}`)
+    return null
+  }
+}
+
+export default function Notification({ notification, onDismiss, onHoverLost, setup }: NotificationProps): Gtk.Widget {
+  const sentAt = notificationDate(notification.time)
+  const image = notificationImage(notification)
+  const hasBody = Boolean(notification.body?.trim())
+  const validActions = notification.actions?.filter(action =>
+    Boolean(action.label?.trim()) && Boolean(action.id)
+  ) || []
 
   const box = Widget.Box({
-    css_classes: ["notification"],
-    spacing: 12,
+    css_classes: ["notification", urgencyClass(notification.urgency)],
+    vertical: true,
+    halign: Gtk.Align.END,
     children: [
-      // Left side: Icon and/or Image (show both if available, side by side)
-      (hasValidIcon || hasValidImage) ? Widget.Box({
-        css_classes: ["notification-icons"],
-        spacing: 8,
-        vertical: false,
-        children: [
-          // App icon
-          hasValidIcon ? Widget.Image({
-            css_classes: ["notification-icon"],
-            ...(isFilePath
-              ? { file: notification.appIcon }
-              : { iconName: notification.appIcon }
-            ),
-          }) : Widget.Box({ visible: false }),
-
-          // Notification image
-          hasValidImage ? Widget.Image({
-            css_classes: ["notification-image"],
-            file: notification.image,
-          }) : Widget.Box({ visible: false }),
-        ],
-      }) : Widget.Box({ visible: false }),
-
-      // Main content area
       Widget.Box({
-        css_classes: ["notification-content"],
-        vertical: true,
-        hexpand: true,
-        spacing: 4,
+        css_classes: ["notification-header"],
+        spacing: 8,
         children: [
-          // App name (small, subtle)
+          appIcon(notification),
           Widget.Label({
             css_classes: ["notification-app-name"],
             label: notification.appName || "Notification",
             xalign: 0,
+            hexpand: true,
+            ellipsize: Pango.EllipsizeMode.END,
+            maxWidthChars: 30,
           }),
-
-          // Summary (main text, bold)
           Widget.Label({
-            css_classes: ["notification-summary"],
-            label: notification.summary,
-            xalign: 0,
-            wrap: true,
-            hexpand: true,
-            maxWidthChars: 50,
+            css_classes: ["notification-time"],
+            label: relativeTime(sentAt),
+            tooltipText: sentAt.toLocaleString(),
           }),
-
-          // Body text (if available)
-          notification.body ? Widget.Label({
-            css_classes: ["notification-body"],
-            label: notification.body,
-            xalign: 0,
-            wrap: true,
-            hexpand: true,
-            maxWidthChars: 50,
-            useMarkup: true,
-          }) : Widget.Box({ visible: false }),
-
-          // Actions (only show valid ones)
-          validActions.length > 0 ? Widget.Box({
-            css_classes: ["notification-actions"],
-            spacing: 8,
-            children: validActions.map(action =>
-              Widget.Button({
-                css_classes: ["notification-action"],
-                label: action.label,
-                onClicked: () => notification.invoke(action.id),
-              })
-            ),
-          }) : Widget.Box({ visible: false }),
+          Widget.Button({
+            css_classes: ["notification-close"],
+            tooltipText: "Dismiss notification",
+            onClicked: () => onDismiss?.(),
+            child: Widget.Image({
+              iconName: "window-close-symbolic",
+              pixelSize: 14,
+            }),
+          }),
         ],
       }),
+
+      Widget.Label({
+        css_classes: ["notification-summary"],
+        label: notification.summary || notification.appName || "Notification",
+        xalign: 0,
+        wrap: true,
+        ellipsize: Pango.EllipsizeMode.END,
+        lines: hasBody ? 2 : 5,
+        maxWidthChars: 42,
+      }),
+
+      hasBody ? Widget.Label({
+        css_classes: ["notification-body"],
+        label: notification.body,
+        xalign: 0,
+        wrap: true,
+        ellipsize: Pango.EllipsizeMode.END,
+        lines: 5,
+        maxWidthChars: 42,
+        useMarkup: true,
+      }) : Widget.Box({ visible: false }),
+
+      image || Widget.Box({ visible: false }),
+
+      validActions.length > 0 ? Widget.Box({
+        css_classes: ["notification-actions"],
+        spacing: 8,
+        vertical: validActions.length > 2,
+        homogeneous: true,
+        children: validActions.map(action =>
+          Widget.Button({
+            css_classes: [
+              "notification-action",
+              ...(action.id === "default" ? ["notification-action-primary"] : []),
+            ],
+            label: action.label,
+            canShrink: true,
+            hexpand: true,
+            onClicked: () => notification.invoke(action.id),
+          })
+        ),
+      }) : Widget.Box({ visible: false }),
     ],
   })
 
-  // Implement GTK4 hover events
+  // Keep the existing dismissal behavior for now; timer/hover semantics belong
+  // to the notification lifecycle batch rather than this visual pass.
   if (onHoverLost) {
     const motion = new Gtk.EventControllerMotion()
-    motion.connect("leave", () => {
-      onHoverLost()
-    })
+    motion.connect("leave", onHoverLost)
     box.add_controller(motion)
   }
 
-  if (setup) {
-    setup()
-  }
+  setup?.()
 
   return box
 }

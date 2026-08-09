@@ -14,5 +14,5 @@ grim -g "$(slurp)" "$FILENAME"
 # Copy the file path to clipboard if screenshot was successful
 if [ -f "$FILENAME" ]; then
     echo -n "$FILENAME" | wl-copy
-    notify-send "Screenshot saved" "$FILENAME\nPath copied to clipboard"
+    notify-send "Screenshot saved" "$FILENAME"
 fi
