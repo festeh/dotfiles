@@ -860,6 +860,10 @@ window {
   border-color: @overlay0;
 }
 
+.notification-action-icon {
+  -gtk-icon-size: 15px;
+}
+
 .notification-action-primary {
   background-color: alpha(@mauve, 0.18);
   color: @mauve;

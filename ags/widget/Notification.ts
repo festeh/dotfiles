@@ -1,4 +1,4 @@
-import { Gtk, Widget } from "astal/gtk4"
+import { Gdk, Gtk, Widget } from "astal/gtk4"
 import GdkPixbuf from "gi://GdkPixbuf"
 import GLib from "gi://GLib"
 import Pango from "gi://Pango"
@@ -103,6 +103,46 @@ function notificationImage(notification: Notifd.Notification): Gtk.Widget | null
   }
 }
 
+function actionButton(notification: Notifd.Notification, action: Notifd.Action) {
+  const display = Gdk.Display.get_default()
+  const iconTheme = display ? Gtk.IconTheme.get_for_display(display) : null
+  const iconName = notification.actionIcons && iconTheme?.has_icon(action.id)
+    ? action.id
+    : null
+
+  return Widget.Button({
+    css_classes: [
+      "notification-action",
+      ...(action.id === "default" ? ["notification-action-primary"] : []),
+      ...(iconName ? ["notification-action-with-icon"] : []),
+    ],
+    tooltipText: iconName ? action.label : undefined,
+    canShrink: true,
+    hexpand: true,
+    onClicked: () => notification.invoke(action.id),
+    ...(iconName ? {
+      child: Widget.Box({
+        spacing: 6,
+        halign: Gtk.Align.CENTER,
+        children: [
+          Widget.Image({
+            css_classes: ["notification-action-icon"],
+            iconName,
+            pixelSize: 15,
+          }),
+          Widget.Label({
+            label: action.label,
+            ellipsize: Pango.EllipsizeMode.END,
+            maxWidthChars: 24,
+          }),
+        ],
+      }),
+    } : {
+      label: action.label,
+    }),
+  })
+}
+
 export default function Notification({ notification, onDismiss, onHoverLost, setup }: NotificationProps): Gtk.Widget {
   const sentAt = notificationDate(notification.time)
   const image = notificationImage(notification)
@@ -174,18 +214,7 @@ export default function Notification({ notification, onDismiss, onHoverLost, set
         spacing: 8,
         vertical: validActions.length > 2,
         homogeneous: true,
-        children: validActions.map(action =>
-          Widget.Button({
-            css_classes: [
-              "notification-action",
-              ...(action.id === "default" ? ["notification-action-primary"] : []),
-            ],
-            label: action.label,
-            canShrink: true,
-            hexpand: true,
-            onClicked: () => notification.invoke(action.id),
-          })
-        ),
+        children: validActions.map(action => actionButton(notification, action)),
       }) : Widget.Box({ visible: false }),
     ],
   })
