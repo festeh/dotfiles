@@ -836,6 +836,35 @@ window {
   margin-top: 5px;
 }
 
+.notification-progress {
+  margin-top: 10px;
+}
+
+.notification-progress trough {
+  min-height: 6px;
+  border-radius: 999px;
+  background-color: alpha(@surface2, 0.65);
+}
+
+.notification-progress block.filled {
+  min-height: 6px;
+  border-radius: 999px;
+  background-color: @mauve;
+}
+
+.notification-progress block.empty {
+  min-height: 6px;
+  background-color: transparent;
+}
+
+.notification-low .notification-progress block.filled {
+  background-color: @overlay1;
+}
+
+.notification-critical .notification-progress block.filled {
+  background-color: @red;
+}
+
 .notification-actions {
   margin-top: 12px;
 }

@@ -143,9 +143,24 @@ function actionButton(notification: Notifd.Notification, action: Notifd.Action) 
   })
 }
 
+function progressValue(notification: Notifd.Notification): number | null {
+  const hint = notification.get_hint("value")
+  if (!hint) return null
+
+  try {
+    const value = hint.deepUnpack<unknown>()
+    if (typeof value !== "number" || !Number.isFinite(value)) return null
+    return Math.max(0, Math.min(100, Math.round(value)))
+  } catch (error) {
+    console.warn(`Could not read notification progress: ${error}`)
+    return null
+  }
+}
+
 export default function Notification({ notification, onDismiss, onHoverLost, setup }: NotificationProps): Gtk.Widget {
   const sentAt = notificationDate(notification.time)
   const image = notificationImage(notification)
+  const progress = progressValue(notification)
   const hasBody = Boolean(notification.body?.trim())
   const validActions = notification.actions?.filter(action =>
     Boolean(action.label?.trim()) && Boolean(action.id)
@@ -205,6 +220,16 @@ export default function Notification({ notification, onDismiss, onHoverLost, set
         lines: 5,
         maxWidthChars: 42,
         useMarkup: true,
+      }) : Widget.Box({ visible: false }),
+
+      progress !== null ? Widget.LevelBar({
+        css_classes: ["notification-progress"],
+        minValue: 0,
+        maxValue: 100,
+        value: progress,
+        mode: Gtk.LevelBarMode.CONTINUOUS,
+        hexpand: true,
+        tooltipText: `${progress}%`,
       }) : Widget.Box({ visible: false }),
 
       image || Widget.Box({ visible: false }),
