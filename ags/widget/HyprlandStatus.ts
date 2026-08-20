@@ -27,6 +27,23 @@ type PillEntry = { updatedAt: number, kittyOrder: number | null, pill: Gtk.Widge
 const apps = AstalApps.Apps.new()
 const iconByClass = new Map<string, string>()
 
+function disposeWidgetTree(widget: Gtk.Widget): void {
+  const children: Gtk.Widget[] = []
+
+  for (
+    let child = widget.get_first_child();
+    child !== null;
+    child = child.get_next_sibling()
+  ) {
+    children.push(child)
+  }
+
+  for (const child of children) disposeWidgetTree(child)
+
+  if (widget.get_parent() !== null) widget.unparent()
+  widget.run_dispose()
+}
+
 function isVisibleAgentState(state: string): state is VisibleAgentState {
   return state === "idle" || state === "running" || state === "waiting" || state === "compacting"
 }
@@ -127,8 +144,10 @@ export default function HyprlandStatus() {
 
       const updateWorkspaces = () => {
         try {
-          buttonContentUpdaters.clear()
+          const oldChildren = [...self.children]
           self.children = []
+          for (const child of oldChildren) disposeWidgetTree(child)
+          buttonContentUpdaters.clear()
 
           // Get all workspaces, filter and sort
           const workspaces = hypr.get_workspaces()
