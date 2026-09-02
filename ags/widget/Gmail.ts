@@ -131,7 +131,7 @@ function gmailLabelText(state: GmailState): string {
   if (state.status === "loading") return "..."
   if (state.status === "setup" || state.status === "error") return "!"
   if (state.unread === 0) return "Empty"
-  return gmailBucketsText(state.labels) || `Other ${state.unread}`
+  return gmailBucketsText(state.labels) || `@unknown ${state.unread}`
 }
 
 function calendarLabelText(state: CalendarState): string {

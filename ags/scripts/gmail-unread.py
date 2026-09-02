@@ -16,6 +16,7 @@ import os
 import shutil
 import sys
 from datetime import datetime, timedelta, timezone
+from email.utils import parseaddr
 from pathlib import Path
 from typing import Any
 
@@ -26,7 +27,15 @@ SCOPES = [
 ]
 CALENDAR_LOOKBACK_HOURS = 8
 CALENDAR_LOOKAHEAD_HOURS = 12
-GMAIL_OTHER_BUCKET = "Other"
+COMMON_COUNTRY_CODE_SECOND_LEVEL_DOMAINS = {
+    "ac",
+    "co",
+    "com",
+    "edu",
+    "gov",
+    "net",
+    "org",
+}
 
 
 def xdg_config_home() -> Path:
@@ -340,6 +349,58 @@ def load_bucket_queries(credentials_path: Path) -> list[tuple[str, str]]:
     return buckets
 
 
+def gmail_sender_label(from_header: str) -> str:
+    """Turn a sender such as hello@posthog.com into @posthog."""
+    _display_name, address = parseaddr(from_header)
+    _local_part, separator, domain = address.lower().rpartition("@")
+    domain_parts = [part for part in domain.strip(".").split(".") if part]
+
+    if not separator or not domain_parts:
+        return "@unknown"
+
+    if len(domain_parts) == 1:
+        return f"@{domain_parts[0]}"
+
+    label_index = -2
+    if (
+        len(domain_parts) >= 3
+        and len(domain_parts[-1]) == 2
+        and domain_parts[-2] in COMMON_COUNTRY_CODE_SECOND_LEVEL_DOMAINS
+    ):
+        label_index = -3
+
+    return f"@{domain_parts[label_index]}"
+
+
+def gmail_message_sender_label(service: Any, message_id: str) -> str:
+    message = (
+        service.users()
+        .messages()
+        .get(
+            userId="me",
+            id=message_id,
+            format="metadata",
+            metadataHeaders=["From"],
+            fields="payload/headers",
+        )
+        .execute()
+    )
+    payload = message.get("payload") if isinstance(message, dict) else None
+    headers = payload.get("headers") if isinstance(payload, dict) else None
+    if not isinstance(headers, list):
+        return "@unknown"
+
+    for header in headers:
+        if not isinstance(header, dict) or str(header.get("name", "")).lower() != "from":
+            continue
+
+        value = header.get("value")
+        if isinstance(value, str):
+            return gmail_sender_label(value)
+
+    return "@unknown"
+
+
 def gmail_unread_status(creds: Any, build: Any, bucket_queries: list[tuple[str, str]]) -> dict[str, Any]:
     service = build("gmail", "v1", credentials=creds, cache_discovery=False)
     message_ids = gmail_unread_inbox_message_ids(service)
@@ -357,8 +418,13 @@ def gmail_unread_status(creds: Any, build: Any, bucket_queries: list[tuple[str, 
 
         remaining_ids -= bucket_ids
 
-    if remaining_ids:
-        buckets.append({"name": GMAIL_OTHER_BUCKET, "unread": len(remaining_ids)})
+    sender_buckets: dict[str, int] = {}
+    for message_id in remaining_ids:
+        sender = gmail_message_sender_label(service, message_id)
+        sender_buckets[sender] = sender_buckets.get(sender, 0) + 1
+
+    for sender, count in sorted(sender_buckets.items()):
+        buckets.append({"name": sender, "unread": count})
 
     return {
         "unread": unread,
