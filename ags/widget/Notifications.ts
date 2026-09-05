@@ -1,6 +1,7 @@
 import { bind, timeout, Variable } from "astal";
 import { Subscribable } from "astal/binding";
 import { Astal, Gdk, Gtk, Widget } from "astal/gtk4";
+import Cairo from "cairo";
 import Notifd from "gi://AstalNotifd"
 import Notification from "./Notification";
 
@@ -134,6 +135,40 @@ class NotificationHistory implements Subscribable {
     return this.subs.subscribe(callback)
   }
 }
+function notificationInputRegion(window: Astal.Window) {
+  let disconnect = () => {}
+  const connect = () => {
+    const surface = window.get_surface()!
+    const clock = window.get_frame_clock()!
+    surface.set_input_region(new Cairo.Region())
+    // Refresh after layout so replacements and resized cards get correct bounds.
+    const id = clock.connect("after-paint", () => {
+      // GJS provides unionRectangle, but the generated Cairo typings omit it.
+      const region = new Cairo.Region() as Cairo.Region & {
+        unionRectangle(rect: { x: number, y: number, width: number, height: number }): void
+      }
+      const [offsetX, offsetY] = window.get_surface_transform()
+      for (let card = window.get_child()?.get_first_child(); card; card = card.get_next_sibling()) {
+        if (!card.get_mapped()) continue
+        const [valid, bounds] = card.compute_bounds(window)
+        if (!valid) continue
+        const x = Math.floor(bounds.get_x() - offsetX)
+        const y = Math.floor(bounds.get_y() - offsetY)
+        // CSS margins and shadows lie outside these border-box bounds.
+        region.unionRectangle({ x, y,
+          width: Math.ceil(bounds.get_x() - offsetX + bounds.get_width()) - x,
+          height: Math.ceil(bounds.get_y() - offsetY + bounds.get_height()) - y,
+        })
+      }
+      surface.set_input_region(region)
+    })
+    disconnect = () => clock.disconnect(id)
+  }
+  window.connect("realize", connect)
+  window.connect("unrealize", () => disconnect())
+  if (window.get_realized()) connect()
+}
+
 export default function Notifications(monitor: Gdk.Monitor) {
   const history = new NotificationHistory()
   return Widget.Window({
@@ -141,6 +176,7 @@ export default function Notifications(monitor: Gdk.Monitor) {
     visible: bind(history).as(list => list.length > 0),
     exclusivity: Astal.Exclusivity.NORMAL,
     anchor: Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT,
+    setup: notificationInputRegion,
   }, Widget.Box({
     vertical: true,
     spacing: 0,
