@@ -141,8 +141,8 @@ function notificationInputRegion(window: Astal.Window) {
     const surface = window.get_surface()!
     const clock = window.get_frame_clock()!
     surface.set_input_region(new Cairo.Region())
-    // Refresh after layout so replacements and resized cards get correct bounds.
-    const id = clock.connect("after-paint", () => {
+    // Use allocated bounds before paint commits the input region to Wayland.
+    const id = clock.connect_after("layout", () => {
       // GJS provides unionRectangle, but the generated Cairo typings omit it.
       const region = new Cairo.Region() as Cairo.Region & {
         unionRectangle(rect: { x: number, y: number, width: number, height: number }): void
