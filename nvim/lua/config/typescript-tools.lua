@@ -14,7 +14,6 @@ local custom_attach = function(client, bufnr)
   map("n", "K", vim.lsp.buf.hover)
   map("n", "<C-k>", vim.lsp.buf.signature_help)
   map("n", "<leader>rn", vim.lsp.buf.rename, { desc = "varialbe rename" })
-  map("n", "gr", vim.lsp.buf.references, { desc = "show references" })
   map("n", "[d", diagnostic.goto_prev, { desc = "previous diagnostic" })
   map("n", "]d", diagnostic.goto_next, { desc = "next diagnostic" })
   map("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "LSP code action" })
@@ -27,5 +26,12 @@ local custom_attach = function(client, bufnr)
   -- require('navigator.lspclient.mapping').setup({ bufnr = bufnr, client = client })
 end
 require("typescript-tools").setup {
-  on_attach = custom_attach
+  on_attach = custom_attach,
+  settings = {
+    tsserver_file_preferences = {
+      includeCompletionsWithSnippetText = false,
+      includeCompletionsWithClassMemberSnippets = false,
+      includeCompletionsWithObjectLiteralMethodSnippets = false,
+    },
+  },
 }

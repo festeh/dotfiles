@@ -11,7 +11,6 @@ end
 
 local plugins = {
   { 'folke/lazydev.nvim',          config = req("lazydev") },
-  { "rafamadriz/friendly-snippets" },
   {
     'saghen/blink.cmp',
     version = '*',
@@ -45,7 +44,14 @@ local plugins = {
   { "lukas-reineke/indent-blankline.nvim",         config = req("indent") },
   { 'nvim-neotest/neotest',                        config = req("neotest") },
   { 'nvim-neotest/neotest-python' },
-  { 'sbdchd/neoformat',                            config = req("neoformat") },
+  {
+    'stevearc/conform.nvim',
+    config = req('conform'),
+    cmd = { 'ConformInfo' },
+    keys = {
+      { '<leader>m', function() require('conform').format({ async = true }) end, mode = { 'n', 'x' }, desc = 'Format buffer or selection' },
+    },
+  },
   { 'DNLHC/glance.nvim',                           config = req('glance') },
   { 'NoahTheDuke/vim-just' },
   {
@@ -113,7 +119,6 @@ local plugins = {
   },
   { "lambdalisue/suda.vim" },
   { "tanvirtin/vgit.nvim" },
-  { "L3MON4D3/LuaSnip",    dependencies = { "rafamadriz/friendly-snippets" }, config = req('luasnip') },
   {
     "kevinhwang91/nvim-ufo",
     dependencies = { "kevinhwang91/promise-async" },
@@ -166,7 +171,7 @@ local plugins = {
     ft = { 'markdown' },
     opts = {},
     keys = {
-      { '<leader>mr', function() require('render-markdown').toggle() end, desc = 'Toggle Markdown Render' },
+      { '<leader>tm', function() require('render-markdown').toggle() end, desc = 'Toggle Markdown Render' },
     },
   },
   { "b0o/schemastore.nvim" },
@@ -206,4 +211,5 @@ local opts = {
   }
 }
 
+require('config.keymap-check').track_specs(plugins)
 require("lazy").setup(plugins, opts)

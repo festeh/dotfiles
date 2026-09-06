@@ -16,7 +16,12 @@ if #missing > 0 then
 end
 
 vim.api.nvim_create_autocmd('FileType', {
+  group = vim.api.nvim_create_augroup('ConfigTreesitter', { clear = true }),
   callback = function(args)
+    if vim.api.nvim_buf_get_name(args.buf):match('%.j2$') then
+      vim.treesitter.stop(args.buf)
+      return
+    end
     local lang = vim.treesitter.language.get_lang(args.match)
     if lang and vim.tbl_contains(ts.get_installed('parsers'), lang) then
       pcall(vim.treesitter.start, args.buf, lang)

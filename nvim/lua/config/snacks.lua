@@ -24,7 +24,7 @@ vim.keymap.set({"n", "x"}, "<leader>gB", function() snacks.gitbrowse() end, { de
 vim.keymap.set({"n", "x"}, "<leader>gO", function() snacks.gitbrowse.open() end, { desc = "Git Browse Repo" })
 vim.keymap.set("n", "<leader>gg", function() snacks.lazygit() end, { desc = "Lazygit" })
 vim.keymap.set("n", "<leader>l", function() snacks.lazygit() end, { desc = "Lazygit" })
-vim.keymap.set("n", "<leader>gF", function() snacks.lazygit.log_file() end, { desc = "Lazygit Current File History" })
+vim.keymap.set("n", "<leader>gh", function() snacks.lazygit.log_file() end, { desc = "Lazygit Current File History" })
 vim.keymap.set("n", "<leader>gG", function() snacks.lazygit.log() end, { desc = "Lazygit Log (cwd)" })
 vim.keymap.set("n", "<leader>gD", function() snacks.git.blame_line() end, { desc = "Git Blame Line" })
 

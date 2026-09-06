@@ -1,131 +1,77 @@
 local dap = require("dap")
 
-local path = vim.fn.glob(vim.fn.stdpath("data") .. "/mason/packages/codelldb/extension/") or ""
-local codelldb_path = path .. "adapter/codelldb"
-local liblldb_path = path .. "lldb/lib/liblldb.so"
+local function executable(name)
+  local path = vim.fn.exepath(name)
+  if path == "" then error(("Debugger %s is missing. Install it with :Mason."):format(name)) end
+  return path
+end
 
-local opts = {}
-vim.keymap.set("n", "<M-d>", dap.continue, opts)
-vim.keymap.set("n", "<leader>i", dap.step_into, opts)
-vim.keymap.set("n", "<leader>n", dap.step_over, opts)
-vim.keymap.set("n", "<leader>o", dap.step_out, opts)
+vim.keymap.set("n", "<M-d>", dap.continue, { desc = "Start or continue debugging" })
+vim.keymap.set("n", "<leader>i", dap.step_into, { desc = "Debugger: step into" })
+vim.keymap.set("n", "<leader>n", dap.step_over, { desc = "Debugger: step over" })
+vim.keymap.set("n", "<leader>o", dap.step_out, { desc = "Debugger: step out" })
 
-dap.adapters.codelldb = {
-  type = 'server',
-  port = "${port}",
-  executable = {
-    -- CHANGE THIS to your path!
-    command = codelldb_path,
-    args = { "--port", "${port}" },
-    -- On windows you may have to uncomment this:
-    -- detached = false,
-  }
-}
+dap.adapters.codelldb = function(callback)
+  callback({
+    type = "server",
+    port = "${port}",
+    executable = {
+      command = executable("codelldb"),
+      args = { "--port", "${port}" },
+    },
+  })
+end
 
 dap.configurations.cpp = {
   {
-    name = "Launch file",
+    name = "Launch executable",
     type = "codelldb",
     request = "launch",
     program = function()
-      return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+      local path = vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file")
+      return path ~= "" and path or dap.ABORT
     end,
-    cwd = '${workspaceFolder}',
+    cwd = "${workspaceFolder}",
     stopOnEntry = false,
   },
 }
-
-
--- dap.configurations.rust = dap.configurations.cpp
-
-dap.configurations.lua = {
-  {
-    type = 'nlua',
-    request = 'attach',
-    name = "Attach to running Neovim instance",
-  }
-}
-
-dap.adapters["local-lua"] = {
-  type = "executable",
-  command = "node",
-  args = {
-    "/home/dlipin/tmp/local-lua-debugger-vscode/extension/debugAdapter.js",
-  },
-  enrich_config = function(config, on_config)
-    if not config["extensionPath"] then
-      local c = vim.deepcopy(config)
-      -- 💀 If this is missing or wrong you'll see
-      -- "module 'lldebugger' not found" errors in the dap-repl when trying to launch a debug session
-      c.extensionPath = "/home/dlipin/tmp/local-lua-debugger-vscode/"
-      on_config(c)
-    else
-      on_config(config)
-    end
-  end,
-}
+dap.configurations.c = vim.deepcopy(dap.configurations.cpp)
 
 dap.adapters.nlua = function(callback, config)
-  callback({ type = 'server', host = config.host or "127.0.0.1", port = config.port or 8086 })
+  callback({ type = "server", host = config.host or "127.0.0.1", port = config.port or 8086 })
 end
 
 dap.configurations.lua = {
   {
-    name = 'Current file (local-lua-dbg, lua)',
-    type = 'local-lua',
-    request = 'launch',
-    cwd = '${workspaceFolder}',
-    program = {
-      lua = 'nlua.lua',
-      file = '${file}',
-    },
-    verbose = true,
-    args = {},
+    type = "nlua",
+    request = "attach",
+    name = "Attach to Neovim (OSV)",
+    host = "127.0.0.1",
+    port = 8086,
   },
 }
 
--- dap.adapters.python = {
---   type = 'executable',
---   command = 'python',
---   args = { '-m', 'debugpy.adapter' },
--- }
+-- Run this in the Neovim instance you want to debug, then attach from another.
+vim.api.nvim_create_user_command("LuaDebugServer", function()
+  require("osv").launch({ host = "127.0.0.1", port = 8086 })
+end, { desc = "Start the Neovim Lua debugger on localhost:8086" })
 
--- dap.configurations.python = {
---   {
---     type = 'python',
---     request = 'launch',
---     name = "Launch file",
---     program = "${file}",
---     justMyCode = false,
---     pythonPath = function()
---       local cwd = vim.fn.getcwd()
---       if vim.fn.executable('./venv/bin/python') == 1 then
---         return './venv/bin/python'
---       elseif vim.fn.executable('python') == 1 then
---         return 'python'
---       else
---         return '/usr/bin/python'
---       end
---     end,
---   },
--- }
-
-dap.adapters.go = {
-  type = "server",
-  port = "${port}",
-  executable = {
-    command = vim.fn.stdpath("data") .. '/mason/bin/dlv',
-    args = { "dap", "-l", "127.0.0.1:${port}" },
-  },
-}
-
-dap.configurations = {
-  go = {
-    {
-      type = "go",           -- Which adapter to use
-      name = "Debug",        -- Human readable name
-      request = "launch",    -- Whether to "launch" or "attach" to program
-      program = ".",   -- The buffer you are focused on when running nvim-dap
+dap.adapters.go = function(callback)
+  callback({
+    type = "server",
+    port = "${port}",
+    executable = {
+      command = executable("dlv"),
+      args = { "dap", "-l", "127.0.0.1:${port}" },
     },
-  }
+  })
+end
+
+dap.configurations.go = {
+  {
+    type = "go",
+    name = "Debug package",
+    request = "launch",
+    program = ".",
+  },
 }

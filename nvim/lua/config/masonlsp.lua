@@ -26,7 +26,6 @@ local custom_attach = function(client, bufnr)
   map("n", "K", vim.lsp.buf.hover)
   -- map("n", "<C-k>", vim.lsp.buf.signature_help)
   map("n", "<leader>rn", vim.lsp.buf.rename, { desc = "varialbe rename" })
-  map("n", "gr", vim.lsp.buf.references, { desc = "show references" })
   map("n", "[d", diagnostic.goto_prev, { desc = "previous diagnostic" })
   map("n", "]d", diagnostic.goto_next, { desc = "next diagnostic" })
   map("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "LSP code action" })
@@ -40,8 +39,12 @@ local capabilities = vim.tbl_deep_extend(
   "force",
   {},
   vim.lsp.protocol.make_client_capabilities(),
-  require("blink.cmp").get_lsp_capabilities()
+  require("blink.cmp").get_lsp_capabilities({
+    textDocument = { completion = { completionItem = { snippetSupport = false } } },
+  })
 )
+
+vim.lsp.config('*', { capabilities = capabilities })
 
 -- Configure Ruff LSP
 vim.lsp.config.ruff = {
@@ -85,15 +88,20 @@ vim.lsp.enable('ruff')
 vim.lsp.config.ty = {
   on_attach = custom_attach,
   capabilities = capabilities,
-  single_file_support = false,
+  workspace_required = true,
 }
 vim.lsp.enable('ty')
 
 -- Configure Lua LSP
 vim.lsp.config.lua_ls = {
   on_attach = custom_attach,
+  workspace_required = true,
   settings = {
     Lua = {
+      completion = {
+        callSnippet = 'Disable',
+        keywordSnippet = 'Disable',
+      },
       runtime = {
         -- Tell the language server which version of Lua you're using (most likely LuaJIT in the case of Neovim)
         version = "LuaJIT",
@@ -116,7 +124,6 @@ vim.lsp.config.lua_ls = {
       telemetry = {
         enable = false,
       },
-      single_file_support = false,
     },
   },
   capabilities = capabilities,

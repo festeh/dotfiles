@@ -4,9 +4,6 @@ keymap.set({ "n", "i", "x" }, '<C-s>',
   "<cmd>update!<CR><Esc>",
   { silent = true, noremap = true, desc = "save current buffer" })
 keymap.set("n", "q:", "<Nop>", { desc = "Doesn't open command history" })
-keymap.set("n", "Q", "<Nop>", { desc = "Doesn't open command history" })
-
-keymap.set("n", "<C-k>", "<cmd>Neogit<CR>")
 
 keymap.set("n", "<leader>+", "<C-a>", { desc = "Increment number" })
 keymap.set("n", "<leader>-", "<C-x>", { desc = "Decrement number" })
