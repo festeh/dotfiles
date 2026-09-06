@@ -8,5 +8,4 @@ return require("config.keymap-check").track_specs({
     event = { "VeryLazy" },
     config = config("gitsigns"),
   },
-  { "tanvirtin/vgit.nvim" },
 })

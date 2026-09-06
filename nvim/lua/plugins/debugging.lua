@@ -29,7 +29,6 @@ return require("config.keymap-check").track_specs({
     event = "VeryLazy",
   },
   { "jbyuki/one-small-step-for-vimkind" },
-  { "neomake/neomake" },
   {
     "theHamsta/nvim-dap-virtual-text",
     dependencies = { "mfussenegger/nvim-dap" },

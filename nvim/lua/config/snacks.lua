@@ -1,11 +1,23 @@
 require("snacks").setup(
   {
-    picker = { enabled = true },
+    picker = { enabled = true, ui_select = true },
     explorer = { enabled = true },
     gitbrowse = { enabled = true },
     git = { enabled = true },
     lazygit = { enabled = true },
-    input = { enabled = true },  -- Better vim.ui.input
+    input = { enabled = true },
+    indent = { enabled = true },
+    scope = {
+      enabled = true,
+      -- Preserve indentation-based ii/ai and [i/]i from mini.indentscope.
+      treesitter = { enabled = false },
+      keys = {
+        textobject = {
+          ii = { linewise = true },
+          ai = { linewise = true },
+        },
+      },
+    },
   }
 )
 

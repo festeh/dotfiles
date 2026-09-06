@@ -4,7 +4,6 @@ return require("config.keymap-check").track_specs({
   { "Pocco81/auto-save.nvim", opts = { trigger_events = "BufLeave" } },
   { "windwp/nvim-autopairs", config = true },
   { "tpope/vim-unimpaired" },
-  { "numToStr/Comment.nvim", config = true },
   { "kylechui/nvim-surround", config = true },
   { "echasnovski/mini.nvim", config = config("mini") },
   { "drybalka/tree-climber.nvim", config = config("treeclimber") },

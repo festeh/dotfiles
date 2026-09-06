@@ -54,6 +54,15 @@ Formatting is manual with `<leader>m`: Ruff for Python, StyLua for Lua, and Pret
 for configured web filetypes, with LSP fallback. `:ConformInfo` shows availability.
 `<leader>tm` toggles Markdown rendering. `:KeymapCheck` shows mapping conflicts.
 
+Commenting uses Neovim's native `gcc`, `gc{motion}`, and visual `gc`. Counts and
+dot-repeat work, and `gcgc` uncomments a contiguous comment block. Native commenting
+operates on whole lines; Comment.nvim's `gb`/`gbc` block toggles and `gco`/`gcO`/`gcA`
+insertion shortcuts are no longer installed. See `:help commenting`.
+
+Snacks owns input prompts, selection dialogs, indentation guides, and scope
+highlighting. Scope detection uses indentation, with linewise `ii`/`ai` text
+objects and `[i`/`]i` scope-edge jumps. Other Mini modules remain enabled.
+
 ## Checks
 
 Run from this directory:

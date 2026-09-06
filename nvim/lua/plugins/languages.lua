@@ -87,7 +87,7 @@ return require("config.keymap-check").track_specs({
     lazy = false,
     dependencies = {
       "nvim-lua/plenary.nvim",
-      "stevearc/dressing.nvim",
+      "folke/snacks.nvim",
       "neovim/nvim-lspconfig",
     },
     opts = function()

@@ -5,7 +5,6 @@ return require("config.keymap-check").track_specs({
   { "akinsho/bufferline.nvim", config = config("bufferline") },
   { "kevinhwang91/nvim-bqf", config = config("bqf") },
   { "szw/vim-maximizer" },
-  { "lukas-reineke/indent-blankline.nvim", config = config("indent") },
   {
     "folke/noice.nvim",
     dependencies = { "MunifTanjim/nui.nvim" },
@@ -37,6 +36,6 @@ return require("config.keymap-check").track_specs({
     "stevearc/resession.nvim",
     config = config("resession"),
   },
-  { "folke/snacks.nvim", config = config("snacks") },
+  { "folke/snacks.nvim", lazy = false, priority = 1000, config = config("snacks") },
   { "catppuccin/nvim", priority = 1000 },
 })
