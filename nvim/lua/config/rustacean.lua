@@ -1,6 +1,3 @@
-local keymap = vim.keymap
-local diagnostic = vim.diagnostic
-
 vim.g.rustaceanvim = {
   tools = {
     inlay_hints = {
@@ -11,32 +8,11 @@ vim.g.rustaceanvim = {
     },
   },
   server = {
-    on_attach = function(client, bufnr)
-      local map = function(mode, l, r, opts)
-        opts = opts or {}
-        opts.silent = true
-        opts.buffer = bufnr
-        keymap.set(mode, l, r, opts)
-      end
-      map(
-        "n",
-        "K",
-        function()
-          vim.cmd.RustLsp({ 'hover', 'actions' })
-        end
-      )
-      map("n", "gd", vim.lsp.buf.definition, { desc = "go to definition" })
-      -- map("n", "<C-k>", vim.lsp.buf.signature_help)
-      map("n", "<leader>rn", vim.lsp.buf.rename, { desc = "varialbe rename" })
-      -- map("n", "[d", diagnostic.goto_prev, { desc = "previous diagnostic" })
-      -- map("n", "]d", diagnostic.goto_next, { desc = "next diagnostic" })
-      map("n", "<leader>ca", vim.lsp.buf.code_action, { desc = "LSP code action" })
-    end,
     default_settings = {
       -- rust-analyzer language server configuration
-      ['rust-analyzer'] = {
+      ["rust-analyzer"] = {
         completion = {
-          callable = { snippets = 'none' },
+          callable = { snippets = "none" },
         },
         cargo = {
           allTargets = false,
@@ -71,8 +47,5 @@ vim.g.rustaceanvim = {
         },
       },
     },
-  },
-  -- DAP configuration
-  dap = {
   },
 }

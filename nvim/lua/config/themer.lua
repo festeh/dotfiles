@@ -1,1 +1,0 @@
--- Using catppuccin-mocha (set in init.lua), themer disabled

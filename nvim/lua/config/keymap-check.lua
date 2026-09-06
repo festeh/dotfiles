@@ -112,6 +112,8 @@ function M.track_specs(plugins)
       M.track_specs(plugin.dependencies or {})
     end
   end
+  -- Allow native Lazy spec modules to return their tracked declarations.
+  return plugins
 end
 
 local function location(map)
