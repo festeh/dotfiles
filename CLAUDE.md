@@ -37,8 +37,8 @@ name = "~/.config/kitty"            # Destination path (~ is expanded)
 
 # Templates: Rendered configs with variables
 [templates.hyprland]
-target = "hyprland/hyprland_template.conf"  # Template source
-name = "~/.config/hypr/hyprland.conf"       # Final symlink destination
+target = "hyprland/hyprland_template.lua"  # Template source
+name = "~/.config/hypr/hyprland.lua"       # Final symlink destination
 SCALING = "1"                                # Template variables
 USER = "dima"
 GTK_THEME = "catppuccin-mocha-mauve-standard+default"
@@ -47,7 +47,7 @@ GTK_THEME = "catppuccin-mocha-mauve-standard+default"
 ## How Templates Work
 
 1. **Template Source**: Template files use Go template syntax (e.g., `{{.SCALING}}`)
-   - Located at paths like `dotfiles/hyprland/hyprland_template.conf`
+   - Located at paths like `dotfiles/hyprland/hyprland_template.lua`
    - Can use Go template functions like `{{or .GAPS_OUT 10}}` for defaults
 
 2. **Rendering Process**:
@@ -57,7 +57,7 @@ GTK_THEME = "catppuccin-mocha-mauve-standard+default"
 
 3. **Symlinking**:
    - Creates a symlink from the `name` path to the generated file
-   - For example: `~/.config/hypr/hyprland.conf` → `dotfiles/hosts/360/generated/hyprland_template.conf`
+   - For example: `~/.config/hypr/hyprland.lua` → `dotfiles/hosts/360/generated/hyprland_template.lua`
 
 ## Generated Files
 
@@ -80,10 +80,10 @@ These files are:
 
 ## Example Workflow
 
-1. Edit a template: `vim ~/dotfiles/hyprland/hyprland_template.conf`
+1. Edit a template: `vim ~/dotfiles/hyprland/hyprland_template.lua`
 2. Regenerate configs: `cd ~/Installer && ./installer -c config`
 3. The generated file appears in `~/dotfiles/hosts/360/generated/`
-4. The symlink at `~/.config/hypr/hyprland.conf` points to the generated file
+4. The symlink at `~/.config/hypr/hyprland.lua` points to the generated file
 
 ## Troubleshooting
 

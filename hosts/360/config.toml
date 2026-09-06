@@ -51,8 +51,8 @@ target = "kitty/generate-kitty-session.js"
 name = "~/.local/bin/generate-kitty-session"
 
 [templates.hyprland]
-target = "hyprland/hyprland_template.conf"
-name = "~/.config/hypr/hyprland.conf"
+target = "hyprland/hyprland_template.lua"
+name = "~/.config/hypr/hyprland.lua"
 SCALING = "1"
 USER = "dima"
 GTK_THEME = "catppuccin-mocha-mauve-standard+default"
