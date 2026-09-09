@@ -1,3 +1,3 @@
 #!/bin/bash
 
-hyprctl dispatch movetoworkspacesilent "9,yappy2"
+hyprctl dispatch 'hl.dsp.window.move({ workspace = 9, window = "class:yappy2", follow = false })'

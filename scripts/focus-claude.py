@@ -45,7 +45,7 @@ def get_ppid(pid: int) -> int | None:
 def focus_window(pid: int) -> bool:
     try:
         subprocess.run(
-            ["hyprctl", "dispatch", "focuswindow", f"pid:{pid}"],
+            ["hyprctl", "dispatch", f'hl.dsp.focus({{ window = "pid:{pid}" }})'],
             capture_output=True,
             check=True,
         )

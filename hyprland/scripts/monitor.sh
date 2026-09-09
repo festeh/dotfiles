@@ -1,10 +1,9 @@
 #!/bin/bash
+set -euo pipefail
 
 # Check if DP-3 in hyprctl monitor list
 sleep 1
-if echo `hyprctl monitors all` | grep "DP-3"; then
-  hyprctl keyword monitor DP-3,preferred,auto,2
-  hyprctl keyword monitor eDP-1,disable
-else
-
+if hyprctl monitors all -j | jq -e 'any(.[]; .name == "DP-3")' > /dev/null; then
+  hyprctl eval 'hl.monitor({ output = "DP-3", mode = "preferred", position = "auto", scale = 2 })
+hl.monitor({ output = "eDP-1", disabled = true })'
 fi

@@ -1,6 +1,7 @@
 import Hyprland from "gi://AstalHyprland"
 import Gio from "gi://Gio"
 import GLib from "gi://GLib"
+import { renameWorkspace } from "./HyprlandActions"
 
 const KITTY_REQUEST_TIMEOUT_MS = 1500
 const WORKSPACE_UPDATE_DELAY_MS = 150
@@ -299,7 +300,7 @@ class WorkspaceNamingService {
     }
 
     if (workspace.get_name() !== newName) {
-      this.hypr.dispatch("renameworkspace", `${workspaceId} ${newName}`)
+      renameWorkspace(workspaceId, newName)
     }
   }
 

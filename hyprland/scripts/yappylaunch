@@ -1,5 +1,2 @@
 #!/bin/bash
-W_ID=$(hyprctl activeworkspace -j | jq .id)
-echo "Activeworkspace ID: $W_ID"
-hyprctl dispatch movetoworkspace "$W_ID,yappy2"
-
+hyprctl dispatch 'hl.dsp.window.move({ workspace = hl.get_active_workspace(), window = "class:yappy2", follow = true })'

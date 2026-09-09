@@ -6,6 +6,7 @@ import GLib from "gi://GLib"
 import { claudeSessions } from "../service/ClaudeStatus"
 import { codexSessions } from "../service/CodexStatus"
 import { kimiSessions } from "../service/KimiStatus"
+import { focusWorkspace } from "../service/HyprlandActions"
 import {
   AgentKittyPlacement,
   getAgentKittyPlacements,
@@ -225,12 +226,12 @@ export default function HyprlandStatus() {
 
           self.children = sorted.map((ws) => {
             const id = ws.get_id()
-            const focusWorkspace = () => hypr.dispatch("workspace", String(id))
+            const focus = () => focusWorkspace(id)
 
             const button = Widget.Button({
               child: workspaceButtonChild(ws),
               tooltip_text: workspaceTooltip(ws),
-              onClicked: focusWorkspace,
+              onClicked: focus,
             })
 
             // Update css_classes based on focused workspace
@@ -284,7 +285,7 @@ export default function HyprlandStatus() {
 
             const groupGesture = Gtk.GestureClick.new()
             groupGesture.set_button(1)
-            groupGesture.connect("released", focusWorkspace)
+            groupGesture.connect("released", focus)
             group.add_controller(groupGesture)
 
             return group

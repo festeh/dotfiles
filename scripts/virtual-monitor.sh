@@ -41,6 +41,12 @@ add_monitor() {
     local resolution="${1:-1920x1080}"
     local refresh="${2:-60}"
 
+    if [[ ! "$resolution" =~ ^[1-9][0-9]*x[1-9][0-9]*$ ]] ||
+       [[ ! "$refresh" =~ ^[1-9][0-9]*(\.[0-9]+)?$ ]]; then
+        echo "Invalid monitor mode: ${resolution}@${refresh}" >&2
+        return 1
+    fi
+
     # Get current headless monitors before creation
     local before
     before=$(get_headless_monitors)
@@ -53,8 +59,12 @@ add_monitor() {
     new_monitor=$(comm -13 <(echo "$before" | sort) <(echo "$after" | sort) | head -1)
 
     if [[ -n "$new_monitor" ]]; then
+        if [[ ! "$new_monitor" =~ ^HEADLESS-[0-9]+$ ]]; then
+            echo "Unexpected headless monitor name: $new_monitor" >&2
+            return 1
+        fi
         # Configure with proper resolution and refresh rate (important for screen sharing)
-        hyprctl keyword monitor "$new_monitor,${resolution}@${refresh},auto,1"
+        hyprctl eval "hl.monitor({ output = \"$new_monitor\", mode = \"${resolution}@${refresh}\", position = \"auto\", scale = 1 })"
         echo "Created virtual monitor: $new_monitor (${resolution}@${refresh}Hz)"
     else
         echo "Created virtual monitor"

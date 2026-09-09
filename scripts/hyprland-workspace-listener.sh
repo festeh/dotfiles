@@ -11,7 +11,7 @@ log() {
 log "Starting Hyprland workspace listener"
 
 # Connect to Hyprland event socket
-SOCKET="/tmp/hypr/${HYPRLAND_INSTANCE_SIGNATURE:-}/.socket2.sock"
+SOCKET="${XDG_RUNTIME_DIR:?}/hypr/${HYPRLAND_INSTANCE_SIGNATURE:?}/.socket2.sock"
 
 if [[ ! -S "$SOCKET" ]]; then
     log "Error: Hyprland socket not found at $SOCKET"

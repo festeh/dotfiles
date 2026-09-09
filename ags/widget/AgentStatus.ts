@@ -10,6 +10,7 @@ import {
   ancestorPids,
 } from "../service/AgentStatus"
 import { focusSessionKittyTab } from "../service/KittyTabs"
+import { focusWorkspace } from "../service/HyprlandActions"
 
 const TICKET_RE = /\b[A-Z][A-Z0-9]+-\d+\b/
 
@@ -366,10 +367,7 @@ export function AgentSessionPill<T extends AgentSession>(
     const fresh = diskSession ? { ...session, ...diskSession } : session
     const wsId = findWorkspaceIdForAgentSession(fresh)
     if (wsId === null) return
-    const hypr = Hyprland.get_default()
-    const ws = hypr.get_workspaces().find(w => w.get_id() === wsId)
-    if (ws) ws.focus()
-    else hypr.dispatch("workspace", String(wsId))
+    focusWorkspace(wsId)
 
     GLib.timeout_add(GLib.PRIORITY_DEFAULT, 50, () => {
       focusSessionKittyTab(fresh)
