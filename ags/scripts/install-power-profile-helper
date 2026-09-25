@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -eu
+umask 022
+
+script_dir=$(CDPATH= cd -- "${0%/*}" && pwd)
+source_dir=$(CDPATH= cd -- "$script_dir/.." && pwd)
+
+/usr/bin/install -D -o root -g root -m 0755 \
+  "$source_dir/scripts/set-power-profile" \
+  /usr/local/libexec/ags-set-power-profile
+
+/usr/bin/install -D -o root -g root -m 0644 \
+  "$source_dir/polkit/com.dimalip.ags.set-power-profile.policy" \
+  /usr/share/polkit-1/actions/com.dimalip.ags.set-power-profile.policy
+
+/usr/bin/install -D -o root -g root -m 0644 \
+  "$source_dir/polkit/49-ags-power-profile.rules" \
+  /etc/polkit-1/rules.d/49-ags-power-profile.rules

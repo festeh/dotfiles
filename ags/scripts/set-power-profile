@@ -1,0 +1,25 @@
+#!/bin/sh
+
+set -eu
+
+profile_path=/sys/firmware/acpi/platform_profile
+
+if [ "$#" -ne 1 ]; then
+  printf '%s\n' "usage: ags-set-power-profile PROFILE" >&2
+  exit 64
+fi
+
+case "$1" in
+  low-power|quiet|balanced|performance) ;;
+  *)
+    printf '%s\n' "unsupported power profile: $1" >&2
+    exit 64
+    ;;
+esac
+
+if [ ! -w "$profile_path" ]; then
+  printf '%s\n' "platform power profiles are unavailable" >&2
+  exit 69
+fi
+
+printf '%s\n' "$1" > "$profile_path"

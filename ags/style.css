@@ -437,6 +437,64 @@ window {
   color: @mauve;
 }
 
+/* Power profile selector */
+.power-profile-widget {
+  background-color: @surface1;
+  border: 1px solid @surface2;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.power-profile-widget.error {
+  border-color: @red;
+}
+
+.power-profile-header {
+  color: @text;
+  font-weight: 700;
+}
+
+.power-profile-current {
+  color: @subtext0;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.power-profile-option {
+  background-color: @surface0;
+  border: 1px solid @surface2;
+  border-radius: 6px;
+  color: @subtext1;
+  padding: 7px 9px;
+  transition: all 200ms ease;
+}
+
+.power-profile-option:hover {
+  background-color: @surface2;
+  color: @text;
+}
+
+.power-profile-option.active {
+  background-color: alpha(@mauve, 0.16);
+  border-color: @mauve;
+  color: @mauve;
+}
+
+.power-profile-option.pending {
+  border-color: @yellow;
+  color: @yellow;
+}
+
+.power-profile-error {
+  color: @red;
+  font-size: 11px;
+}
+
+.power-profile-spinner {
+  animation: spin 1s linear infinite;
+  color: @yellow;
+}
+
 /* Record button */
 .record-button {
   background-color: @surface1;

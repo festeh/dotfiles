@@ -5,6 +5,7 @@ import Gio from "gi://Gio"
 import GLib from "gi://GLib"
 import Graphene from "gi://Graphene"
 import Hyprland from "gi://AstalHyprland"
+import PowerProfile from "./PowerProfile"
 
 const RECORDS_DIR = "/tmp/records"
 const SIGTERM = 15
@@ -321,6 +322,8 @@ export default function Menu(monitor: Gdk.Monitor) {
             />
           </box>
         </button>
+
+        <PowerProfile />
 
         {/* Start recording button (shown when idle) */}
         <button
