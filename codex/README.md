@@ -1,46 +1,9 @@
-# Codex AGS Status Widget
+# Codex pills in AGS
 
-Local Codex CLI session tracker for the AGS top bar. Codex hooks write one JSON file per active session under `~/.cache/ags-codex/sessions/`; AGS monitors that directory and renders Codex pills beside the Hyprland workspace that owns the terminal window.
+AGS shows one pill for each Kitty window whose foreground process is an agent (`../ags/service/Agents.ts`, polling Kitty's remote-control `ls` every five seconds). Internal Codex workers, including memory jobs and the shared app-server daemon, have no foreground Kitty window and are therefore not shown.
 
-## Files
+Codex has no AGS hook. Codex TUIs share one app-server daemon (`daemon_auto_start`, on by default), and hooks run inside that daemon with its environment, so a hook cannot tell which Kitty window its session belongs to. The Codex pill color follows the terminal title the TUI maintains instead: a spinner means running, `[ ! ] Action Required` (blinking with `[ . ]`) means waiting, and an unmarked title means idle. This relies on the default `[tui].terminal_title`, which includes the `activity` item.
 
-| File | Purpose |
-| --- | --- |
-| `hooks/ags-status.py` | Codex hook script. Reads hook JSON from stdin and updates the session cache. |
-| `hooks.json` | Hook configuration example for `~/.codex/hooks.json`. |
-| `../ags/service/AgentStatus.ts` | Shared session cache monitor used by Claude and Codex. |
-| `../ags/service/CodexStatus.ts` | Codex service adapter. |
-| `../ags/widget/AgentStatus.ts` | Shared pill/detail renderer used by Claude and Codex. |
-| `../ags/widget/CodexStatus.ts` | Codex widget adapter. |
+The time badge shows how long Codex has been idle or waiting, based on title transitions observed by AGS; it restarts when AGS restarts.
 
-## Install
-
-Enable Codex hooks in `~/.codex/config.toml`:
-
-```toml
-[features]
-hooks = true
-```
-
-Then symlink the hook configuration:
-
-```sh
-mkdir -p ~/.codex
-ln -sf ~/dotfiles/codex/hooks.json ~/.codex/hooks.json
-```
-
-This repo does not overwrite the full Codex config because it also contains auth, model, MCP, and project trust settings.
-
-## Event Mapping
-
-| Codex event | State |
-| --- | --- |
-| `SessionStart` | `idle` |
-| `UserPromptSubmit` | `running` |
-| `PreToolUse` | `running` |
-| `PermissionRequest` | `waiting` |
-| `PostToolUse` | `running` |
-| `Stop` | `idle` |
-| unknown event | `unknown` |
-
-The hook intentionally writes nothing to stdout. Codex treats stdout as hook output that can affect the session, while this hook is telemetry-only.
+`hooks.json` keeps only the separate `herdr-agent-state.sh` SessionStart hook. `hooks/ags-status.py` is a no-op for Codex sessions that loaded the old AGS hook configuration.

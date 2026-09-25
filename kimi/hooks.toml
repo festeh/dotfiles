@@ -1,0 +1,75 @@
+# AGS status widget hooks (dotfiles/kimi/hooks/ags-status.py)
+[[hooks]]
+event = "SessionStart"
+command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
+timeout = 5
+
+[[hooks]]
+event = "SessionEnd"
+command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
+timeout = 5
+
+[[hooks]]
+event = "UserPromptSubmit"
+command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
+timeout = 5
+
+[[hooks]]
+event = "PreToolUse"
+command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
+timeout = 5
+
+[[hooks]]
+event = "PostToolUse"
+command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
+timeout = 5
+
+[[hooks]]
+event = "PostToolUseFailure"
+command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
+timeout = 5
+
+[[hooks]]
+event = "PermissionRequest"
+command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
+timeout = 5
+
+[[hooks]]
+event = "PermissionResult"
+command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
+timeout = 5
+
+[[hooks]]
+event = "Stop"
+command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
+timeout = 5
+
+[[hooks]]
+event = "StopFailure"
+command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
+timeout = 5
+
+[[hooks]]
+event = "Interrupt"
+command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
+timeout = 5
+
+[[hooks]]
+event = "PreCompact"
+command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
+timeout = 5
+
+[[hooks]]
+event = "PostCompact"
+command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
+timeout = 5
+
+[[hooks]]
+event = "SubagentStart"
+command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
+timeout = 5
+
+[[hooks]]
+event = "SubagentStop"
+command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
+timeout = 5

@@ -122,8 +122,7 @@ window {
   color: @yellow;
 }
 
-.agent-session-pill,
-.claude-session-pill {
+.agent-session-pill {
   background-color: @surface1;
   border-radius: 8px;
   padding: 2px 8px;
@@ -132,18 +131,15 @@ window {
   transition: all 200ms ease;
 }
 
-.agent-session-pill:first-child,
-.claude-session-pill:first-child {
+.agent-session-pill:first-child {
   margin-left: 0;
 }
 
-.agent-session-pill:last-child,
-.claude-session-pill:last-child {
+.agent-session-pill:last-child {
   margin-right: 0;
 }
 
-.agent-session-pill,
-.claude-session-pill {
+.agent-session-pill {
   transition: border-color 400ms ease, color 400ms ease, background-color 400ms ease;
 }
 
@@ -167,55 +163,42 @@ window {
   100% { background-color: alpha(@overlay0, 0.08); }
 }
 
-.agent-session-running,
-.claude-session-running {
+.agent-session-running {
   border-color: @blue;
   color: @blue;
   background-color: alpha(@blue, 0.08);
 }
 
-.agent-session-waiting,
-.claude-session-waiting {
+.agent-session-waiting {
   border-color: @yellow;
   color: @yellow;
   background-color: alpha(@yellow, 0.08);
 }
 
-.agent-session-idle,
-.claude-session-idle {
+.agent-session-idle {
   border-color: @green;
   color: @green;
   background-color: alpha(@green, 0.08);
 }
 
-.agent-session-compacting,
-.claude-session-compacting {
+.agent-session-compacting {
   border-color: @peach;
   color: @peach;
   background-color: alpha(@peach, 0.08);
 }
 
-.agent-session-unknown,
-.claude-session-unknown {
-  border-color: @overlay0;
-  color: @overlay0;
-  background-color: alpha(@overlay0, 0.08);
-}
 
-.agent-session-icon,
-.claude-session-icon {
+.agent-session-icon {
   -gtk-icon-size: 14px;
   margin-right: 6px;
 }
 
-.agent-session-name,
-.claude-session-name {
+.agent-session-name {
   font-size: 12px;
   font-weight: 600;
 }
 
-.agent-session-badge,
-.claude-session-badge {
+.agent-session-badge {
   font-size: 9px;
   font-weight: 700;
   background-color: alpha(currentColor, 0.2);
@@ -225,73 +208,57 @@ window {
 }
 
 /* Agent detail popover */
-.agent-detail-popover,
-.claude-detail-popover {
+.agent-detail-popover {
   padding: 14px 16px;
   min-width: 280px;
 }
 
-.agent-detail-header,
-.claude-detail-header {
+.agent-detail-header {
   margin-bottom: 4px;
   padding-bottom: 8px;
   border-bottom: 1px solid @surface1;
 }
 
-.agent-detail-state-running,
-.claude-detail-state-running {
+.agent-detail-state-running {
   color: @blue;
   font-weight: 700;
   font-size: 11px;
   letter-spacing: 0.5px;
 }
 
-.agent-detail-state-waiting,
-.claude-detail-state-waiting {
+.agent-detail-state-waiting {
   color: @yellow;
   font-weight: 700;
   font-size: 11px;
   letter-spacing: 0.5px;
 }
 
-.agent-detail-state-idle,
-.claude-detail-state-idle {
+.agent-detail-state-idle {
   color: @green;
   font-weight: 700;
   font-size: 11px;
   letter-spacing: 0.5px;
 }
 
-.agent-detail-state-compacting,
-.claude-detail-state-compacting {
+.agent-detail-state-compacting {
   color: @peach;
   font-weight: 700;
   font-size: 11px;
   letter-spacing: 0.5px;
 }
 
-.agent-detail-state-unknown,
-.claude-detail-state-unknown {
-  color: @overlay0;
-  font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-}
 
-.agent-detail-project,
-.claude-detail-project {
+.agent-detail-project {
   font-weight: 700;
   font-size: 13px;
   color: @text;
 }
 
-.agent-detail-section,
-.claude-detail-section {
+.agent-detail-section {
   margin-top: 2px;
 }
 
-.agent-detail-label,
-.claude-detail-label {
+.agent-detail-label {
   font-size: 10px;
   font-weight: 600;
   color: @overlay0;
@@ -299,15 +266,13 @@ window {
   letter-spacing: 0.6px;
 }
 
-.agent-detail-value,
-.claude-detail-value {
+.agent-detail-value {
   font-size: 12px;
   color: @text;
   line-height: 1.4;
 }
 
-.agent-detail-monospace,
-.claude-detail-monospace {
+.agent-detail-monospace {
   font-family: "JetBrainsMono Nerd Font", monospace;
   background-color: @mantle;
   padding: 6px 8px;
@@ -315,20 +280,17 @@ window {
   margin-top: 4px;
 }
 
-.agent-detail-error,
-.claude-detail-error {
+.agent-detail-error {
   color: @red;
 }
 
-.agent-detail-footer,
-.claude-detail-footer {
+.agent-detail-footer {
   margin-top: 4px;
   padding-top: 8px;
   border-top: 1px solid @surface1;
 }
 
-.agent-detail-meta,
-.claude-detail-meta {
+.agent-detail-meta {
   font-size: 10px;
   color: @overlay1;
 }
@@ -615,46 +577,39 @@ window {
   margin-right: 0;
 }
 
-.workspace-group .agent-session-pill,
-.workspace-group .claude-session-pill {
+.workspace-group .agent-session-pill {
   margin: 0;
   border: none;
   border-radius: 0;
   padding: 2px 0 2px 6px;
 }
 
-.workspace-group .agent-session-pill:last-child,
-.workspace-group .claude-session-pill:last-child {
+.workspace-group .agent-session-pill:last-child {
   border-radius: 0 8px 8px 0;
 }
 
-.workspace-group .agent-session-badge,
-.workspace-group .claude-session-badge {
+.workspace-group .agent-session-badge {
   border-radius: 0 6px 6px 0;
   margin-left: 6px;
   padding: 2px 6px;
 }
 
-.workspace-group .agent-session-running,
-.workspace-group .claude-session-running {
+.workspace-group .agent-session-running {
   background-color: alpha(@blue, 0.34);
   color: @text;
 }
 
-.workspace-group .agent-session-waiting,
-.workspace-group .claude-session-waiting {
+.workspace-group .agent-session-waiting {
   background-color: alpha(@yellow, 0.28);
   color: @text;
 }
 
-.workspace-group .agent-session-compacting,
-.workspace-group .claude-session-compacting {
+.workspace-group .agent-session-compacting {
   background-color: alpha(@peach, 0.3);
   color: @text;
 }
 
-.workspace-group .agent-session-idle,
-.workspace-group .claude-session-idle {
+.workspace-group .agent-session-idle {
   background-color: alpha(@green, 0.12);
   color: @green;
 }

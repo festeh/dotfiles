@@ -1,59 +1,9 @@
 # Claude Code AGS Status Widget
 
-Real-time Claude Code session tracker for the AGS (Astal/GTK4) top bar. Shows active Claude instances with color-coded, animated status pills.
-
-## Architecture
-
-```
-┌─────────────────┐     hooks      ┌─────────────────────────┐     poll     ┌──────────────────┐
-│  Claude Code    │ ─────────────► │  ~/.cache/ags-claude/   │ ───────────► │   AGS Widget     │
-│  (N instances)  │   JSON stdin   │  sessions.json + hook.log│   1s         │  (top bar pills) │
-└─────────────────┘                └─────────────────────────┘              └──────────────────┘
-         ▲
-         │
-   ~/.claude/settings.json
-   (hook commands configured here)
-```
-
-## Key Files
-
-| File | Purpose |
-|------|---------|
-| `hooks/ags-status.py` | Claude Code hook script. Reads hook events from stdin and maintains the shared `sessions.json` database. |
-| `../ags/service/ClaudeStatus.ts` | AGS service. Polls `sessions.json` every second, filters stale sessions, and exposes a reactive `Variable<ClaudeSession[]>`. Ignores `action` churn to avoid unnecessary widget rebuilds. |
-| `../ags/widget/ClaudeStatus.ts` | AGS widget. Renders session pills in the bar. Running sessions get a custom Cairo arc spinner with global persistent animation state (no teleporting on rebuilds). |
-| `../ags/widget/Bar.ts` | Bar layout. Imports and places `ClaudeStatus()` on the left side. |
-| `../ags/style.css` | Styles. Color-coded pills with flash-on-state-change animations and smooth 400ms transitions. |
-
-## Hook Events → States
-
-| Event | State | Icon |
-|-------|-------|------|
-| `SessionStart` | `idle` | ✅ checkmark |
-| `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PostToolBatch` | `running` | 🌀 spinning arc |
-| `PermissionRequest`, `Notification:permission_prompt/elicitation_dialog` | `waiting` | ⚠️ warning |
-| `Notification:idle_prompt`, `Stop` | `idle` | ✅ checkmark |
-| `SessionEnd` | *(removed)* | — |
-| Unknown event / notification | `unknown` | ❓ question |
-
-## Colors
-
-- **Running** — blue border + blue spinner arc
-- **Idle** — green border + green checkmark
-- **Waiting** — yellow border + yellow warning
-- **Unknown** — gray border + gray question
-
-Each pill briefly flashes its color on state change, then settles to a subtle tinted background.
-
-## Requirements
-
-- `python3` (for hook script)
-- `jq` (only if you rewrite the hook in bash — current script is pure Python)
-- AGS v2+ with Astal/GTK4
-- Claude Code hooks enabled in `~/.claude/settings.json`
+Claude Code hooks feed the AGS agent pills. `hooks/ags-status.py` is a thin entry point into the shared `../ags/hooks/agent_status.py`, which writes the state of the agent in the current Kitty window to `~/.cache/ags-agents/windows/<KITTY_PID>-<KITTY_WINDOW_ID>.json`. AGS (`../ags/service/Agents.ts`, `../ags/widget/AgentPill.ts`) shows a pill while a Kitty window's foreground process is `claude` and colors it from that file. The event-to-state mapping lives in `agent_status.py`.
 
 ## Notes
 
-- The hook script is symlinked from `~/.claude/hooks/ags-status.py` → `~/dotfiles/claude/hooks/ags-status.py`
+- The hook script is symlinked from `~/.claude/hooks/ags-status.py` → `~/dotfiles/claude/hooks/ags-status.py`; the hook commands are configured in `settings.json`.
 - `~/.claude/settings.json` is tracked in this repo at `claude/settings.json` and symlinked back (installer entry `symlinks.claude_settings` in `hosts/common/config.toml`). Note: Claude Code mutates this file at runtime (survey state, theme/effort toggles, etc.), so expect occasional diffs.
-- Idle sessions never go stale; running/waiting sessions are cleaned up after 60s of silence
+- Claude Code has no hook for Esc interrupts during a response, so an interrupted pill stays "running" until the next event.

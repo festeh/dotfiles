@@ -3,27 +3,16 @@ import Hyprland from "gi://AstalHyprland"
 import { Widget } from "astal/gtk4"
 import AstalApps from "gi://AstalApps?version=0.1"
 import GLib from "gi://GLib"
-import { claudeSessions } from "../service/ClaudeStatus"
-import { codexSessions } from "../service/CodexStatus"
-import { kimiSessions } from "../service/KimiStatus"
+import { agents, agentWorkspaceId } from "../service/Agents"
 import { focusWorkspace } from "../service/HyprlandActions"
-import {
-  AgentKittyPlacement,
-  getAgentKittyPlacements,
-  kittyPlacementSortKey,
-  withKittyPlacement,
-} from "../service/KittyTabs"
-import { SessionPill as ClaudeSessionPill, findWorkspaceIdForSession as findClaudeWorkspaceId } from "./ClaudeStatus"
-import { SessionPill as CodexSessionPill, findWorkspaceIdForSession as findCodexWorkspaceId } from "./CodexStatus"
-import { SessionPill as KimiSessionPill, findWorkspaceIdForSession as findKimiWorkspaceId } from "./KimiStatus"
+import AgentPill from "./AgentPill"
 import Gtk from "gi://Gtk?version=4.0"
 
 type AstalBox = Gtk.Box & { children: Gtk.Widget[] }
 type HyprlandInstance = ReturnType<typeof Hyprland.get_default>
 type HyprlandWorkspace = ReturnType<HyprlandInstance["get_workspaces"]>[number]
 type HyprlandClient = ReturnType<HyprlandInstance["get_clients"]>[number]
-type VisibleAgentState = "idle" | "running" | "waiting" | "compacting"
-type PillEntry = { updatedAt: number, kittyOrder: number | null, pill: Gtk.Widget }
+type PillEntry = { order: number, pill: Gtk.Widget }
 
 const apps = AstalApps.Apps.new()
 const iconByClass = new Map<string, string>()
@@ -43,10 +32,6 @@ function disposeWidgetTree(widget: Gtk.Widget): void {
 
   if (widget.get_parent() !== null) widget.unparent()
   widget.run_dispose()
-}
-
-function isVisibleAgentState(state: string): state is VisibleAgentState {
-  return state === "idle" || state === "running" || state === "waiting" || state === "compacting"
 }
 
 function normalizeAppKey(value: string): string {
@@ -156,72 +141,11 @@ export default function HyprlandStatus() {
           const sorted = filtered.sort((a, b) => a.get_id() - b.get_id())
 
           const pillsByWs = new Map<number, PillEntry[]>()
-
-          const addPill = (
-            wsId: number,
-            updatedAt: number,
-            placement: AgentKittyPlacement | undefined,
-            pill: Gtk.Widget,
-          ) => {
+          for (const agent of agents.get()) {
+            const wsId = agentWorkspaceId(agent)
+            if (wsId === null) continue
             if (!pillsByWs.has(wsId)) pillsByWs.set(wsId, [])
-            pillsByWs.get(wsId)!.push({
-              updatedAt,
-              kittyOrder: placement === undefined ? null : kittyPlacementSortKey(placement),
-              pill,
-            })
-          }
-
-          const parseUpdatedAt = (updatedAt: string) => {
-            const value = new Date(updatedAt).getTime()
-            return Number.isNaN(value) ? 0 : value
-          }
-
-          const visibleClaudeSessions = claudeSessions.get().filter(s => isVisibleAgentState(s.state))
-          const visibleCodexSessions = codexSessions.get().filter(s => isVisibleAgentState(s.state))
-          const visibleKimiSessions = kimiSessions.get().filter(s => isVisibleAgentState(s.state))
-          const kittyPlacements = getAgentKittyPlacements(hypr, [
-            ...visibleClaudeSessions,
-            ...visibleCodexSessions,
-            ...visibleKimiSessions,
-          ])
-
-          for (const s of visibleClaudeSessions) {
-            if (!isVisibleAgentState(s.state)) continue
-            const wsId = findClaudeWorkspaceId(s)
-            if (wsId === null) continue
-            const placement = kittyPlacements.get(s.session_id)
-            addPill(
-              wsId,
-              parseUpdatedAt(s.updated_at),
-              placement,
-              ClaudeSessionPill(withKittyPlacement(s, placement)),
-            )
-          }
-
-          for (const s of visibleCodexSessions) {
-            if (!isVisibleAgentState(s.state)) continue
-            const wsId = findCodexWorkspaceId(s)
-            if (wsId === null) continue
-            const placement = kittyPlacements.get(s.session_id)
-            addPill(
-              wsId,
-              parseUpdatedAt(s.updated_at),
-              placement,
-              CodexSessionPill(withKittyPlacement(s, placement)),
-            )
-          }
-
-          for (const s of visibleKimiSessions) {
-            if (!isVisibleAgentState(s.state)) continue
-            const wsId = findKimiWorkspaceId(s)
-            if (wsId === null) continue
-            const placement = kittyPlacements.get(s.session_id)
-            addPill(
-              wsId,
-              parseUpdatedAt(s.updated_at),
-              placement,
-              KimiSessionPill(withKittyPlacement(s, placement)),
-            )
+            pillsByWs.get(wsId)!.push({ order: agent.order, pill: AgentPill(agent) })
           }
 
           self.children = sorted.map((ws) => {
@@ -266,14 +190,7 @@ export default function HyprlandStatus() {
             })
 
             const pills = (pillsByWs.get(id) || [])
-              .sort((a, b) => {
-                if (a.kittyOrder !== null || b.kittyOrder !== null) {
-                  if (a.kittyOrder === null) return 1
-                  if (b.kittyOrder === null) return -1
-                  if (a.kittyOrder !== b.kittyOrder) return a.kittyOrder - b.kittyOrder
-                }
-                return b.updatedAt - a.updatedAt
-              })
+              .sort((a, b) => a.order - b.order)
               .map(entry => entry.pill)
 
             const group = Widget.Box({
@@ -342,18 +259,14 @@ export default function HyprlandStatus() {
         }
       })
 
-      // Re-render when agent sessions change
-      const claudeSessionsSub = claudeSessions.subscribe(scheduleUpdateWorkspaces)
-      const codexSessionsSub = codexSessions.subscribe(scheduleUpdateWorkspaces)
-      const kimiSessionsSub = kimiSessions.subscribe(scheduleUpdateWorkspaces)
+      // Re-render when agents change
+      const agentsSub = agents.subscribe(scheduleUpdateWorkspaces)
       self.connect("destroy", () => {
         if (updateSource !== 0) GLib.source_remove(updateSource)
         if (buttonUpdateSource !== 0) GLib.source_remove(buttonUpdateSource)
         hypr.disconnect(workspacesId)
         hypr.disconnect(eventId)
-        claudeSessionsSub()
-        codexSessionsSub()
-        kimiSessionsSub()
+        agentsSub()
       })
     }
   })
