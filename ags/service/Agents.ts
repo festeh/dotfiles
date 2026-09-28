@@ -97,6 +97,11 @@ interface AgentWindow {
 }
 
 const POLL_INTERVAL_MS = 5000
+// Claude fires no hook when a turn is interrupted with Esc, so its state file keeps
+// saying "running" while the title already shows the idle glyph. Hook silence rules
+// out a title that has not caught up with a turn that just started.
+const CLAUDE_IDLE_TITLE_RE = /^\s*✳/u
+const INTERRUPT_SILENCE_MS = 10_000
 const WINDOWS_DIR = GLib.get_home_dir() + "/.cache/ags-agents/windows"
 const ASSETS_DIR = GLib.get_home_dir() + "/dotfiles/ags/assets"
 
@@ -131,6 +136,9 @@ export const agentClock = Variable(0)
 let windows: AgentWindow[] = []
 let hookStates = new Map<string, AgentHookState>()
 const observedStates = new Map<string, { state: AgentState, since: number }>()
+// Removed pills by window, with the state they were removed in. A pill comes back
+// once its agent changes state or its window closes.
+const dismissed = new Map<string, string>()
 const kittyCommByPid = new Map<number, boolean>()
 // Unknown windows whose state file already triggered an early poll this interval.
 const pollTriggeredKeys = new Set<string>()
@@ -194,6 +202,10 @@ function stateSince(key: string, state: AgentState, hook: AgentHookState | null,
   return now
 }
 
+function stateMark(agent: Agent): string {
+  return `${agent.state}@${agent.since}`
+}
+
 function publish(): void {
   const now = Date.now()
   const next = windows.map((window): Agent => {
@@ -223,7 +235,54 @@ function publish(): void {
   for (const key of observedStates.keys()) {
     if (!windows.some(window => window.key === key)) observedStates.delete(key)
   }
-  if (JSON.stringify(next) !== JSON.stringify(agents.get())) agents.set(next)
+  for (const [key, mark] of dismissed) {
+    const agent = next.find(candidate => candidate.key === key)
+    if (!agent || stateMark(agent) !== mark) dismissed.delete(key)
+  }
+
+  const visible = next.filter(agent => !dismissed.has(agent.key))
+  if (JSON.stringify(visible) !== JSON.stringify(agents.get())) agents.set(visible)
+}
+
+/** Rewrites a window's hook state as idle; the agent's next hook event takes over. */
+export function markAgentIdle(key: string): void {
+  const path = `${WINDOWS_DIR}/${key}.json`
+  try {
+    const [ok, content] = GLib.file_get_contents(path)
+    if (!ok) return
+    const record = JSON.parse(new TextDecoder().decode(content))
+    record.state = "idle"
+    // The turn stopped somewhere after its last hook event.
+    record.state_since = record.updated_at || new Date().toISOString()
+    // Stop never fired, so this response belongs to the turn before.
+    delete record.last_assistant_message
+    GLib.file_set_contents(path, JSON.stringify(record, null, 2))
+  } catch (error) {
+    console.error(`Could not mark agent ${key} idle:`, error)
+  }
+}
+
+/** Hides an agent's pill until its state changes. */
+export function dismissAgent(agent: Agent): void {
+  dismissed.set(agent.key, stateMark(agent))
+  publish()
+}
+
+function settleInterruptedTurns(): void {
+  const now = Date.now()
+  for (const window of windows) {
+    const hook = hookStates.get(window.key)
+    if (
+      window.kind.id === "claude"
+      && hook?.agent === "claude"
+      && hook.state === "running"
+      && CLAUDE_IDLE_TITLE_RE.test(window.title)
+      && now - Date.parse(hook.updated_at) > INTERRUPT_SILENCE_MS
+    ) {
+      console.log(`Agent ${window.key}: idle title during a running turn, marking it idle`)
+      markAgentIdle(window.key)
+    }
+  }
 }
 
 let polling = false
@@ -282,6 +341,7 @@ async function pollKitty(): Promise<void> {
     })
 
     windows = found
+    settleInterruptedTurns()
     publish()
   } catch (error) {
     console.error("Could not read Kitty agent windows:", error)

@@ -5,7 +5,7 @@ import AstalApps from "gi://AstalApps?version=0.1"
 import GLib from "gi://GLib"
 import { agents, agentWorkspaceId } from "../service/Agents"
 import { focusWorkspace } from "../service/HyprlandActions"
-import AgentPill from "./AgentPill"
+import AgentPill, { agentMenuOpen } from "./AgentPill"
 import Gtk from "gi://Gtk?version=4.0"
 
 type AstalBox = Gtk.Box & { children: Gtk.Widget[] }
@@ -129,6 +129,9 @@ export default function HyprlandStatus() {
       let lastFocusedClientAddress = focusedClientAddress()
 
       const updateWorkspaces = () => {
+        // Rebuilding disposes the pills, and an open agent menu with them; the
+        // menu closing schedules the rebuild instead.
+        if (agentMenuOpen.get()) return
         try {
           const oldChildren = [...self.children]
           self.children = []
@@ -261,12 +264,16 @@ export default function HyprlandStatus() {
 
       // Re-render when agents change
       const agentsSub = agents.subscribe(scheduleUpdateWorkspaces)
+      const agentMenuSub = agentMenuOpen.subscribe(open => {
+        if (!open) scheduleUpdateWorkspaces()
+      })
       self.connect("destroy", () => {
         if (updateSource !== 0) GLib.source_remove(updateSource)
         if (buttonUpdateSource !== 0) GLib.source_remove(buttonUpdateSource)
         hypr.disconnect(workspacesId)
         hypr.disconnect(eventId)
         agentsSub()
+        agentMenuSub()
       })
     }
   })

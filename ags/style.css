@@ -207,92 +207,159 @@ window {
   margin-left: 4px;
 }
 
-/* Agent detail popover */
-.agent-detail-popover {
-  padding: 14px 16px;
-  min-width: 280px;
+/* Agent menu (right-click on an agent pill) */
+.agent-menu {
+  min-width: 340px;
+  padding: 6px 4px 0;
 }
 
-.agent-detail-header {
-  margin-bottom: 4px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid @surface1;
+.agent-menu-header {
+  padding: 0 4px 12px;
 }
 
-.agent-detail-state-running {
-  color: @blue;
+.agent-menu-icon {
+  min-width: 34px;
+  min-height: 34px;
+  border-radius: 10px;
+  background-color: @surface1;
+}
+
+.agent-menu-icon image {
+  margin: 8px;
+}
+
+.agent-menu-title {
+  font-size: 14px;
   font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-}
-
-.agent-detail-state-waiting {
-  color: @yellow;
-  font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-}
-
-.agent-detail-state-idle {
-  color: @green;
-  font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-}
-
-.agent-detail-state-compacting {
-  color: @peach;
-  font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-}
-
-
-.agent-detail-project {
-  font-weight: 700;
-  font-size: 13px;
   color: @text;
 }
 
-.agent-detail-section {
-  margin-top: 2px;
+.agent-menu-subtitle {
+  font-size: 11px;
+  color: @overlay1;
 }
 
-.agent-detail-label {
+.agent-menu-state {
   font-size: 10px;
-  font-weight: 600;
-  color: @overlay0;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  border-radius: 999px;
+  padding: 3px 9px;
+  margin-left: 6px;
+}
+
+.agent-menu-state.running { color: @blue; background-color: alpha(@blue, 0.14); }
+.agent-menu-state.waiting { color: @yellow; background-color: alpha(@yellow, 0.14); }
+.agent-menu-state.idle { color: @green; background-color: alpha(@green, 0.12); }
+.agent-menu-state.compacting { color: @peach; background-color: alpha(@peach, 0.14); }
+
+.agent-menu-icon.running { background-color: alpha(@blue, 0.16); }
+.agent-menu-icon.waiting { background-color: alpha(@yellow, 0.16); }
+.agent-menu-icon.idle { background-color: alpha(@green, 0.12); }
+.agent-menu-icon.compacting { background-color: alpha(@peach, 0.16); }
+
+.agent-menu-body {
+  padding: 12px 4px;
+  border-top: 1px solid alpha(@surface2, 0.7);
+}
+
+.agent-menu-caption {
+  font-size: 10px;
+  font-weight: 700;
+  color: @overlay1;
   text-transform: uppercase;
   letter-spacing: 0.6px;
 }
 
-.agent-detail-value {
+.agent-menu-text {
   font-size: 12px;
-  color: @text;
-  line-height: 1.4;
+  color: @subtext1;
 }
 
-.agent-detail-monospace {
-  font-family: "JetBrainsMono Nerd Font", monospace;
-  background-color: @mantle;
-  padding: 6px 8px;
-  border-radius: 6px;
-  margin-top: 4px;
+.agent-menu-callout {
+  border-radius: 8px;
+  border-style: solid;
+  border-width: 0 0 0 3px;
+  padding: 8px 10px;
 }
 
-.agent-detail-error {
+.agent-menu-callout.waiting {
+  border-color: @yellow;
+  background-color: alpha(@yellow, 0.08);
+}
+
+.agent-menu-callout.waiting .agent-menu-caption {
+  color: @yellow;
+}
+
+.agent-menu-callout.error {
+  border-color: @red;
+  background-color: alpha(@red, 0.08);
+}
+
+.agent-menu-callout.error .agent-menu-caption {
   color: @red;
 }
 
-.agent-detail-footer {
-  margin-top: 4px;
-  padding-top: 8px;
-  border-top: 1px solid @surface1;
+.agent-menu-callout .agent-menu-text {
+  color: @text;
 }
 
-.agent-detail-meta {
+.agent-menu-code {
+  background-color: @mantle;
+  border: 1px solid alpha(@surface2, 0.6);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.agent-menu-code-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: @mauve;
+}
+
+.agent-menu-code .agent-menu-code-text {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 11px;
+  color: @subtext0;
+}
+
+.agent-menu-footer {
+  padding: 8px 0 2px 4px;
+  border-top: 1px solid alpha(@surface2, 0.7);
+}
+
+.agent-menu-meta {
   font-size: 10px;
-  color: @overlay1;
+  color: @overlay0;
+}
+
+.agent-menu-action {
+  background-color: transparent;
+  background-image: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 7px;
+  min-height: 0;
+  padding: 5px 10px;
+  color: @subtext1;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.agent-menu-action image {
+  -gtk-icon-size: 14px;
+}
+
+.agent-menu-action:hover {
+  background-color: @surface1;
+  color: @text;
+}
+
+.agent-menu-action.interrupt:hover {
+  background-color: alpha(@peach, 0.14);
+  color: @peach;
 }
 
 /* Battery widget - normal color, red when low */
