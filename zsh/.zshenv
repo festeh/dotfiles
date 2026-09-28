@@ -5,6 +5,8 @@ export XDG_DATA_HOME="$HOME/.local/share"
 # For cached files
 export XDG_CACHE_HOME="$HOME/.cache"
 
+# Keep the first occurrence of each PATH entry.
+typeset -U path PATH
 
 export EDITOR="nvim"
 export MANPAGER='nvim +Man!'
@@ -41,13 +43,16 @@ pathadd() {
     fi
 }
 
+# Make globally configured mise tools available in every zsh process.
+export PATH="$XDG_DATA_HOME/mise/shims:$PATH"
+
 # To not add if already in path
 pathadd "$HOME/.local/bin"
 pathadd "$HOME/.cargo/bin"
 pathadd "$HOME/.bun/bin"
 pathadd "$HOME/go/bin"
 pathadd "$ANDROID_HOME/cmdline-tools/latest/bin"
-pathadd "$ANDROID_HOME/platform-tools"
+export PATH="$ANDROID_HOME/platform-tools:$PATH"
 pathadd "$ANDROID_HOME/emulator"
 # TODO: only work pc
 pathadd "$HOME/Downloads/swift-5.7.3-RELEASE-ubuntu22.04"
@@ -55,3 +60,8 @@ pathadd "$GOENV_ROOT/bin"
 
 [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
 [ -f "$HOME/dotfiles/.env" ] && source "$HOME/dotfiles/.env"
+
+# OMP uses a separate variable name for the same Ollama Cloud credential.
+if [[ -n "${OLLAMA_API_KEY:-}" && -z "${OLLAMA_CLOUD_API_KEY:-}" ]]; then
+    export OLLAMA_CLOUD_API_KEY="$OLLAMA_API_KEY"
+fi

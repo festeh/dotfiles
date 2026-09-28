@@ -1,4 +1,5 @@
 i3/status.conf
+/codex/config.toml
 nvim/core/local.lua
 zsh/local.sh
 ags/types

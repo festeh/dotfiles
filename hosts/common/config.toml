@@ -22,6 +22,10 @@ name = "~/.config/kitty"
 target = "mise"
 name = "~/.config/mise"
 
+[symlinks.starship]
+target = "starship/starship.toml"
+name = "~/.config/starship.toml"
+
 [symlinks.claude_settings]
 target = "claude/settings.json"
 name = "~/.claude/settings.json"

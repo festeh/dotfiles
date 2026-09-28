@@ -50,6 +50,10 @@ name = "~/.local/bin/workspace-name-from-kitty"
 target = "kitty/generate-kitty-session.js"
 name = "~/.local/bin/generate-kitty-session"
 
+[symlinks.rofi_books]
+target = "scripts/rofi-books.py"
+name = "~/.local/bin/rofi-books"
+
 [templates.hyprland]
 target = "hyprland/hyprland_template.lua"
 name = "~/.config/hypr/hyprland.lua"
@@ -63,3 +67,7 @@ target = "systemd/ags_template.service"
 name = "~/.config/systemd/user/ags.service"
 GTK_THEME = "catppuccin-mocha-mauve-standard+default"
 AGS_PATH = "/home/dima/.local/bin"
+
+[symlinks.mise]
+target = "mise/config.toml"
+name = "~/.config/mise/config.toml"

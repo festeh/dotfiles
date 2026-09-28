@@ -19,6 +19,12 @@ cmd = "pacman -S --noconfirm fzf"
 sudo = true
 check = "which fzf"
 
+[simples.fzf_tab]
+cmd = "mkdir -p ~/.local/share/zsh/plugins && git clone --depth 1 https://github.com/Aloxaf/fzf-tab.git ~/.local/share/zsh/plugins/fzf-tab"
+sudo = false
+check = "[ -f ~/.local/share/zsh/plugins/fzf-tab/fzf-tab.plugin.zsh ]"
+depends_on = ["fzf"]
+
 [simples.curl]
 cmd = "pacman -S --noconfirm curl"
 sudo = true

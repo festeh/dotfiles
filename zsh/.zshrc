@@ -2,27 +2,18 @@ setopt AUTO_CD # cd to directory without typing cd
 
 source $DOTFILES/zsh/external/completion.zsh
 
-
-# zsh-autosuggestions
-if [ -f "/usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
-    source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
-elif [ -f "/usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
-    source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-else
-    echo "WARN: zsh-autosuggestions not found. Install: sudo pacman -S zsh-autosuggestions"
-fi
-
 bindkey -v
 bindkey  "^?" backward-delete-char
 bindkey "^[[1;3D" backward-word  # Alt+Left
 bindkey "^[[1;3C" forward-word   # Alt+Right
 bindkey "^[[1;5D" backward-word  # Ctrl+Left
 bindkey "^[[1;5C" forward-word   # Ctrl+Right
-bindkey "^R" history-incremental-search-backward
 
 export KEYTIMEOUT=1
 
-fpath=($ZDOTDIR/external $fpath)
+ZSH_CACHE_COMPLETIONS="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/completions"
+mkdir -p "$ZSH_CACHE_COMPLETIONS"
+fpath=("$ZSH_CACHE_COMPLETIONS" $ZDOTDIR/external $fpath)
 
 autoload -Uz cursor_mode && cursor_mode
 
@@ -37,15 +28,6 @@ zle -N edit-command-line
 bindkey -M vicmd v edit-command-line
 
 bindkey '^_' undo
-
-# zsh-syntax-highlighting
-if [ -f "/usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
-    source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-elif [ -f "/usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
-    source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-else
-    echo "WARN: zsh-syntax-highlighting not found. Install: sudo pacman -S zsh-syntax-highlighting"
-fi
 
 # fzf
 if command -v fzf &> /dev/null; then
@@ -95,6 +77,8 @@ else
     echo "WARN: mise not found. Install: sudo pacman -S mise"
 fi
 
+source $DOTFILES/zsh/completions.sh
+
 _comp_options+=(globdots)
 autoload -U compinit
 if [[ ! -f "$ZDOTDIR/.zcompdump" ]] || [[ -n "$(find "$ZDOTDIR/.zcompdump" -mtime +1)" ]]; then
@@ -103,6 +87,22 @@ if [[ ! -f "$ZDOTDIR/.zcompdump" ]] || [[ -n "$(find "$ZDOTDIR/.zcompdump" -mtim
     touch "$ZDOTDIR/.zcompdump"
 else
     compinit -C
+fi
+
+# fzf-tab must be loaded after compinit and before widget-wrapping plugins.
+if [ -f "$XDG_DATA_HOME/zsh/plugins/fzf-tab/fzf-tab.plugin.zsh" ]; then
+    source "$XDG_DATA_HOME/zsh/plugins/fzf-tab/fzf-tab.plugin.zsh"
+else
+    echo "WARN: fzf-tab not found. Install from https://github.com/Aloxaf/fzf-tab"
+fi
+
+# zsh-autosuggestions
+if [ -f "/usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
+    source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+elif [ -f "/usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]; then
+    source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+else
+    echo "WARN: zsh-autosuggestions not found. Install: sudo pacman -S zsh-autosuggestions"
 fi
 
 # scripts
@@ -116,3 +116,12 @@ else
 fi
 
 if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
+
+# zsh-syntax-highlighting must be loaded after all widgets and hooks.
+if [ -f "/usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
+    source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+elif [ -f "/usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
+    source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+else
+    echo "WARN: zsh-syntax-highlighting not found. Install: sudo pacman -S zsh-syntax-highlighting"
+fi

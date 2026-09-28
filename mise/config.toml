@@ -1,5 +1,37 @@
 [tools]
-node = "lts"
-rust = "latest"
+bitwarden = "latest"
+bun = "latest"
 go = "latest"
+overmind = "latest"
+rust = "latest"
+"github:sst/opencode" = { version = "latest", matching = "opencode-linux-x64.tar.gz" }
 uv = "latest"
+yazi = "latest"
+zig = "0.14.1"
+zoxide = "0.9.8"
+age = "latest"
+sops = "latest"
+"github:spicetify/cli" = "latest"
+"npm:@openai/codex" = "latest"
+yarn = "1.22.22"
+kubectl = "latest"
+"npm:sentry" = "latest"
+antigravity-cli = "latest"
+"aqua:phrase/phrase-cli" = "latest"
+"github:slackapi/slack-cli" = "latest"
+"npm:@posthog/cli" = "latest"
+"github:MoonshotAI/kimi-code" = { version = "latest", version_prefix = "@moonshot-ai/kimi-code@" }
+glab = "latest"
+java = "temurin-21"
+"npm:ntn" = "latest"
+"npm:mcporter" = "latest"
+"npm:@gongrzhe/server-gmail-autoauth-mcp" = "1.1.11"
+"npm:@deepseek-ai/dsh" = { version = "0.1.5-rc.1", allow_low_downloads = true }
+"github:can1357/oh-my-pi" = "latest"
+herdr = "latest"
+"aqua:getsentry/sentry-cli" = "latest"
+acli = "latest"
+
+[settings]
+trusted_config_paths = ["~"]
+minimum_release_age_excludes = ["npm:@openai/codex", "github:can1357/oh-my-pi", "oh-my-pi"]

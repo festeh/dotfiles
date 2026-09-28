@@ -32,6 +32,16 @@
             "command": "python3 /home/dima/.claude/hooks/ags-status.py"
           }
         ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash '/home/dima/.claude/hooks/herdr-agent-state.sh' session",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
@@ -170,5 +180,6 @@
   "voiceEnabled": true,
   "feedbackSurveyState": {
     "lastShownTime": 1754070055493
-  }
+  },
+  "promptSuggestionEnabled": false
 }

@@ -1,0 +1,3 @@
+creation_rules:
+  - path_regex: hosts/.*/archinstall-creds\.json$
+    age: age1xmxlss2dyvhn4a74xxmqf9fvaanr5f3rdcags5xft5v7g07qqspqrxuz3d
