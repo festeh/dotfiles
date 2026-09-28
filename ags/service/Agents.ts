@@ -2,6 +2,7 @@ import { Variable } from "astal"
 import Gio from "gi://Gio"
 import GLib from "gi://GLib"
 import Hyprland from "gi://AstalHyprland"
+import { codexToolCount } from "./CodexToolCount"
 import { focusWorkspace } from "./HyprlandActions"
 
 // An agent pill exists while a Kitty window's foreground process is a known agent
@@ -47,6 +48,8 @@ export interface Agent {
   kittyPid: number
   windowId: number
   order: number
+  /** Tool calls in the current turn, or null when unknown. */
+  toolCount: number | null
   hook: AgentHookState | null
 }
 
@@ -54,6 +57,8 @@ interface AgentKind {
   id: AgentId
   stateSource: "hooks" | "title"
   matches: (argv: string[]) => boolean
+  /** Title-driven agents have no hook file, so they supply the tool count themselves. */
+  toolCount?: (title: string) => number | null
 }
 
 interface KittyProcess {
@@ -88,6 +93,7 @@ interface AgentWindow {
   kittyPid: number
   windowId: number
   order: number
+  toolCount: number | null
 }
 
 const POLL_INTERVAL_MS = 5000
@@ -109,6 +115,7 @@ const AGENT_KINDS: AgentKind[] = [
   {
     id: "codex",
     stateSource: "title",
+    toolCount: codexToolCount,
     matches: argv => {
       const command = basename(argv[0] || "")
       const isCodex = command === "codex" || (command === "node" && basename(argv[1] || "") === "codex.js")
@@ -208,6 +215,7 @@ function publish(): void {
       kittyPid: window.kittyPid,
       windowId: window.windowId,
       order: window.order,
+      toolCount: window.kind.stateSource === "title" ? window.toolCount : hook ? hook.tool_count ?? 0 : null,
       hook,
     }
   })
@@ -254,16 +262,18 @@ async function pollKitty(): Promise<void> {
           for (const process of window.foreground_processes || []) {
             const kind = AGENT_KINDS.find(candidate => candidate.matches(process.cmdline || []))
             if (!kind) continue
+            const title = window.title || ""
             found.push({
               key: `${kittyPid}-${window.id}`,
               kind,
-              title: window.title || "",
+              title,
               tabTitle: tab.title || "",
               cwd: process.cwd || window.cwd || "",
               windowAddress: client.get_address(),
               kittyPid,
               windowId: window.id,
               order: clientIndex * 1000000 + tabIndex * 1000 + windowIndex,
+              toolCount: kind.toolCount?.(stripActivity(title)) ?? null,
             })
             break
           }

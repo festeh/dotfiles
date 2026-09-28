@@ -80,8 +80,8 @@ function Badge(agent: Agent): Gtk.Widget | null {
       label: bind(agentClock).as(() => formatElapsed(since)),
     })
   }
-  if (agent.hook?.tool_count) {
-    return Widget.Label({ css_classes: ["agent-session-badge"], label: `${agent.hook.tool_count}` })
+  if (agent.toolCount !== null) {
+    return Widget.Label({ css_classes: ["agent-session-badge"], label: `${agent.toolCount}` })
   }
   return null
 }
