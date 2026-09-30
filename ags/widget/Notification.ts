@@ -273,7 +273,7 @@ export default function Notification({ notification, onDismiss, onHoverLost, set
         ellipsize: Pango.EllipsizeMode.END,
         lines: 5,
         maxWidthChars: 42,
-        useMarkup: true,
+        useMarkup: false,
       }) : Widget.Box({ visible: false }),
 
       progress !== null ? Widget.LevelBar({
