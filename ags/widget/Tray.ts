@@ -5,7 +5,7 @@ import { Variable, bind } from "astal";
 
 
 const createMenu = (menuModel: Gio.MenuModel, actionGroup: Gio.ActionGroup): Gtk.PopoverMenu => {
-    const menu = Gtk.PopoverMenu.new_from_model(menuModel);
+    const menu = Gtk.PopoverMenu.new_from_model_full(menuModel, Gtk.PopoverMenuFlags.NESTED);
     menu.insert_action_group('dbusmenu', actionGroup);
     return menu;
 };
@@ -50,7 +50,9 @@ export default function Tray() {
       gesture.set_button(3) // Right mouse button
       gesture.connect("pressed", () => {
         if (menu) {
-          menu.set_parent(button)
+          if (menu.get_parent() === null) {
+            menu.set_parent(button)
+          }
           menu.popup()
         }
       })
