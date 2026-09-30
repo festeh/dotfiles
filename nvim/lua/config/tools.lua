@@ -11,7 +11,6 @@ M.servers = {
   lua_ls = "lua-language-server",
   ruff = "ruff",
   svelte = "svelte-language-server",
-  tailwindcss = "tailwindcss-language-server",
   ty = "ty",
 }
 
