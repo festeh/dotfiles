@@ -14,6 +14,11 @@ import { focusWorkspace } from "./HyprlandActions"
 export type AgentId = "claude" | "codex" | "kimi"
 export type AgentState = "idle" | "running" | "waiting" | "compacting"
 
+export interface BackgroundTask {
+  kind: "agent" | "process"
+  description: string
+}
+
 /** One window's hook state; see ags/hooks/agent_status.py. */
 export interface AgentHookState {
   agent: AgentId
@@ -33,6 +38,8 @@ export interface AgentHookState {
   notification_message?: string
   last_assistant_message?: string
   agent_type?: string
+  /** Background work in flight when the last turn stopped. */
+  background_tasks?: BackgroundTask[]
 }
 
 export interface Agent {

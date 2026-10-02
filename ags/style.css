@@ -714,9 +714,17 @@ window {
 }
 
 .workspace-group .agent-session-badge {
-  border-radius: 0 6px 6px 0;
+  border-radius: 0;
   margin-left: 6px;
   padding: 2px 6px;
+}
+
+.workspace-group .agent-session-badge + .agent-session-badge {
+  margin-left: 1px;
+}
+
+.workspace-group .agent-session-badge:last-child {
+  border-radius: 0 6px 6px 0;
 }
 
 .workspace-group .agent-session-running {

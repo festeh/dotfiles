@@ -6,6 +6,9 @@ date: the state of the agent running in that Kitty window. AGS decides which
 windows run an agent from `kitty @ ls`, so this file only carries state and
 details for the popover. Events outside Kitty are ignored.
 
+A Claude session moved to the background runs in Claude's daemon, so its window
+comes from the interactive session that parked it (see `_parked_window_env`).
+
 Codex has no hook here: its sessions run in a shared app-server daemon whose
 environment belongs to whichever window started it, so AGS reads Codex state
 from the terminal title instead.
@@ -28,6 +31,7 @@ CACHE_DIR = Path.home() / ".cache" / "ags-agents"
 WINDOWS_DIR = CACHE_DIR / "windows"
 LOG_PATH = CACHE_DIR / "hook.log"
 LOG_MAX_BYTES = 1_000_000
+CLAUDE_SESSIONS_DIR = Path.home() / ".claude" / "sessions"
 
 STATE_BY_EVENT = {
     "SessionStart": "idle",
@@ -45,6 +49,9 @@ STATE_BY_EVENT = {
     "StopFailure": "idle",
     "Interrupt": "idle",
 }
+
+# Task types in Claude's Stop `background_tasks`.
+BACKGROUND_AGENT_TYPES = {"subagent", "workflow", "teammate", "cloud session"}
 
 TOOL_DETAIL_KEYS = ("command", "file_path", "path", "pattern", "url", "query", "description")
 
@@ -104,6 +111,20 @@ def _git_branch(cwd: str) -> str | None:
     if result.returncode != 0:
         return None
     return result.stdout.strip() or None
+
+
+def _background_tasks(data: dict[str, Any]) -> list[dict[str, str]]:
+    """Background work still in flight at Claude's Stop, split into agents and processes."""
+    tasks = data.get("background_tasks")
+    if not isinstance(tasks, list):
+        return []
+    return [
+        {
+            "kind": "agent" if task.get("type") in BACKGROUND_AGENT_TYPES else "process",
+            "description": _one_line(str(task.get("description") or task.get("command") or task.get("type") or "task"), 120),
+        }
+        for task in tasks if isinstance(task, dict)
+    ]
 
 
 def _next_state(event: str, data: dict[str, Any]) -> str | None:
@@ -186,13 +207,43 @@ def _update(existing: dict[str, Any], agent: str, event: str, data: dict[str, An
         record["agent_type"] = str(data.get("agent_type") or data.get("agent_name") or "subagent")
     if event == "Stop" and data.get("last_assistant_message"):
         record["last_assistant_message"] = _one_line(str(data["last_assistant_message"]), 500)
+    # Only Stop reports background work, so the list stands until the next one.
+    if event == "Stop":
+        record["background_tasks"] = _background_tasks(data) or None
 
     return {key: value for key, value in record.items() if value not in (None, "")}
 
 
+def _proc_env(pid: Any) -> dict[str, str]:
+    try:
+        raw = Path(f"/proc/{int(pid)}/environ").read_bytes()
+    except (OSError, ValueError, TypeError):
+        return {}
+    pairs = (item.split("=", 1) for item in raw.decode("utf-8", "replace").split("\0") if "=" in item)
+    return dict(pairs)
+
+
+def _parked_window_env(job_dir: str) -> dict[str, str]:
+    """Environment of the window showing a Claude background session.
+
+    Background sessions run in Claude's daemon, which drops KITTY_WINDOW_ID and keeps
+    the KITTY_PID of whichever window started the daemon. The window that moved the
+    session to the background keeps showing it, and Claude's session registry records
+    that interactive session's pid with the parked job id.
+    """
+    job_id = Path(job_dir).name
+    for path in CLAUDE_SESSIONS_DIR.glob("*.json"):
+        session = _read(path)
+        if session.get("kind") == "interactive" and session.get("parkedJobId") == job_id:
+            return _proc_env(session.get("pid"))
+    return {}
+
+
 def _handle(agent: str, data: dict[str, Any]) -> None:
-    kitty_pid = os.environ.get("KITTY_PID", "")
-    window_id = os.environ.get("KITTY_WINDOW_ID", "")
+    job_dir = os.environ.get("CLAUDE_JOB_DIR", "")
+    env = _parked_window_env(job_dir) if job_dir else os.environ
+    kitty_pid = env.get("KITTY_PID", "")
+    window_id = env.get("KITTY_WINDOW_ID", "")
     event = str(data.get("hook_event_name") or "")
     if not (kitty_pid.isdigit() and window_id.isdigit() and event):
         return

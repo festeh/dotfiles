@@ -7,6 +7,7 @@ import {
   Agent,
   AgentHookState,
   AgentState,
+  BackgroundTask,
   agentClock,
   agentIcon,
   agents,
@@ -88,6 +89,17 @@ function Badge(agent: Agent): Gtk.Widget | null {
     return Widget.Label({ css_classes: ["agent-session-badge"], label: `${agent.toolCount}` })
   }
   return null
+}
+
+const TASK_KINDS: [BackgroundTask["kind"], string][] = [["process", "ps"], ["agent", "ag"]]
+
+/** One "N ps" / "N ag" segment per kind of background task running; none when idle. */
+function TaskBadges(hook: AgentHookState | null): Gtk.Widget[] {
+  const tasks = hook?.background_tasks ?? []
+  return TASK_KINDS.flatMap(([kind, suffix]) => {
+    const count = tasks.filter(task => task.kind === kind).length
+    return count > 0 ? [Widget.Label({ css_classes: ["agent-session-badge"], label: `${count} ${suffix}` })] : []
+  })
 }
 
 const STATE_NAMES: Record<AgentState, string> = {
@@ -218,6 +230,10 @@ function MenuBody(agent: Agent): Gtk.Widget[] {
     const count = hook.tool_count ? ` · #${hook.tool_count}` : ""
     sections.push(Section(caption + count, ToolBlock(hook)))
   }
+
+  const tasks = TASK_KINDS.flatMap(([kind, suffix]) =>
+    (hook.background_tasks ?? []).filter(task => task.kind === kind).map(task => `${suffix} · ${task.description}`))
+  if (tasks.length > 0) sections.push(Section("Background", Text(tasks.join("\n"), 6)))
   return sections
 }
 
@@ -340,6 +356,7 @@ export default function AgentPill(agent: Agent): Gtk.Widget {
       icon,
       Widget.Label({ css_classes: ["agent-session-name"], label: pillLabel(agent) }),
       ...(badge ? [badge] : []),
+      ...TaskBadges(agent.hook),
     ],
   })
 
