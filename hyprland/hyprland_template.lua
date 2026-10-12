@@ -4,6 +4,15 @@
 -- Docs: https://wiki.hypr.land/configuring/
 -- NOTE: Go templates treat two consecutive opening braces as an action; keep a space between nested table braces.
 
+-- Timestamped logs for diagnosing compositor/AGS IPC failures.
+hl.config({
+    debug = {
+        disable_logs = false,
+        disable_time = false,
+        enable_stdout_logs = true,
+    },
+})
+
 ------------------
 ---- MONITORS ----
 ------------------
@@ -68,6 +77,15 @@ hl.config({
 
         sensitivity = 0, -- -1.0 - 1.0, 0 means no modification.
     },
+    gestures = {
+        workspace_swipe_invert = false,
+    },
+})
+
+hl.gesture({
+    fingers = 3,
+    direction = "horizontal",
+    action = "workspace",
 })
 
 -----------------------
@@ -124,9 +142,7 @@ local mainMod = "SUPER"
 
 hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.window.close())
 hl.bind(mainMod .. " + C",         hl.dsp.window.close())
-hl.bind(mainMod .. " + M",         hl.dsp.exit())
 hl.bind(mainMod .. " + Return",    hl.dsp.exec_cmd("kitty"))
-hl.bind(mainMod .. " + A",         hl.dsp.exec_cmd("alacritty"))
 hl.bind(mainMod .. " + E",         hl.dsp.exec_cmd('astal -i astal "toggle-recording"'))
 hl.bind(mainMod .. " + D",         hl.dsp.exec_cmd("rofi -show drun"))
 hl.bind(mainMod .. " + R",         hl.dsp.exec_cmd("rofi -show run"))
@@ -134,7 +150,6 @@ hl.bind(mainMod .. " + B",         hl.dsp.exec_cmd('rofi -show books -modes "boo
 hl.bind(mainMod .. " + P",         hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J",         hl.dsp.layout("togglesplit"))
 hl.bind(mainMod .. " + F",         hl.dsp.window.fullscreen())
-hl.bind(mainMod .. " + SHIFT + n", hl.dsp.exec_cmd("swaync-client -t -sw"))
 hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd('rofi -show power-menu -modi "power-menu:rofi-power-menu --confirm=lockscreen "'))
 
 -- clipboard picker
@@ -163,18 +178,15 @@ hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
 -- Media / brightness keys
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("pactl set-sink-volume @DEFAULT_SINK@ +10%"), { repeating = true })
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("pactl set-sink-volume @DEFAULT_SINK@ -10%"), { repeating = true })
-hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("pactl set-sink-mute @DEFAULT_SINK@ toggle"),  { transparent = true })
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 10%+"), { locked = true, repeating = true })
+hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("pactl set-sink-volume @DEFAULT_SINK@ -10%"), { locked = true, repeating = true })
+hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("pactl set-sink-mute @DEFAULT_SINK@ toggle"),  { locked = true, transparent = true })
+hl.bind("XF86AudioMicMute",     hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true })
 
-hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl set +10%"), { repeating = true })
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 10%-"), { repeating = true })
-hl.bind("XF86KbdBrightnessUp",   hl.dsp.exec_cmd("brightnessctl --device='*::kbd_backlight' set +25%"), { repeating = true })
-hl.bind("XF86KbdBrightnessDown", hl.dsp.exec_cmd("brightnessctl --device='*::kbd_backlight' set 25%-"), { repeating = true })
-
--- Project launcher
-hl.bind(mainMod .. " + U", hl.dsp.exec_cmd("projectlaunch"))
-hl.bind(mainMod .. " + J", hl.dsp.exec_cmd("projecthide"))
+hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl set +10%"), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 10%-"), { locked = true, repeating = true })
+hl.bind("XF86KbdBrightnessUp",   hl.dsp.exec_cmd("brightnessctl --device='*::kbd_backlight' set +25%"), { locked = true, repeating = true })
+hl.bind("XF86KbdBrightnessDown", hl.dsp.exec_cmd("brightnessctl --device='*::kbd_backlight' set 25%-"), { locked = true, repeating = true })
 
 -- Toolbox tmux window switcher
 hl.bind(mainMod .. " + T", hl.dsp.workspace.toggle_special("toolbox"))
@@ -184,4 +196,18 @@ hl.window_rule({
     float     = true,
     center    = true,
     workspace = "special:toolbox silent",
+})
+
+-- Keep temporary XWayland drag windows from taking focus.
+hl.window_rule({
+    name = "fix-xwayland-drags",
+    match = {
+        class = "^$",
+        title = "^$",
+        xwayland = true,
+        float = true,
+        fullscreen = false,
+        pin = false,
+    },
+    no_focus = true,
 })
