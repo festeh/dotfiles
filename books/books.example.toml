@@ -1,0 +1,16 @@
+# Copy to ~/.config/book-desktop/books.toml and fill in your local book details.
+# Keep the populated settings file outside this repository.
+root = "~/tmp/books"
+codex_workspace = 11
+books_workspace = 12
+toggle_key = "SUPER + SHIFT + B"
+
+[[books]]
+id = "example"
+title = ""
+source = "~/path/to/book.pdf"
+reader = ["zathura"]
+reader_class = "org.pwmt.zathura"
+reader_title = ""
+note = ""
+# existing_session = "" # Optional saved Codex session ID; otherwise discovered/created.

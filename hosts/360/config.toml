@@ -54,6 +54,22 @@ name = "~/.local/bin/generate-kitty-session"
 target = "scripts/rofi-books.py"
 name = "~/.local/bin/rofi-books"
 
+[symlinks.book_desktop]
+target = "scripts/book-desktop.py"
+name = "~/.local/bin/book-desktop"
+
+[symlinks.book_desktop_hyprland]
+target = "books/hyprland.lua"
+name = "~/.config/book-desktop/hyprland.lua"
+
+[symlinks.book_desktop_launcher]
+target = "books/reading-desktop.desktop"
+name = "~/.local/share/applications/reading-desktop.desktop"
+
+[symlinks.book_desktop_stop_launcher]
+target = "books/reading-desktop-stop.desktop"
+name = "~/.local/share/applications/reading-desktop-stop.desktop"
+
 [templates.hyprland]
 target = "hyprland/hyprland_template.lua"
 name = "~/.config/hypr/hyprland.lua"

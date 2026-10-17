@@ -14,3 +14,4 @@ spotify/.token.json
 spotify/.venv
 __pycache__
 *.py[cod]
+/books/books.toml

@@ -155,9 +155,9 @@ hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd('rofi -show power-menu -modi 
 -- clipboard picker
 hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("cliphist list | rofi -dmenu | cliphist decode | wl-copy"))
 
--- Move focus with mainMod + arrow keys
-hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
-hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
+-- Navigate existing workspaces horizontally; move window focus vertically.
+hl.bind(mainMod .. " + left",  hl.dsp.focus({ workspace = "e-1" }))
+hl.bind(mainMod .. " + right", hl.dsp.focus({ workspace = "e+1" }))
 hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
 hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
 
@@ -211,3 +211,11 @@ hl.window_rule({
     },
     no_focus = true,
 })
+
+-- Optional reading desktop: book-desktop up/down, or Super+Shift+B.
+local books_config = os.getenv("HOME") .. "/.config/book-desktop/hyprland.lua"
+local books_file = io.open(books_config, "r")
+if books_file then
+    books_file:close()
+    dofile(books_config)
+end

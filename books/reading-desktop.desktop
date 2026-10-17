@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Reading Desktop
+GenericName=Books and Codex
+Comment=Start or resume your book readers and matching Codex conversations
+Exec=/home/dima/.local/bin/book-desktop up
+TryExec=/home/dima/.local/bin/book-desktop
+Icon=com.github.johnfactotum.Foliate
+Terminal=false
+StartupNotify=false
+Categories=Education;
+Keywords=books;reading;reader;Codex;start;resume;

@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Stop Reading Desktop
+GenericName=Books and Codex
+Comment=Close reading workspaces while preserving books, progress, and conversations
+Exec=/home/dima/.local/bin/book-desktop down
+TryExec=/home/dima/.local/bin/book-desktop
+Icon=process-stop
+Terminal=false
+StartupNotify=false
+Categories=Education;
+Keywords=books;reading;reader;Codex;stop;close;teardown;
