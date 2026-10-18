@@ -173,13 +173,17 @@
   },
   "alwaysThinkingEnabled": true,
   "effortLevel": "xhigh",
+  "promptSuggestionEnabled": false,
   "tui": "fullscreen",
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  },
   "skipDangerousModePermissionPrompt": true,
   "theme": "dark",
   "skipAutoPermissionPrompt": true,
   "voiceEnabled": true,
   "feedbackSurveyState": {
     "lastShownTime": 1754070055493
-  },
-  "promptSuggestionEnabled": false
+  }
 }
