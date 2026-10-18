@@ -26,6 +26,10 @@ name = "~/.config/waybar"
 target = "zathura"
 name = "~/.config/zathura"
 
+[symlinks.zed]
+target = "zed"
+name = "~/.config/zed"
+
 [symlinks.aiderconfig]
 target = "aider/.aider.conf.yml"
 name = "~/.aider.conf.yml"

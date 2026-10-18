@@ -1,0 +1,11 @@
+// Zed key bindings. Margins: ctrl-alt-= shrinks them (wider text, like
+// zooming in), ctrl-alt-- grows them, ctrl-alt-0 resets.
+[
+  {
+    "bindings": {
+      "ctrl-alt-=": ["task::Spawn", { "task_name": "Margins: narrower" }],
+      "ctrl-alt--": ["task::Spawn", { "task_name": "Margins: wider" }],
+      "ctrl-alt-0": ["task::Spawn", { "task_name": "Margins: reset" }]
+    }
+  }
+]

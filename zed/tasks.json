@@ -1,0 +1,24 @@
+// Zed tasks: run with `task: spawn` (alt-shift-t) or the keys in keymap.json.
+[
+  {
+    "label": "Margins: wider",
+    "command": "~/.config/zed/margins.py wider",
+    "reveal": "never",
+    "hide": "always",
+    "show_summary": false
+  },
+  {
+    "label": "Margins: narrower",
+    "command": "~/.config/zed/margins.py narrower",
+    "reveal": "never",
+    "hide": "always",
+    "show_summary": false
+  },
+  {
+    "label": "Margins: reset",
+    "command": "~/.config/zed/margins.py reset",
+    "reveal": "never",
+    "hide": "always",
+    "show_summary": false
+  }
+]
