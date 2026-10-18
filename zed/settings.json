@@ -23,11 +23,7 @@
   "markdown_preview": {
     "open_markdown_files_in_preview": true,
     "limit_content_width": true,
-    // Changed by margins.py (ctrl-alt-= / ctrl-alt-- / ctrl-alt-0).
+    // Text width; preview-width.py changes it (> < 0 in the preview).
     "max_width": 800
-  },
-  "centered_layout": {
-    "left_padding": 0.2,
-    "right_padding": 0.2
   },
 }

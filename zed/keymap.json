@@ -1,11 +1,24 @@
-// Zed key bindings. Margins: ctrl-alt-= shrinks them (wider text, like
-// zooming in), ctrl-alt-- grows them, ctrl-alt-0 resets.
+// Zed key bindings.
 [
   {
+    // Markdown preview is read-only, so plain keys work like in a pager.
+    "context": "MarkdownPreview",
     "bindings": {
-      "ctrl-alt-=": ["task::Spawn", { "task_name": "Margins: narrower" }],
-      "ctrl-alt--": ["task::Spawn", { "task_name": "Margins: wider" }],
-      "ctrl-alt-0": ["task::Spawn", { "task_name": "Margins: reset" }]
+      "j": "markdown::ScrollDown",
+      "k": "markdown::ScrollUp",
+      "ctrl-d": "markdown::ScrollPageDown",
+      "ctrl-u": "markdown::ScrollPageUp",
+      "g g": "markdown::ScrollToTop",
+      "shift-g": "markdown::ScrollToBottom",
+      "q": "markdown::CloseAndReturnToEditor",
+      // In the preview these change the preview's font; persist keeps it
+      // in settings.json (markdown_preview.font_size).
+      "+": ["zed::IncreaseBufferFontSize", { "persist": true }],
+      "-": ["zed::DecreaseBufferFontSize", { "persist": true }],
+      "=": ["zed::ResetBufferFontSize", { "persist": true }],
+      ">": ["task::Spawn", { "task_name": "Preview: wider text" }],
+      "<": ["task::Spawn", { "task_name": "Preview: narrower text" }],
+      "0": ["task::Spawn", { "task_name": "Preview: reset text width" }]
     }
   }
 ]
