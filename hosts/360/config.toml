@@ -30,6 +30,10 @@ name = "~/.config/zathura"
 target = "zed"
 name = "~/.config/zed"
 
+[symlinks.rofi]
+target = "rofi"
+name = "~/.config/rofi"
+
 [symlinks.aiderconfig]
 target = "aider/.aider.conf.yml"
 name = "~/.aider.conf.yml"
