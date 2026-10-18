@@ -13,7 +13,7 @@ if file then
     end
     file:close()
 end
-hl.bind(toggle, hl.dsp.exec_cmd(command .. " toggle"))
+shortcut(toggle, "Toggle reading desktop", hl.dsp.exec_cmd(command .. " toggle"))
 
 file = io.open(dir .. "/enabled.lua", "r")
 if not file then return end
@@ -53,7 +53,7 @@ end)
 for _, direction in ipairs({ "up", "down" }) do
     local key = "SUPER + " .. direction
     hl.unbind(key)
-    hl.bind(key, function()
+    shortcut(key, direction == "up" and "Focus window above" or "Focus window below", function()
         local workspace = hl.get_active_workspace()
         local id = workspace and workspace.id
         if id == setup.books_workspace or id == setup.codex_workspace then

@@ -62,6 +62,10 @@ name = "~/.local/bin/generate-kitty-session"
 target = "scripts/rofi-books.py"
 name = "~/.local/bin/rofi-books"
 
+[symlinks.rofi_shortcuts]
+target = "scripts/rofi-shortcuts.py"
+name = "~/.local/bin/rofi-shortcuts"
+
 [symlinks.book_desktop]
 target = "scripts/book-desktop.py"
 name = "~/.local/bin/book-desktop"

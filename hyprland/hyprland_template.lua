@@ -140,33 +140,44 @@ hl.animation({ leaf = "workspaces",  enabled = true, speed = 6,  bezier = "defau
 
 local mainMod = "SUPER"
 
-hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.window.close())
-hl.bind(mainMod .. " + C",         hl.dsp.window.close())
-hl.bind(mainMod .. " + Return",    hl.dsp.exec_cmd("kitty"))
-hl.bind(mainMod .. " + E",         hl.dsp.exec_cmd('astal -i astal "toggle-recording"'))
-hl.bind(mainMod .. " + D",         hl.dsp.exec_cmd("rofi -show drun"))
-hl.bind(mainMod .. " + R",         hl.dsp.exec_cmd("rofi -show run"))
-hl.bind(mainMod .. " + B",         hl.dsp.exec_cmd('rofi -show books -modes "books:rofi-books" -show-icons'))
-hl.bind(mainMod .. " + P",         hl.dsp.window.pseudo())
-hl.bind(mainMod .. " + J",         hl.dsp.layout("togglesplit"))
-hl.bind(mainMod .. " + F",         hl.dsp.window.fullscreen())
-hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd('rofi -show power-menu -modi "power-menu:rofi-power-menu --confirm=lockscreen "'))
+-- Described binds appear in the shortcut launcher (mainMod + /), which runs
+-- the selected one through `hyprctl eval 'hl.dispatch(shortcuts[...])'`.
+shortcuts = {}
+function shortcut(keys, description, action, opts)
+    opts = opts or {}
+    opts.description = description
+    shortcuts[description] = action
+    return hl.bind(keys, action, opts)
+end
+
+shortcut(mainMod .. " + slash",     "Show shortcuts",          hl.dsp.exec_cmd('rofi -show shortcuts -modes "shortcuts:rofi-shortcuts"'))
+shortcut(mainMod .. " + SHIFT + Q", "Close window",            hl.dsp.window.close())
+shortcut(mainMod .. " + C",         "Close window",            hl.dsp.window.close())
+shortcut(mainMod .. " + Return",    "Open terminal",           hl.dsp.exec_cmd("kitty"))
+shortcut(mainMod .. " + E",         "Start voice recording",   hl.dsp.exec_cmd('astal -i astal "toggle-recording"'))
+shortcut(mainMod .. " + D",         "Launch app",              hl.dsp.exec_cmd("rofi -show drun"))
+shortcut(mainMod .. " + R",         "Run command",             hl.dsp.exec_cmd("rofi -show run"))
+shortcut(mainMod .. " + B",         "Open book",               hl.dsp.exec_cmd('rofi -show books -modes "books:rofi-books" -show-icons'))
+shortcut(mainMod .. " + P",         "Pseudotile window",       hl.dsp.window.pseudo())
+shortcut(mainMod .. " + J",         "Toggle split direction",  hl.dsp.layout("togglesplit"))
+shortcut(mainMod .. " + F",         "Toggle fullscreen",       hl.dsp.window.fullscreen())
+shortcut(mainMod .. " + SHIFT + M", "Power menu",              hl.dsp.exec_cmd('rofi -show power-menu -modi "power-menu:rofi-power-menu --confirm=lockscreen "'))
 
 -- clipboard picker
-hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("cliphist list | rofi -dmenu | cliphist decode | wl-copy"))
+shortcut(mainMod .. " + V", "Clipboard history", hl.dsp.exec_cmd("cliphist list | rofi -dmenu | cliphist decode | wl-copy"))
 
 -- Navigate existing workspaces horizontally; move window focus vertically.
-hl.bind(mainMod .. " + left",  hl.dsp.focus({ workspace = "e-1" }))
-hl.bind(mainMod .. " + right", hl.dsp.focus({ workspace = "e+1" }))
-hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
-hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
+shortcut(mainMod .. " + left",  "Previous workspace", hl.dsp.focus({ workspace = "e-1" }))
+shortcut(mainMod .. " + right", "Next workspace",     hl.dsp.focus({ workspace = "e+1" }))
+shortcut(mainMod .. " + up",    "Focus window above", hl.dsp.focus({ direction = "up" }))
+shortcut(mainMod .. " + down",  "Focus window below", hl.dsp.focus({ direction = "down" }))
 
 -- Switch workspaces with mainMod + [0-9]
 -- Move active window to a workspace (silently) with mainMod + SHIFT + [0-9]
 for i = 1, 10 do
     local key = i % 10 -- 10 maps to key 0
-    hl.bind(mainMod .. " + " .. key,           hl.dsp.focus({ workspace = i }))
-    hl.bind(mainMod .. " + SHIFT + " .. key,   hl.dsp.window.move({ workspace = i, follow = false }))
+    shortcut(mainMod .. " + " .. key,         "Go to workspace " .. i,         hl.dsp.focus({ workspace = i }))
+    shortcut(mainMod .. " + SHIFT + " .. key, "Move window to workspace " .. i, hl.dsp.window.move({ workspace = i, follow = false }))
 end
 
 -- Scroll through existing workspaces with mainMod + scroll
@@ -178,18 +189,18 @@ hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
 -- Media / brightness keys
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 10%+"), { locked = true, repeating = true })
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("pactl set-sink-volume @DEFAULT_SINK@ -10%"), { locked = true, repeating = true })
-hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("pactl set-sink-mute @DEFAULT_SINK@ toggle"),  { locked = true, transparent = true })
-hl.bind("XF86AudioMicMute",     hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true })
+shortcut("XF86AudioRaiseVolume", "Volume up",       hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 10%+"), { locked = true, repeating = true })
+shortcut("XF86AudioLowerVolume", "Volume down",     hl.dsp.exec_cmd("pactl set-sink-volume @DEFAULT_SINK@ -10%"), { locked = true, repeating = true })
+shortcut("XF86AudioMute",        "Mute audio",      hl.dsp.exec_cmd("pactl set-sink-mute @DEFAULT_SINK@ toggle"),  { locked = true, transparent = true })
+shortcut("XF86AudioMicMute",     "Mute microphone", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true })
 
-hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl set +10%"), { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 10%-"), { locked = true, repeating = true })
-hl.bind("XF86KbdBrightnessUp",   hl.dsp.exec_cmd("brightnessctl --device='*::kbd_backlight' set +25%"), { locked = true, repeating = true })
-hl.bind("XF86KbdBrightnessDown", hl.dsp.exec_cmd("brightnessctl --device='*::kbd_backlight' set 25%-"), { locked = true, repeating = true })
+shortcut("XF86MonBrightnessUp",   "Screen brightness up",     hl.dsp.exec_cmd("brightnessctl set +10%"), { locked = true, repeating = true })
+shortcut("XF86MonBrightnessDown", "Screen brightness down",   hl.dsp.exec_cmd("brightnessctl set 10%-"), { locked = true, repeating = true })
+shortcut("XF86KbdBrightnessUp",   "Keyboard backlight up",    hl.dsp.exec_cmd("brightnessctl --device='*::kbd_backlight' set +25%"), { locked = true, repeating = true })
+shortcut("XF86KbdBrightnessDown", "Keyboard backlight down",  hl.dsp.exec_cmd("brightnessctl --device='*::kbd_backlight' set 25%-"), { locked = true, repeating = true })
 
 -- Toolbox tmux window switcher
-hl.bind(mainMod .. " + T", hl.dsp.workspace.toggle_special("toolbox"))
+shortcut(mainMod .. " + T", "Toggle toolbox", hl.dsp.workspace.toggle_special("toolbox"))
 hl.window_rule({
     name      = "toolbox",
     match     = { class = "^(com.example.toolbox)$" },
