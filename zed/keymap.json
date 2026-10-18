@@ -11,6 +11,7 @@
       "g g": "markdown::ScrollToTop",
       "shift-g": "markdown::ScrollToBottom",
       "q": "markdown::CloseAndReturnToEditor",
+      "m": "workspace::ToggleCenteredLayout",
       // preview.py edits settings.json in place; see why in its docstring.
       "+": ["task::Spawn", { "task_name": "Preview: bigger font" }],
       "-": ["task::Spawn", { "task_name": "Preview: smaller font" }],
