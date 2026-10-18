@@ -2,23 +2,68 @@
 [
   {
     "label": "Preview: wider text",
-    "command": "~/.config/zed/preview-width.py wider",
+    "command": "~/.config/zed/preview.py wider",
     "reveal": "never",
     "hide": "always",
-    "show_summary": false
+    "show_summary": false,
+    "allow_concurrent_runs": true,
+    "shell": {
+      "program": "sh"
+    }
   },
   {
     "label": "Preview: narrower text",
-    "command": "~/.config/zed/preview-width.py narrower",
+    "command": "~/.config/zed/preview.py narrower",
     "reveal": "never",
     "hide": "always",
-    "show_summary": false
+    "show_summary": false,
+    "allow_concurrent_runs": true,
+    "shell": {
+      "program": "sh"
+    }
   },
   {
     "label": "Preview: reset text width",
-    "command": "~/.config/zed/preview-width.py reset",
+    "command": "~/.config/zed/preview.py width-reset",
     "reveal": "never",
     "hide": "always",
-    "show_summary": false
+    "show_summary": false,
+    "allow_concurrent_runs": true,
+    "shell": {
+      "program": "sh"
+    }
+  },
+  {
+    "label": "Preview: bigger font",
+    "command": "~/.config/zed/preview.py bigger",
+    "reveal": "never",
+    "hide": "always",
+    "show_summary": false,
+    "allow_concurrent_runs": true,
+    "shell": {
+      "program": "sh"
+    }
+  },
+  {
+    "label": "Preview: smaller font",
+    "command": "~/.config/zed/preview.py smaller",
+    "reveal": "never",
+    "hide": "always",
+    "show_summary": false,
+    "allow_concurrent_runs": true,
+    "shell": {
+      "program": "sh"
+    }
+  },
+  {
+    "label": "Preview: reset font",
+    "command": "~/.config/zed/preview.py font-reset",
+    "reveal": "never",
+    "hide": "always",
+    "show_summary": false,
+    "allow_concurrent_runs": true,
+    "shell": {
+      "program": "sh"
+    }
   }
 ]

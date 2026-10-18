@@ -11,11 +11,10 @@
       "g g": "markdown::ScrollToTop",
       "shift-g": "markdown::ScrollToBottom",
       "q": "markdown::CloseAndReturnToEditor",
-      // In the preview these change the preview's font; persist keeps it
-      // in settings.json (markdown_preview.font_size).
-      "+": ["zed::IncreaseBufferFontSize", { "persist": true }],
-      "-": ["zed::DecreaseBufferFontSize", { "persist": true }],
-      "=": ["zed::ResetBufferFontSize", { "persist": true }],
+      // preview.py edits settings.json in place; see why in its docstring.
+      "+": ["task::Spawn", { "task_name": "Preview: bigger font" }],
+      "-": ["task::Spawn", { "task_name": "Preview: smaller font" }],
+      "=": ["task::Spawn", { "task_name": "Preview: reset font" }],
       ">": ["task::Spawn", { "task_name": "Preview: wider text" }],
       "<": ["task::Spawn", { "task_name": "Preview: narrower text" }],
       "0": ["task::Spawn", { "task_name": "Preview: reset text width" }]

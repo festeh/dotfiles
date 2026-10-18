@@ -23,7 +23,8 @@
   "markdown_preview": {
     "open_markdown_files_in_preview": true,
     "limit_content_width": true,
-    // Text width; preview-width.py changes it (> < 0 in the preview).
-    "max_width": 800
+    // preview.py changes these two: > < 0 and + - = in the preview.
+    "max_width": 1100,
+    "font_size": 16
   },
 }
