@@ -7,6 +7,12 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
+  "agent_buffer_font_size": 17.0,
+  "agent_ui_font_size": 16.0,
+  "agent_ui_font_family": "JetBrainsMono Nerd Font",
+  "terminal": {
+    "font_family": "JetBrainsMono Nerd Font"
+  },
   "cli_default_open_behavior": "existing_window",
   "telemetry": {
     "diagnostics": false,
@@ -21,10 +27,11 @@
     "dark": "One Dark",
   },
   "markdown_preview": {
+    "font_family": "Liberation Sans",
     "open_markdown_files_in_preview": true,
     "limit_content_width": true,
     // preview.py changes these two: > < 0 and + - = in the preview.
-    "max_width": 1100,
+    "max_width": 1500,
     "font_size": 16
   },
 }
