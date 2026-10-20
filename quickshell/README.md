@@ -6,12 +6,15 @@ rounded container, and right alignment from `ags/style.css`.
 Run `./quickshell/run` from the dotfiles checkout, or
 `quickshell --path ~/dotfiles/quickshell`. Quickshell reloads QML edits live;
 restart the preview after editing imported JavaScript logic.
+Install the `papirus-icon-theme` package, or install Papirus and Papirus-Dark
+under `~/.local/share/icons` for the current user. Theme changes require a
+preview restart so Qt rebuilds its icon lookup.
 Stop with `quickshell --path ~/dotfiles/quickshell kill`.
 This preview is started manually; it is not enabled at login.
 
 Each monitor gets a transparent row below panels that already reserve space
 (currently AGS). The compositor handles placement without polling or a fixed
-AGS height. Only the volume, network, battery, clock, and tray receive pointer input. The row reserves 44 pixels;
+AGS height. Only the workspace strip and the volume, network, battery, clock, and tray receive pointer input. The row reserves 44 pixels;
 the clock remains visible when there are no tray items. All tray items remain visible, including
 passive items, so applications do not silently disappear.
 
@@ -171,85 +174,126 @@ Restart the preview after changing this stylesheet; QML edits reload live.
 Missing icons remain empty in both the tray and menus. The preview uses the compose input
 context and skips portal registration to avoid Qt Wayland input and duplicate
 portal-registration warnings. The Wi-Fi picker uses a Qt Quick password field.
-Icons use Breeze Dark first and Adwaita as a fallback. Blueman supplies GTK
-symbolic icon names that Breeze lacks, so Adwaita supplies those without
-replacing icons already found in Breeze or application-specific icon directories.
-Symbolic icons are tinted to the menu text color so Adwaita's dark source
+Icons use Papirus-Dark, with Adwaita as a fallback for missing GTK symbolic names.
+The theme can be installed per user under `~/.local/share/icons`.
+Symbolic icons are tinted to the menu text color so dark source
 artwork remains readable against the dark menu background.
 
-## Hyprland workspaces and app icons plan
+## Hyprland workspaces and window icons
 
-Scope: add workspace groups with an app icon for every window to the left of
-the preview bar, including separate icons for multiple windows of the same app.
-Keep the existing status widgets on the right.
-Agentic status, agent pills, session/process inspection, and workspace renaming
-are out of scope. AGS supplies the visual reference; implement state and
-interaction independently. This section is a plan, not an implemented feature.
+The left strip groups every normal workspace with an icon for each of its
+windows, including separate icons for multiple windows of the same app. Empty
+workspaces retain their numbered button. Numbered workspaces sort numerically;
+named workspaces have a stable name order. Special workspaces are identified by
+their names and omitted, without hiding normal named workspaces with negative IDs.
+The number sits close to its window icons. Spacing stays the same when focus
+changes, and workspace backgrounds stay neutral. A workspace visible on another
+monitor has a subtle border. The focused window has a mauve underline.
 
-1. **Probe the native service first.** Use the already enabled
-   `Quickshell.Hyprland` module in an isolated read-only probe against the installed
-   Hyprland 0.56.2. Check workspace/window membership, focus updates, Wayland app-ID
-   mapping, and Lua mode. Then validate workspace and exact-window activation
-   with disposable test windows before wiring clicks into the bar. Prefer the stock
-   `workspace.activate()` method: the checked-out runtime already selects Lua
-   dispatcher syntax when `Hyprland.usingLua` is true. No new core patch is planned.
+Click a workspace number to activate it, or an app icon to focus that exact
+window. Tab moves between buttons; Enter/Space activates the focused button.
+Each button has an independent hover/focus highlight and a compact one-line
+tooltip. Window tooltips show the app name and title to distinguish duplicates.
+Unknown applications and unavailable artwork use a neutral window symbol and
+remain clickable. The strip scrolls horizontally when space runs out, and
+keyboard focus reveals clipped buttons. The status row keeps its space on the
+right; the unused center remains click-through through a union of input regions.
 
-2. **Build the workspace strip before icons.** Show existing normal workspaces
-   across monitors, sorted numerically, with deterministic ordering for named
-   workspaces. Distinguish special workspaces by their identity/name rather than
-   copying AGS's negative-ID range filter. Match AGS's compact numbered buttons,
-   rounded groups, and mauve focused state; distinguish the focused workspace
-   from a workspace merely visible on another monitor. Support click and
-   keyboard activation, independent hover, and a compact one-line tooltip.
-   Use stable workspace identities so a focus change updates delegates without
-   rebuilding the complete row. Bound the left strip's width and allow horizontal
-   overflow without covering the status row. Extend the input mask to the union
-   of the two rows so the unused center stays click-through.
+`WorkspaceState.qml` shares the stock native Hyprland models and desktop-entry
+catalog across monitor views. `ScriptModel` preserves delegates by native object
+identity, and windows keep a stable address order when focus changes. Membership
+uses workspace IDs from the initial IPC snapshot and move events. The native
+workspace pointer resolves by name, which can group windows incorrectly when
+AGS assigns the same name to several numbered workspaces. Workspace selection
+also uses IDs from monitor snapshots and workspace events. Wayland app IDs,
+exact desktop IDs, and unambiguous
+`StartupWMClass` matches resolve app icons. Desktop catalog notifications clear
+our icon cache, including when previously missing applications are installed.
+When a single registered tray item matches an app ID, desktop-entry ID, or
+startup class, its live icon source takes priority. This includes app-provided
+pixmaps and icon updates, without app-specific assets or overrides. Missing or
+ambiguous tray matches fall back to the desktop icon.
+Desktop artwork prefers the configured icon theme using its explicit icon name,
+desktop-entry ID, and app IDs before falling back to a bundled image path. This
+also covers launchers with absolute `Icon=` paths, such as Zed, without an
+app-specific rule. Icon identifiers retain their case.
+Explicit user overrides in `WorkspaceState.qml` take precedence: `codex` and
+`book-codex-*` app IDs use the bundled Codex SVG artwork also used by AGS.
+Kitty uses WhiteSur's terminal artwork, including the terminal fallback. Foliate
+uses Phosphor's open-book duotone icon in mauve, selected from
+[`previews/foliate-icons.html`](previews/foliate-icons.html). Bundled artwork retains
+its upstream license and attribution in `assets/whitesur/` and `assets/phosphor/`.
+For Kitty windows, the foreground app in the active tab/pane supplies the icon.
+Installed desktop IDs, startup classes, and unambiguous `Exec` executable names
+resolve the artwork first. Codex and Claude use bundled overrides when their
+foreground executables have no usable app icon. Other unknown apps and shell
+prompts fall back to Kitty; failed image loads also retain that fallback.
 
-3. **Add an icon for every window inside its workspace group.** Build each group
-   from the native workspace's live toplevel model. Keep one icon per window,
-   including duplicate application icons, with stable ordering that does not
-   change when focus changes. Key each delegate by window address; insert, remove,
-   or move only the affected window when membership changes. Give the focused
-   window a distinct highlight. Clicking the workspace number activates the
-   workspace; clicking an app icon focuses that exact window. Prefer the mapped
-   Wayland toplevel's activation method and verify cross-workspace activation in
-   the probe; review a Lua IPC fallback for unmapped windows if needed. Hover
-   shows a compact one-line app name and window title so duplicate icons remain
-   distinguishable. Prefer the mapped Wayland `appId`; use IPC class metadata
-   when needed. Resolve exact desktop IDs and `StartupWMClass` through
-   `DesktopEntries`, with explicit aliases only for unresolved applications.
-   Cache the lookup and invalidate it when application metadata changes, including
-   previously missing matches. Unknown or missing artwork uses a small neutral
-   window symbol, keeping every window visible and focusable without a
-   checkerboard. Empty workspaces retain their numbered button.
+`KittyApps.qml` owns one shared Python reader. It talks directly to the configured
+abstract Kitty sockets, without spawning `kitty @` commands. Focus/title changes
+request a refresh, coalesced to at most four queries per second per Kitty process.
+Leading activity spinners and their presentation/spacing changes are removed
+before comparing titles. Spinner-only updates never request a reader refresh;
+meaningful title changes and focus events still do. Initial titles are seeded
+from the native model, and cached keys are removed when windows close.
+A one-second check reads `/proc` stat fields for known Kitty pane/foreground PIDs
+so foreground-group changes and exits also update icons with fixed titles. There
+are no periodic process-tree scans or idle Kitty IPC queries. With no Kitty
+windows the reader blocks on input. Only app executable basenames reach QML;
+command arguments, environment, working directories and session metadata stay
+out of the icon state. Multiple OS windows in one Kitty process are matched only
+when their classes identify them uniquely; ambiguous windows use the Kitty icon.
+Kitty tab/pane switches refresh through meaningful compositor title/focus events.
+A switch that leaves both the normalized title and the previously observed
+foreground processes unchanged is detected on the next meaningful title/focus event.
 
-4. **Keep state shared and driven by events.** One `WorkspaceState.qml` owns
-   selection and icon resolution for all monitor views. Use native workspace,
-   toplevel, and desktop-entry notifications. Coalesce only events that need
-   fresh IPC metadata, and update affected workspaces. Treat `lastIpcObject` as
-   a snapshot, not a continuously updated property. Avoid repeating timers,
-   `hyprctl` polling, shell processes per window, and permanent failed icon caches.
+The open-window event supplies class metadata before the first full IPC snapshot.
+Since that event contains only a workspace name, a single-shot 40 ms timer
+coalesces open bursts into one client snapshot to obtain workspace IDs. Initial
+load and monitor/configuration changes also refresh metadata once.
+Hyprland membership uses no repeating timers, `hyprctl` polling, per-window
+processes, or new Quickshell core patches. AGS supplies visual references and
+Codex/Claude artwork only. Agent status, agent pills, session tracking, and
+workspace renaming are out of scope.
 
-5. **Verify lifecycle and failure behavior before calling it complete.** Test
-   focus changes, workspace creation/removal/rename, window open/close/move,
-   duplicate app windows and exact-window activation, missing or changing app
-   IDs/icons, named/special workspaces, overflow, and
-   monitor changes with isolated fixtures, then inspect the live bar. Measure
-   idle IPC traffic and preserve unrelated windows and workspaces during checks.
-   The current native connection logs an event-socket disconnect but does not
-   automatically reconnect in the inspected implementation. Test that failure
-   explicitly, document the reload/restart recovery path, and review a stock-API
-   or upstream remedy separately before promising automatic reconnection.
+Workspace activation uses the native Hyprland dispatcher with numeric IDs for
+numbered workspaces and explicit names for named workspaces, with Lua-mode
+support. Window activation uses an exact, validated address.
+The Wayland activation method silently returns if Qt has no last input device;
+the dispatcher also works before pointer input and for windows on other workspaces.
+An empty focus event explicitly clears our window highlight rather than relying
+on the native active-toplevel pointer retaining the previous window.
 
-Implementation order: native probe, workspace buttons, app icons, then lifecycle
-checks and polish. Review the visible result after each step.
+The inspected native event connection does not reconnect automatically after a
+socket disconnect. Its last state can remain visible; QML reload alone does not
+recreate the native connection. Stop the preview with
+`quickshell --path ~/dotfiles/quickshell kill`, then start `./quickshell/run`
+after it exits. Restart recovery is checked with private sockets. Automatic
+reconnection remains a separate stock-runtime/upstream review.
+
+The initial read-only probe verified Lua mode, workspace membership, and Wayland
+mapping against the installed Hyprland 0.56.2. Private request/event sockets and
+an offscreen widget check duplicate windows, missing/changing app metadata and
+artwork, focus clearing, exact-window mouse and keyboard activation, delegate
+reuse, open/close/move/title events, named/special workspaces, workspace
+creation/removal/rename, identical workspace names at startup and after moves,
+ID-based workspace selection, terminal executable matching and icon fallbacks,
+monitor changes, overflow, idle IPC traffic, and
+restart recovery. Two disposable application windows verified real exact-window and
+cross-workspace activation; the original desktop state was restored afterward.
+Physical multi-monitor hotplug and laptop suspend/resume remain unverified.
+
+Run the workspace checks with:
+
+```sh
+node --test quickshell/tests/workspace-logic.test.cjs
+python3 quickshell/tests/kitty-apps.test.py
+python3 quickshell/tests/check-workspaces
+```
 
 References: [native Hyprland service](https://quickshell.org/docs/v0.3.2/types/Quickshell.Hyprland/Hyprland/),
-[workspace API](https://quickshell.org/docs/v0.3.2/types/Quickshell.Hyprland/HyprlandWorkspace/),
-and the local sources `src/wayland/hyprland/ipc/` and `src/core/desktopentry.hpp`
-in `~/github/quickshell`. AGS visual references are `ags/widget/HyprlandStatus.ts`
-and the workspace rules in `ags/style.css`.
+[stable script models](https://quickshell.org/docs/v0.3.2/types/Quickshell/ScriptModel/),
+and [Hyprland dispatchers](https://wiki.hypr.land/Configuring/Basics/Dispatchers/).
 
 ## Local runtime
 

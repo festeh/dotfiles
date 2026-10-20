@@ -19,3 +19,8 @@ VolumeWidget 1.0 VolumeWidget.qml
 VolumeAction 1.0 VolumeAction.qml
 VolumeIcon 1.0 VolumeIcon.qml
 VolumePopup 1.0 VolumePopup.qml
+singleton WorkspaceState 1.0 WorkspaceState.qml
+singleton KittyApps 1.0 KittyApps.qml
+WorkspaceStrip 1.0 WorkspaceStrip.qml
+WorkspaceGroup 1.0 WorkspaceGroup.qml
+WorkspaceButton 1.0 WorkspaceButton.qml

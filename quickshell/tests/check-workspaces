@@ -1,0 +1,335 @@
+#!/usr/bin/env python3
+"""Native Hyprland models and rendered controls against private IPC sockets."""
+
+import json
+import os
+from pathlib import Path
+import socket
+import subprocess
+import tempfile
+import threading
+import time
+
+config = Path(__file__).resolve().parents[1]
+
+with tempfile.TemporaryDirectory(prefix="quickshell-workspace-check-") as directory:
+    root = Path(directory)
+    runtime = root / "runtime"
+    ipc = runtime / "hypr" / "test"
+    ipc.mkdir(parents=True, mode=0o700)
+    runtime.chmod(0o700)
+    apps = root / "data/applications"
+    apps.mkdir(parents=True)
+    icon = root / "editor.svg"
+    icon.write_text('<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"><rect width="18" height="18" fill="#89b4fa"/></svg>')
+
+    def desktop(name="org.example.Editor", startup="MyEditor", icon_path=icon, executable="editor-cli %F"):
+        staging = apps / (name + ".tmp")
+        staging.write_text(
+            "[Desktop Entry]\nType=Application\nName=Example Editor\nExec=" + executable + "\nStartupWMClass="
+            + startup + "\nIcon=" + str(icon_path) + "\n")
+        staging.replace(apps / (name + ".desktop"))
+
+    desktop()
+    kitty_icon = root / "kitty.svg"
+    kitty_icon.write_text(icon.read_text().replace("#89b4fa", "#cba6f7"))
+    desktop("kitty", "kitty", kitty_icon, "kitty")
+    theme = root / "data/icons/QuickshellWorkspaceTest"
+    (theme / "16x16/apps").mkdir(parents=True)
+    (theme / "index.theme").write_text("[Icon Theme]\nName=QuickshellWorkspaceTest\nDirectories=16x16/apps\n\n"
+        "[16x16/apps]\nSize=16\nType=Fixed\nContext=Applications\n")
+    (theme / "16x16/apps/org.example.Themed.svg").write_text(icon.read_text())
+    (root / "assets").symlink_to(config / "assets")
+    for item in config.iterdir():
+        if item.is_file() and item.name != "shell.qml":
+            if item.name == "KittyApps.qml":
+                # Exercise the real QML event filter with an observable private
+                # helper transport; it never connects to the user's terminals.
+                source = item.read_text()
+                replacement = source.replace('shellPath("kitty_apps.py")', 'shellPath("kitty-apps-probe.py")')
+                assert replacement != source
+                (root / item.name).write_text(replacement)
+            else:
+                (root / item.name).symlink_to(item)
+    (root / "kitty-apps-probe.py").symlink_to(config / "tests/fixtures/kitty-apps-probe.py")
+    (root / "shell.qml").write_text((config / "tests/fixtures/workspace-native.qml").read_text())
+
+    env = os.environ.copy()
+    env.update(XDG_RUNTIME_DIR=str(runtime), HYPRLAND_INSTANCE_SIGNATURE="test",
+        XDG_DATA_HOME=str(root / "data"), XDG_DATA_DIRS=str(root / "empty"),
+        QT_QPA_PLATFORM="offscreen", QT_QUICK_BACKEND="software", QT_IM_MODULE="compose",
+        QT_NO_XDG_DESKTOP_PORTAL="1", QS_KITTY_CHECK_LOG=str(root / "kitty-requests.jsonl"))
+
+    workspaces = [dict(id=i, name=str(i), monitor="TEST-1", monitorID=0) for i in (1, 2, 10)]
+    workspaces += [dict(id=-1337, name="dev", monitor="TEST-1", monitorID=0),
+        dict(id=-99, name="special:scratch", monitor="TEST-1", monitorID=0)]
+    clients = []
+
+    def client(address, ws, app="MyEditor", title="Example window"):
+        return dict(address="0x" + address, pid=40000000 + int(address, 16), workspace=dict(id=ws["id"], name=ws["name"]),
+            **{"class": app}, initialClass=app, title=title)
+
+    clients += [client("a1", workspaces[0], title="First, editor"), client("a2", workspaces[0], title="Second editor"),
+        client("b1", workspaces[1], app="UnknownApp"), client("c1", workspaces[3]), client("d1", workspaces[4])]
+    monitors = [dict(id=0, name="TEST-1", description="Test monitor", x=0, y=0,
+        width=1920, height=1080, scale=1, focused=True, activeWorkspace=dict(id=1, name="1"))]
+    requests, dispatches, event_connections = [], [], []
+    stopping = threading.Event()
+    sockets = []
+
+    def listen(name, events=False):
+        listener = socket.socket(socket.AF_UNIX)
+        listener.bind(str(ipc / name))
+        listener.listen()
+        listener.settimeout(0.2)
+        sockets.append(listener)
+
+        def serve():
+            while not stopping.is_set():
+                try:
+                    connection, _ = listener.accept()
+                except socket.timeout:
+                    continue
+                except OSError:
+                    break
+                if events:
+                    event_connections.append(connection)
+                    continue
+                with connection:
+                    request = connection.recv(65536).decode()
+                    requests.append(request)
+                    if request.startswith("dispatch "):
+                        dispatches.append(request)
+                        payload = "ok"
+                    else:
+                        payload = json.dumps({"j/status": {"configProvider": "lua"},
+                            "j/monitors": monitors, "j/workspaces": workspaces, "j/clients": clients}.get(request, []))
+                    connection.sendall(payload.encode())
+
+        threading.Thread(target=serve, daemon=True).start()
+
+    listen(".socket.sock")
+    listen(".socket2.sock", True)
+    log = (root / "quickshell.log").open("w")
+    process = None
+
+    def call(method, *args):
+        return subprocess.check_output(["quickshell", "ipc", "--path", str(root), "call", "workspace-test", method,
+            *(str(arg) for arg in args)], env=env, text=True, stderr=subprocess.PIPE, timeout=5).strip()
+
+    def state():
+        return json.loads(call("state"))
+
+    def wait_for(predicate, message):
+        deadline = time.monotonic() + 6
+        last = None
+        while time.monotonic() < deadline:
+            try:
+                last = state()
+                if predicate(last): return last
+            except (subprocess.SubprocessError, json.JSONDecodeError):
+                pass
+            time.sleep(0.04)
+        raise AssertionError(message + ": " + repr(last))
+
+    def emit(name, data):
+        event_connections[-1].sendall((name + ">>" + data + "\n").encode())
+
+    def windows(snapshot):
+        return {window["address"]: window for group in snapshot["groups"] for window in group["windows"]}
+
+    def start():
+        return subprocess.Popen(["quickshell", "--path", str(root)], env=env, stdout=log, stderr=log)
+
+    def reader_requests():
+        path = root / "kitty-requests.jsonl"
+        return [json.loads(line) for line in path.read_text().splitlines()] if path.exists() else []
+
+    def refreshes():
+        return sum("refresh" in request for request in reader_requests())
+
+    try:
+        process = start()
+        initial = wait_for(lambda s: s["terminalReady"] and len(s["groups"]) == 4 and len(windows(s)) == 4
+            and windows(s)["a1"]["info"]["source"], "native startup and icon resolution")
+        assert [group["id"] for group in initial["groups"]] == [1, 2, 10, -1337]
+        assert len(initial["groups"][0]["windows"]) == 2
+        assert not windows(initial)["b1"]["info"]["source"]
+        assert all("null" != window["delegate"] for window in windows(initial).values())
+        print("PASS: native startup, numeric/named/special workspaces, duplicate icons, missing artwork", flush=True)
+
+        baseline_refreshes = refreshes()
+        emit("windowtitlev2", "a1,⠋ Background, editor")
+        wait_for(lambda s: refreshes() == baseline_refreshes + 1, "meaningful title requests app refresh")
+        spinner_refreshes = refreshes()
+        frames = ["⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", "✳️"]
+        for index in range(100):
+            emit("windowtitlev2", "a1," + frames[index % len(frames)] + " Background, editor")
+        wait_for(lambda s: windows(s)["a1"]["title"] == frames[-1] + " Background, editor", "spinner frames processed")
+        time.sleep(.35)
+        assert refreshes() == spinner_refreshes, "spinner-only frames reached the reader"
+        emit("windowtitlev2", "a1,Background, editor")
+        wait_for(lambda s: windows(s)["a1"]["title"] == "Background, editor", "spinner disappears")
+        assert refreshes() == spinner_refreshes
+        emit("windowtitlev2", "a1,⠋ Another tab, editor")
+        wait_for(lambda s: refreshes() == spinner_refreshes + 1, "meaningful title change remains observable")
+        focus_refreshes = refreshes()
+        emit("activewindowv2", "a1")
+        wait_for(lambda s: refreshes() == focus_refreshes + 1, "focus refresh bypasses title filter")
+        print("PASS: 100 spinner frames and spinner removal cause zero reader requests; real title/focus changes refresh", flush=True)
+
+        for program, expected in [("codex", "/assets/codex.svg"), ("claude", "/assets/claude.svg"),
+                ("editor-cli", "/editor.svg"), ("unknown-cli", "/assets/whitesur/terminal.svg")]:
+            call("terminal", "a1", program)
+            wait_for(lambda s: windows(s)["a1"]["info"]["source"].endswith(expected), "terminal app " + program)
+        call("terminal", "a1", "claude,editor-cli")
+        wait_for(lambda s: windows(s)["a1"]["info"]["source"].endswith("/assets/claude.svg"),
+            "primary foreground app takes priority over a secondary process")
+        call("terminal", "a1", "")
+        wait_for(lambda s: windows(s)["a1"]["info"]["source"].endswith("/assets/whitesur/terminal.svg"), "shell prompt fallback")
+        call("terminal", "a1", "-")
+        wait_for(lambda s: windows(s)["a1"]["info"]["source"].endswith("/editor.svg"), "ordinary window metadata restored")
+        print("PASS: Kitty foreground app, executable desktop matching, Codex/Claude overrides, unknown/shell fallback", flush=True)
+
+        desktop("org.example.Themed", "ThemedApp", icon, "themed-cli")
+        clients.append(client("e1", workspaces[0], app="ThemedApp"))
+        emit("openwindow", "e1,1,ThemedApp,Themed window")
+        wait_for(lambda s: "e1" in windows(s)
+            and windows(s)["e1"]["info"]["source"] == "image://icon/org.example.Themed",
+            "theme app ID overrides an absolute bundled Icon path")
+        clients[:] = [w for w in clients if w["address"] != "0xe1"]
+        emit("closewindow", "e1")
+        wait_for(lambda s: "e1" not in windows(s), "themed window closes")
+        print("PASS: native theme lookup uses case-sensitive app IDs before bundled image paths", flush=True)
+
+        emit("activewindowv2", "a2")
+        focused = wait_for(lambda s: windows(s)["a2"]["focused"], "window focus")
+        assert all(windows(initial)[address]["delegate"] == window["delegate"] for address, window in windows(focused).items())
+        emit("activewindowv2", "")
+        wait_for(lambda s: not any(w["focused"] for w in windows(s).values()), "empty focus clears highlight")
+        assert call("click", "workspace-window-a2") == "true"
+        deadline = time.monotonic() + 3
+        while not dispatches:
+            assert time.monotonic() < deadline
+            time.sleep(0.02)
+        assert dispatches[-1] == 'dispatch hl.dsp.focus({ window = "address:0xa2" })'
+        call("click", "workspace-number-2")
+        deadline = time.monotonic() + 3
+        while 'workspace = 2' not in dispatches[-1]:
+            assert time.monotonic() < deadline
+            time.sleep(0.02)
+        print("PASS: exact-window and workspace mouse activation use Lua; focus preserves delegates", flush=True)
+
+        baseline_clients = requests.count("j/clients")
+        added = client("a3", workspaces[0], title="New, window")
+        clients.append(added)
+        emit("openwindow", "a3,1,MyEditor,New, window")
+        # The open event has a name but no workspace ID. One coalesced snapshot
+        # resolves the identity, even if several open events arrive together.
+        emit("openwindow", "a3,1,MyEditor,New, window")
+        wait_for(lambda s: "a3" in windows(s) and windows(s)["a3"]["info"]["source"], "open event metadata")
+        assert requests.count("j/clients") == baseline_clients + 1
+        clients[0]["workspace"] = dict(id=2, name="2")
+        emit("movewindowv2", "a1,2,2")
+        moved = wait_for(lambda s: [w["address"] for w in s["groups"][1]["windows"]] == ["a1", "b1"], "window move")
+        assert [w["address"] for w in moved["groups"][0]["windows"]] == ["a2", "a3"]
+        emit("windowtitlev2", "a2,Changed, title")
+        wait_for(lambda s: windows(s)["a2"]["title"] == "Changed, title", "title event with commas")
+        clients[:] = [w for w in clients if w["address"] != "0xa3"]
+        emit("closewindow", "a3")
+        wait_for(lambda s: "a3" not in windows(s), "window close")
+        print("PASS: open bursts use one ID snapshot; move/title/close update without polling", flush=True)
+
+        # Reproduce AGS assigning the same visible name to numbered workspaces.
+        # Native membership and monitor pointers resolve by name and select the
+        # first match; our grouping, focus, and activation must retain the IDs.
+        for workspace in workspaces[:2]:
+            workspace["name"] = "shared"
+            emit("renameworkspace", str(workspace["id"]) + ",shared")
+        for window in clients:
+            if window["workspace"]["id"] in (1, 2): window["workspace"]["name"] = "shared"
+        clients[1]["workspace"] = dict(id=2, name="shared")
+        emit("movewindowv2", "a2,2,shared")
+        monitors[0]["activeWorkspace"] = dict(id=2, name="shared")
+        emit("workspacev2", "2,shared")
+        duplicate_names = wait_for(lambda s: s["groups"][0]["name"] == "shared"
+            and s["groups"][1]["name"] == "shared" and not s["groups"][0]["windows"]
+            and [w["address"] for w in s["groups"][1]["windows"]] == ["a1", "a2", "b1"]
+            and s["groups"][1]["focused"] and not s["groups"][0]["focused"], "duplicate-name ID membership and focus")
+        call("click", "workspace-number-2")
+        assert dispatches[-1] == "dispatch hl.dsp.focus({ workspace = 2 })"
+        print("PASS: identical workspace names retain separate membership, focus, and numeric activation", flush=True)
+        # Restore focus to 1 before testing a second monitor displaying 2.
+        monitors[0]["activeWorkspace"] = dict(id=1, name="shared")
+        emit("workspacev2", "1,shared")
+
+        desktop("org.example.Unknown", "UnknownApp")
+        wait_for(lambda s: bool(windows(s)["b1"]["info"]["source"]), "previously missing desktop entry installed")
+        desktop("org.example.Unknown", "UnknownApp", root / "missing.svg")
+        wait_for(lambda s: not windows(s)["b1"]["info"]["source"], "icon change invalidates cached artwork")
+        created = dict(id=3, name="3", monitor="TEST-1", monitorID=0)
+        workspaces.append(created)
+        emit("createworkspacev2", "3,3")
+        wait_for(lambda s: [g["id"] for g in s["groups"]] == [1, 2, 3, 10, -1337], "workspace creation")
+        workspaces.remove(created)
+        emit("destroyworkspacev2", "3,3")
+        wait_for(lambda s: len(s["groups"]) == 4, "workspace destruction")
+        monitors.append(dict(id=1, name="TEST-2", description="Second test monitor", x=1920, y=0,
+            width=1920, height=1080, scale=1, focused=False, activeWorkspace=dict(id=2, name="shared")))
+        workspaces[1].update(monitor="TEST-2", monitorID=1)
+        emit("monitoraddedv2", "1,TEST-2,Second test monitor")
+        emit("moveworkspacev2", "2,shared,TEST-2")
+        wait_for(lambda s: s["groups"][1]["active"] and not s["groups"][1]["focused"], "visible workspace on another monitor")
+        workspaces[1].update(monitor="TEST-1", monitorID=0)
+        emit("moveworkspacev2", "2,shared,TEST-1")
+        monitors.pop()
+        emit("monitorremoved", "TEST-2")
+        wait_for(lambda s: not s["groups"][1]["active"], "monitor removal")
+        workspaces[3]["name"] = "renamed"
+        emit("renameworkspace", "-1337,renamed")
+        wait_for(lambda s: s["groups"][-1]["name"] == "renamed", "workspace rename")
+        call("narrow")
+        narrow = wait_for(lambda s: s["implicitWidth"] > s["width"], "bounded overflow")
+        call("reveal", "workspace-window-c1")
+        wait_for(lambda s: s["scrollX"] > 0, "keyboard focus scrolls clipped button into view")
+        assert call("key", 16777220) == "true"
+        deadline = time.monotonic() + 3
+        while not dispatches[-1].endswith('window = "address:0xc1" })'):
+            assert time.monotonic() < deadline
+            time.sleep(0.02)
+        print("PASS: metadata/icon changes, workspace create/remove/rename, monitor changes, keyboard activation and overflow", flush=True)
+
+        idle_reads = len(requests)
+        time.sleep(0.35)
+        assert len(requests) == idle_reads
+        event_connections[-1].shutdown(socket.SHUT_RDWR)
+        event_connections[-1].close()
+        time.sleep(0.2)
+        assert len(event_connections) == 1, "Native reconnect behavior changed; update recovery documentation"
+        process.terminate(); process.wait(timeout=3)
+        # Restore consistency in the fixture's startup snapshot after the rename.
+        for window in clients:
+            if window["workspace"]["id"] == -1337: window["workspace"]["name"] = "renamed"
+        process = start()
+        wait_for(lambda s: len(windows(s)) == 4 and s["groups"][-1]["name"] == "renamed"
+            and not s["groups"][0]["windows"]
+            and [w["address"] for w in s["groups"][1]["windows"]] == ["a1", "a2", "b1"],
+            "restart recovery with duplicate workspace names")
+        assert len(event_connections) == 2
+        print("PASS: zero idle IPC requests; native disconnect limitation and restart recovery verified", flush=True)
+
+        output = (root / "quickshell.log").read_text()
+        assert not any(error in output for error in ("TypeError:", "ReferenceError:", "Binding loop detected", "Failed to load configuration")), output
+        print("All workspace checks passed on private sockets with offscreen mouse events; desktop unchanged.")
+    except Exception:
+        print((root / "quickshell.log").read_text())
+        raise
+    finally:
+        if process and process.poll() is None:
+            process.terminate(); process.wait(timeout=3)
+        stopping.set()
+        for connection in event_connections:
+            connection.close()
+        for listener in sockets:
+            listener.close()
+        log.close()

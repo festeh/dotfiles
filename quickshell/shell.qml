@@ -1,5 +1,5 @@
 //@ pragma UseQApplication
-//@ pragma IconTheme breeze-dark
+//@ pragma IconTheme Papirus-Dark
 //@ pragma Env QS_FALLBACK_ICON_THEME = Adwaita
 //@ pragma Env QS_SYMBOLIC_ICON_COLOR = #cdd6f4
 //@ pragma Env QT_QPA_PLATFORMTHEME = gtk3
@@ -29,7 +29,20 @@ ShellRoot {
             exclusiveZone: implicitHeight
             WlrLayershell.namespace: "quickshell-tray-preview"
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
-            mask: Region { item: statusRow }
+            mask: Region {
+                Region { item: workspaceStrip }
+                Region { item: statusRow }
+            }
+
+            WorkspaceStrip {
+                id: workspaceStrip
+                anchors { left: parent.left; verticalCenter: parent.verticalCenter }
+                anchors.leftMargin: 4
+                width: Math.max(0, Math.min(implicitWidth, statusRow.x - 16))
+                keyboardNavigation: statusRow.keyboardNavigation
+                onPointerInteraction: statusRow.keyboardNavigation = false
+                onKeyboardInteraction: statusRow.keyboardNavigation = true
+            }
 
             Row {
                 id: statusRow
