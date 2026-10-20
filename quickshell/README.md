@@ -14,7 +14,8 @@ This preview is started manually; it is not enabled at login.
 
 Each monitor gets a transparent row below panels that already reserve space
 (currently AGS). The compositor handles placement without polling or a fixed
-AGS height. Only the workspace strip and the volume, network, battery, clock, and tray receive pointer input. The row reserves 44 pixels;
+AGS height. Only the workspace strip and the layout, volume, network, battery,
+clock, and tray widgets receive pointer input. The row reserves 44 pixels;
 the clock remains visible when there are no tray items. All tray items remain visible, including
 passive items, so applications do not silently disappear.
 
@@ -31,6 +32,43 @@ passive items, so applications do not silently disappear.
 - Tooltips use one compact line with normalized whitespace and 6px horizontal /
   3px vertical padding. Long text is elided. Items requesting attention get a
   yellow border and dot.
+
+## Keyboard layout
+
+A compact mauve `RU` lettermark appears immediately left of the volume while the main
+physical keyboard uses Russian. It hides for other layouts and unavailable data.
+The letter shapes are SVG paths, selected as option 04 in the icon comparison;
+they render without relying on installed fonts.
+Click, press Enter/Space, or use the accessibility action to cycle the identified
+keyboard's configured layouts. Hover or focus for its current layout name.
+
+`LayoutState.qml` is shared across outputs. One transient `hyprctl -j devices`
+request finds the main keyboard at startup; `activelayout` events from the
+existing native Hyprland connection update its name directly. Config reloads and
+events from another physical keyboard trigger a coalesced device refresh so the
+widget can follow a newly selected main keyboard. Virtual keyboards are ignored.
+The device name is discovered rather than hardcoded, and switching uses separate
+process arguments. A follow-up snapshot confirms the result of an explicit click.
+Newer events take precedence over an older snapshot already in flight.
+There is no periodic polling, persistent helper process, or new core patch.
+Requests have a two-second timeout and at most two retries after a failed read;
+later relevant events can retry after recovery. The native event connection's
+restart limitation described below also applies to layout events.
+
+Check discovery, event updates, activation, races, and idle behavior without
+changing the user's keyboard:
+
+```sh
+node --test quickshell/tests/layout-logic.test.cjs
+python3 quickshell/tests/check-layout
+```
+
+Compare 16 flags, lettermarks, and icon-set alternatives in the standalone
+[`previews/layout-icons.html`](previews/layout-icons.html) page. It previews the
+same bar slot, symbol colors, icon heights, and hiding the indicator on English.
+
+References: [Hyprland layout events](https://wiki.hypr.land/IPC/) and
+[hyprctl commands](https://wiki.hypr.land/Configuring/Using-hyprctl/).
 
 ## Volume
 
@@ -117,12 +155,14 @@ the bar's native status observer continues. This adds no Quickshell core patches
 ## Battery
 
 The battery sits immediately left of the clock. Its vertical vector indicator
-fills from the bottom to the actual charge level. Charging uses green without
-an overlay; external power shows a plug when not charging. The bar shows only the icon in a fixed-width
-pill; the exact percentage is available on hover.
+fills from the bottom to the actual charge level while on battery or charging.
+Charging uses green without an overlay. When plugged in without charging, the
+icon shows a full green battery; the tooltip retains the actual charge level.
+The bar shows only the icon in a fixed-width pill; the exact percentage is
+available on hover.
 While discharging on battery power, the icon stays text gray above 20%, turns
 yellow at 11–20%, peach at 6–10%, and red at 0–5%. Charging overrides the
-percentage color with green; paused charging stays neutral. The low (20%) and
+percentage color with green; paused charging on battery stays neutral. The low (20%) and
 critical (5%) thresholds match the current UPower policy on this machine.
 Missing batteries are hidden; unavailable data
 shows a question mark instead of an invented `0%`.

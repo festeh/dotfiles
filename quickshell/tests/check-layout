@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+"""Layout snapshots, real native events and widget activation on private IPC."""
+import json
+import os
+from pathlib import Path
+import socket
+import subprocess
+import tempfile
+import threading
+import time
+
+config = Path(__file__).resolve().parents[1]
+with tempfile.TemporaryDirectory(prefix="quickshell-layout-check-") as directory:
+    root = Path(directory)
+    runtime = root / "runtime"
+    ipc = runtime / "hypr" / "layout-test"
+    ipc.mkdir(parents=True, mode=0o700)
+    runtime.chmod(0o700)
+    for source in config.iterdir():
+        if source.name != "shell.qml" and (source.is_file() or source.name == "assets"):
+            (root / source.name).symlink_to(source)
+    (root / "shell.qml").write_text((config / "tests/fixtures/layout-native.qml").read_text())
+    env = dict(os.environ, XDG_RUNTIME_DIR=str(runtime), HYPRLAND_INSTANCE_SIGNATURE="layout-test",
+        QT_QPA_PLATFORM="offscreen", QT_QUICK_BACKEND="software", QT_IM_MODULE="compose", QT_NO_XDG_DESKTOP_PORTAL="1")
+    keyboards = [dict(name="wtype-virtual-keyboard", main=True, layout="us,ru", active_keymap="Russian", active_layout_index=1),
+        dict(name="usb-keyboard", main=True, layout="us,ru", active_keymap="English (US)", active_layout_index=0)]
+    requests, connections = [], []
+    stop = threading.Event()
+    release = threading.Event()
+    hold_next = False
+    malformed = False
+    switch_fails = False
+    listeners = []
+
+    def emit(name, payload):
+        connections[-1].sendall((name + ">>" + payload + "\n").encode())
+
+    def serve(connection):
+        global hold_next
+        with connection:
+            request = connection.recv(65536).decode()
+            requests.append(request)
+            command = request.split("/", 1)[-1]
+            if command == "devices":
+                reply = "invalid-json" if malformed else json.dumps(dict(keyboards=keyboards))
+                if hold_next:
+                    hold_next = False
+                    release.wait(4)
+            elif command.startswith("switchxkblayout "):
+                if switch_fails:
+                    reply = "keyboard unavailable"
+                else:
+                    _, device, direction = command.split()
+                    assert direction == "next"
+                    keyboard = next(k for k in keyboards if k["name"] == device)
+                    keyboard.update(active_keymap="English (US)", active_layout_index=0)
+                    emit("activelayout", device + ",English (US)")
+                    reply = "ok"
+            else:
+                reply = json.dumps({"status": {"configProvider": "lua"}, "monitors": [], "workspaces": [], "clients": []}.get(command, []))
+            connection.sendall(reply.encode())
+
+    def listen(name, event_socket=False):
+        listener = socket.socket(socket.AF_UNIX)
+        listener.bind(str(ipc / name))
+        listener.listen()
+        listener.settimeout(.1)
+        listeners.append(listener)
+        def accept():
+            while not stop.is_set():
+                try:
+                    connection, _ = listener.accept()
+                except socket.timeout:
+                    continue
+                except OSError:
+                    break
+                if event_socket:
+                    connections.append(connection)
+                else:
+                    threading.Thread(target=serve, args=(connection,), daemon=True).start()
+        threading.Thread(target=accept, daemon=True).start()
+
+    listen(".socket.sock")
+    listen(".socket2.sock", True)
+    def call(method, *args):
+        return subprocess.check_output(["quickshell", "ipc", "--path", str(root), "call", "layout-test", method,
+            *(str(arg) for arg in args)], env=env, text=True, stderr=subprocess.PIPE, timeout=5).strip()
+    def state(): return json.loads(call("state"))
+    def wait(predicate, message):
+        deadline = time.monotonic() + 6
+        last = None
+        while time.monotonic() < deadline:
+            try:
+                last = state()
+                if predicate(last): return last
+            except (subprocess.SubprocessError, json.JSONDecodeError): pass
+            time.sleep(.03)
+        raise AssertionError(message + ": " + repr(last))
+    def reads(): return sum(request.endswith("/devices") for request in requests)
+    def switches(): return [r.split("/", 1)[-1] for r in requests if "switchxkblayout " in r]
+
+    with (root / "log").open("w") as log:
+        process = subprocess.Popen(["quickshell", "--path", str(root)], env=env, stdout=log, stderr=log)
+        try:
+            wait(lambda s: s["status"]["device"] == "usb-keyboard" and not s["visible"] and bool(connections), "initial main keyboard")
+            assert reads() == 1
+            baseline = reads()
+            emit("activelayout", "usb-keyboard,Russian, typewriter")
+            wait(lambda s: s["visible"] and s["status"]["name"] == "Russian, typewriter", "Russian event with comma")
+            emit("activelayout", "wtype-virtual-keyboard,English (US)")
+            time.sleep(.15)
+            assert state()["visible"] and reads() == baseline
+            assert call("click") == "true"
+            wait(lambda s: not s["visible"] and not s["cycling"] and not s["busy"], "real widget click switches to English")
+            assert switches() == ["switchxkblayout usb-keyboard next"]
+            print("PASS: physical main selection, event-only updates, virtual keyboard filtering and exact-device mouse activation", flush=True)
+
+            keyboards[1]["main"] = False
+            keyboards.append(dict(name="bluetooth-keyboard", main=True, layout="us,ru", active_keymap="Russian", active_layout_index=1))
+            emit("activelayout", "bluetooth-keyboard,Russian")
+            wait(lambda s: s["visible"] and s["status"]["device"] == "bluetooth-keyboard" and not s["busy"], "new main keyboard discovered")
+            assert call("key", 16777220) == "true"
+            wait(lambda s: not s["visible"] and not s["cycling"] and not s["busy"], "keyboard activation")
+            assert switches()[-1] == "switchxkblayout bluetooth-keyboard next"
+            print("PASS: keyboard discovery and Enter activation follow the new main device", flush=True)
+
+            baseline = reads()
+            for _ in range(15): emit("configreloaded", "")
+            wait(lambda s: reads() == baseline + 1 and not s["busy"], "config changes coalesced")
+            time.sleep(.12)
+            assert reads() == baseline + 1
+            release.clear()
+            hold_next = True
+            baseline = reads()
+            call("refresh")
+            wait(lambda s: reads() == baseline + 1 and s["busy"], "snapshot held")
+            emit("activelayout", "bluetooth-keyboard,Russian")
+            wait(lambda s: s["visible"], "newer layout event")
+            release.set()
+            wait(lambda s: s["visible"] and not s["busy"], "stale snapshot cannot overwrite the new event")
+            print("PASS: configuration bursts coalesce; newer layout events survive an in-flight stale snapshot", flush=True)
+
+            switch_fails = True
+            call("click")
+            wait(lambda s: bool(s["error"]) and not s["cycling"], "failed command reports an error")
+            assert state()["visible"]
+            malformed = True
+            baseline = reads()
+            call("refresh")
+            wait(lambda s: reads() == baseline + 3 and not s["busy"] and not s["status"]["ready"], "bounded retries")
+            time.sleep(.45)
+            assert reads() == baseline + 3
+            malformed = False
+            keyboards[-1].update(active_keymap="Russian", active_layout_index=1)
+            emit("configreloaded", "")
+            wait(lambda s: s["visible"] and not s["busy"] and not s["error"], "recovery after failure")
+            keyboards.clear()
+            emit("configreloaded", "")
+            wait(lambda s: not s["status"]["ready"] and not s["visible"] and not s["busy"], "no keyboards clears stale state")
+            baseline = reads()
+            time.sleep(.45)
+            assert reads() == baseline
+            output = (root / "log").read_text()
+            assert not any(error in output for error in ["TypeError:", "ReferenceError:", "Binding loop", "Failed to load configuration"]), output
+            print("PASS: failed switching, malformed snapshots, bounded retries, recovery, missing devices and zero idle requests", flush=True)
+        except Exception:
+            print((root / "log").read_text())
+            raise
+        finally:
+            release.set()
+            process.terminate()
+            process.wait(timeout=4)
+            stop.set()
+            for connection in connections: connection.close()
+            for listener in listeners: listener.close()

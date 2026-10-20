@@ -7,7 +7,7 @@ FocusScope {
     property bool keyboardNavigation: false
     readonly property bool highlighted: keyboardNavigation ? activeFocus : mouse.containsMouse
     readonly property color foreground: !BatteryState.status.known ? Theme.subtext
-        : BatteryState.status.marker === "charging" ? Theme.positive
+        : BatteryState.status.marker === "charging" || BatteryState.status.marker === "plugged" ? Theme.positive
         : BatteryState.status.severity === "critical" ? Theme.critical
         : BatteryState.status.severity === "low" && BatteryState.status.level <= 0.10 ? Theme.warning
         : BatteryState.status.severity === "low" ? Theme.attention : Theme.text
@@ -42,7 +42,7 @@ FocusScope {
     BatteryIcon {
         id: icon
         anchors.centerIn: parent
-        level: BatteryState.status.level
+        level: BatteryState.status.marker === "plugged" ? 1 : BatteryState.status.level
         known: BatteryState.status.known
         marker: BatteryState.status.marker
         foreground: root.foreground

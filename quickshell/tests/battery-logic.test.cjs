@@ -67,7 +67,7 @@ test('the tooltip uses the estimate for the current direction and describes rate
     }
 });
 
-test('paused and complete charging never reuse a stale discharge estimate or imply 100%', () => {
+test('paused and complete charging keep the actual percentage and omit stale discharge estimates', () => {
     const paused = battery.describe(sample({state: battery.PendingCharge, percentage: 0.80}), false);
     assert.equal(paused.marker, 'plugged');
     assert.equal(paused.tooltip, 'Plugged in · Charging paused');

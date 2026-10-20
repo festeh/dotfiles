@@ -51,6 +51,12 @@ ShellRoot {
                 anchors.rightMargin: 4
                 spacing: 8
 
+                LayoutWidget {
+                    keyboardNavigation: statusRow.keyboardNavigation
+                    onPointerInteraction: statusRow.keyboardNavigation = false
+                    onKeyboardInteraction: statusRow.keyboardNavigation = true
+                }
+
                 VolumeWidget {
                     keyboardNavigation: statusRow.keyboardNavigation
                     onPointerInteraction: statusRow.keyboardNavigation = false
