@@ -42,7 +42,7 @@ immediately instead of inheriting the desktop's long layer/fade transitions.
 | Shortcuts | Super+/ |
 | Widgets | Super+Shift+D |
 
-Super+S opens the existing screenshot capture tool.
+Super+S opens the existing screenshot capture tool; its saved notification expires after five seconds.
 
 Ctrl+J/K and Up/Down select results or widget controls. Ctrl+H/L switches
 categories without losing search text. Reopening starts a fresh search in the
@@ -138,8 +138,9 @@ keeps the popup open. Failures preserve the count and allow retry.
 The AGS implementations and styles are retained. `ags/features.ts` sets
 `legacyStatusWidgetsEnabled` and `legacyGoogleWidgetsEnabled` to `false`, disabling
 the old right-hand bar controls and Google extra row. The Google polling helper
-and clock timer also stay inactive behind these flags. AGS workspaces, agent
-status and the recording workflow remain available.
+and clock timer also stay inactive behind these flags. AGS workspaces and agent
+status remain active. The recording implementation is retained, with its Super+E
+shortcut disabled.
 
 Calendar shows a meeting icon and the current/next meeting's start time only for
 today. `outOfOffice` uses a palm, including all-day absences. Left click opens the
@@ -359,8 +360,74 @@ the rate, and paused/complete states do not reuse stale estimates.
 `BatteryState.qml` shares the native UPower display device across outputs and
 reacts to D-Bus property changes. There is no battery timer, command polling,
 notification sender, power-mode switch, or charging-limit control. UPower owns
-hardware refreshes, including after resume. The existing AGS notification service
-and system power policy continue to operate independently.
+hardware refreshes, including after resume. The Quickshell notification service
+and system power policy operate independently of battery monitoring.
+
+## Notifications
+
+Quickshell owns `org.freedesktop.Notifications`. AGS's original notification
+implementation is retained behind `legacyNotificationsEnabled = false` in
+`ags/features.ts`; disabling that call also prevents AstalNotifd from acquiring
+the notification service. AGS's remaining widgets stay active.
+
+One native `NotificationServer` serves all monitors. Compact cards appear at the
+top right, below reserved bar space, on the monitor focused when they arrive.
+Monitor removal moves live cards to an available output. Popups do not take
+keyboard focus, and their rounded input regions leave gaps clickable through.
+
+Explicit sender timeouts are respected, in milliseconds. Zero means no automatic
+expiration. When no timeout is supplied (`-1`), low and normal notifications
+default to 30 seconds; critical notifications stay until dismissed. An explicit
+positive timeout also applies to a critical notification.
+Hover does not extend a deadline; leaving a hovered noncritical card dismisses
+it immediately. A thin mauve outline traces the rounded border clockwise from
+the top center, completing one lap at the notification's deadline. It resets on replacement and resumes at
+the correct position after reload or suspend; only visible cards animate.
+Clock reconciliation never rewinds the outline, and a completed lap stays full
+until expiration instead of restarting for a final frame.
+Notifications without a deadline have no timeout indicator. Critical notifications
+do not dismiss on hover leave. Sender withdrawal and action
+semantics, including resident actions, are handled by the native service.
+Timeout sends the expired close reason; the close button and hover leave send
+the user-dismissed reason.
+
+At most three cards are visible, with fewer on short screens. Critical alerts
+have priority, while the stack under the pointer stays in place on arrival.
+Hyprland animations are disabled for the notification layer: animating its height
+when a card disappears stretches the colored border into a temporary rectangle.
+The timeout outline still animates within each card.
+Queued ordinary notifications keep their original deadline. Ordinary bursts are
+bounded to 64 active notifications; excess entries expire instead of growing a
+backlog. There is no notification center, saved history, DND, or server sound.
+
+Bodies and summaries are literal plain text. App icons and action icons use the
+current theme with a bundled bell fallback. Local images and native `image-data`
+have bounded display sizes; remote image URLs are not fetched. Cards support
+default actions, separate action buttons, and numeric progress hints.
+
+One single-shot timer handles expiration; a `gdbus monitor` process subscribes to
+logind resume events without polling. Resume reconciles wall-clock deadlines
+immediately, and visible relative timestamps reuse the existing shared clock.
+QML reloads retain only lifetime/monitor metadata through `PersistentProperties`;
+they preserve the original deadlines and live native actions without disk writes.
+
+`notifications.patch` adds a native replacement event, including replacements
+whose content is identical. This is needed to restart the deadline reliably;
+upstream only emits the arrival signal for new IDs, and property-change signals
+cannot detect identical replacements. The patch is separate from `runtime.patch`
+and applied by `build-runtime`. It adds no notification policy to C++.
+
+Validation uses a private D-Bus session, real notification method calls/signals,
+and the production cards with Qt mouse events:
+
+```sh
+node --test quickshell/tests/notification-logic.test.cjs
+quickshell/tests/check-notifications
+# Optional full 30-second animation/expiration regression:
+quickshell/tests/check-notifications --deadline
+```
+
+Privacy-preserving live status: `quickshell ipc --path ~/dotfiles/quickshell call notifications status`.
 
 ## Clock and calendar
 
@@ -526,7 +593,7 @@ Upstream source: `~/github/quickshell`, fetched from
 The local runtime is built against the host Qt version and installed under
 `~/.local`. Rebuild Quickshell after Qt upgrades: it uses private Qt APIs.
 
-The current build enables PipeWire, networking, UPower, the tray, Wayland panels, Hyprland integration, and
+The current build enables PipeWire, notifications, networking, UPower, the tray, Wayland panels, Hyprland integration, and
 Unix sockets. Other desktop services and the crash reporter are disabled for
 this experiment. The build configuration is recorded in
 `~/github/quickshell/build/CMakeCache.txt`.
@@ -538,7 +605,7 @@ cmake -S ~/github/quickshell -B ~/github/quickshell/build -G Ninja \
   -DDISTRIBUTOR='Local tray prototype' -DCRASH_HANDLER=OFF -DSCREENCOPY=OFF \
   -DSERVICE_PIPEWIRE=ON -DSERVICE_MPRIS=OFF -DSERVICE_PAM=OFF \
   -DSERVICE_POLKIT=OFF -DSERVICE_GREETD=OFF -DSERVICE_UPOWER=ON \
-  -DSERVICE_NOTIFICATIONS=OFF -DBLUETOOTH=OFF -DNETWORK=ON -DX11=OFF \
+  -DSERVICE_NOTIFICATIONS=ON -DBLUETOOTH=OFF -DNETWORK=ON -DX11=OFF \
   -DI3=OFF -DWAYLAND_SESSION_LOCK=OFF -DWAYLAND_TOPLEVEL_MANAGEMENT=ON
 ./quickshell/build-runtime
 ```

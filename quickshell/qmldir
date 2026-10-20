@@ -1,4 +1,8 @@
 singleton Theme 1.0 Theme.qml
+singleton NotificationState 1.0 NotificationState.qml
+NotificationCard 1.0 NotificationCard.qml
+NotificationPopups 1.0 NotificationPopups.qml
+Notifications 1.0 Notifications.qml
 Launcher 1.0 Launcher.qml
 singleton GoogleWorkState 1.0 GoogleWorkState.qml
 GoogleWorkWidget 1.0 GoogleWorkWidget.qml

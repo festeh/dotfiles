@@ -15,6 +15,7 @@ import Quickshell.Wayland
 
 ShellRoot {
     Launcher {}
+    Notifications {}
     Variants {
         model: Quickshell.screens
 

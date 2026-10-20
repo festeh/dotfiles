@@ -1,0 +1,208 @@
+#!/usr/bin/python3
+"""Real native D-Bus service + production QML cards on an isolated session bus."""
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import time
+
+if '--private-bus' not in sys.argv:
+    raise SystemExit(subprocess.call(['dbus-run-session', '--', sys.executable, __file__, '--private-bus', *sys.argv[1:]]))
+
+from gi.repository import Gio, GLib
+
+config = Path(__file__).resolve().parents[1]
+interface = 'org.freedesktop.Notifications'
+path = '/org/freedesktop/Notifications'
+connection = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+signals = []
+connection.signal_subscribe(None, interface, None, path, None, Gio.DBusSignalFlags.NONE,
+    lambda _c, _s, _p, _i, name, parameters: signals.append((name, parameters.unpack())))
+
+def pump():
+    context = GLib.MainContext.default()
+    while context.pending():
+        context.iteration(False)
+
+def call(method, parameters=None):
+    result = connection.call_sync(interface, path, interface, method, parameters, None,
+        Gio.DBusCallFlags.NONE, 3000, None)
+    pump()
+    return result.unpack()
+
+def notify(summary='Test notification', urgency=1, replaces=0, actions=(), hints=None, timeout=-1):
+    values = {'urgency': GLib.Variant('y', urgency)}
+    values.update(hints or {})
+    return call('Notify', GLib.Variant('(susssasa{sv}i)',
+        ('Notification fixture', replaces, 'dialog-information', summary, '<b>Literal & body</b>',
+         list(actions), values, timeout)))[0]
+
+with tempfile.TemporaryDirectory(prefix='quickshell-notifications-') as temporary:
+    root = Path(temporary)
+    runtime = root/'runtime'; runtime.mkdir(mode=0o700)
+    (root/'assets').symlink_to(config/'assets')
+    for name in ['NotificationState.qml', 'NotificationCard.qml', 'NotificationLogic.js', 'ClockState.qml', 'Theme.qml']:
+        (root/name).symlink_to(config/name)
+    (root/'qmldir').write_text('singleton Theme 1.0 Theme.qml\nsingleton ClockState 1.0 ClockState.qml\n'
+        'singleton NotificationState 1.0 NotificationState.qml\nNotificationCard 1.0 NotificationCard.qml\n')
+    shell = root/'shell.qml'
+    shell.write_text((config/'tests/fixtures/notifications-ui.qml').read_text())
+    env = dict(os.environ, QT_QPA_PLATFORM='offscreen', QT_QUICK_BACKEND='software', XDG_RUNTIME_DIR=str(runtime),
+        QT_IM_MODULE='compose', QT_NO_XDG_DESKTOP_PORTAL='1', QS_NO_RELOAD_POPUP='1')
+    with (root/'quickshell.log').open('w+') as log:
+        process = subprocess.Popen(['quickshell', '--path', str(root)], env=env, stdout=log, stderr=log)
+
+        def ipc(action, *args):
+            result = subprocess.run(['quickshell', 'ipc', '--path', str(root), 'call', 'fixture', action, *map(str, args)],
+                env=env, text=True, capture_output=True, timeout=4)
+            if result.returncode:
+                raise RuntimeError(result.stdout + result.stderr)
+            pump()
+            return json.loads(result.stdout) if action in ('status', 'trace') else None
+
+        def wait(predicate, timeout=4):
+            end = time.monotonic() + timeout
+            status = None
+            while time.monotonic() < end:
+                pump()
+                try:
+                    status = ipc('status')
+                    if predicate(status): return status
+                except (ValueError, RuntimeError):
+                    pass
+                time.sleep(0.025)
+            raise AssertionError(f'Notification fixture did not reach expected state: {status}')
+
+        def row(status, identifier):
+            return next(entry for entry in status['rows'] if entry['id'] == identifier)
+
+        try:
+            wait(lambda state: state['count'] == 0)
+            capabilities = set(call('GetCapabilities')[0])
+            assert capabilities == {'body', 'actions', 'action-icons', 'icon-static'}, capabilities
+            assert call('GetServerInformation')[0] == 'quickshell'
+
+            normal = notify(timeout=5000)
+            state = wait(lambda state: state['count'] == 1 and row(state, normal)['serial'] > 0)
+            first = row(state, normal)
+            assert first['deadline'] - first['arrived'] == 5000
+            assert first['body'] == '<b>Literal & body</b>'
+            assert first['height'] > 60
+            assert first['timeoutVisible'] and 0 <= first['elapsed'] < 0.1
+            time.sleep(0.08)
+            assert notify(replaces=normal, timeout=5000) == normal
+            state = wait(lambda state: row(state, normal)['deadline'] > first['deadline'])
+            assert row(state, normal)['serial'] == first['serial'], 'Replacement recreated the card'
+
+            ipc('finishAndResync', normal)
+            state = ipc('status')
+            assert row(state, normal)['elapsed'] == 1, 'Clock reconciliation rewound a completed border'
+
+            notify('Updated title', replaces=normal, actions=('default', 'Open', 'specific', 'Specific action'),
+                hints={'value': GLib.Variant('i', 42)})
+            state = wait(lambda state: row(state, normal)['summary'] == 'Updated title' and row(state, normal)['progress'] == 42)
+            assert row(state, normal)['serial'] == first['serial']
+            assert row(state, normal)['elapsed'] < 0.1, 'Replacement did not reset the completed border'
+            assert row(state, normal)['deadline'] - row(state, normal)['arrived'] == 30000
+            ipc('ui', normal, 'action')
+            wait(lambda state: state['count'] == 0)
+            assert ('ActionInvoked', (normal, 'specific')) in signals
+            assert ('ActionInvoked', (normal, 'default')) not in signals
+            assert ('NotificationClosed', (normal, 2)) in signals
+
+            normal = notify('Hover dismissal')
+            wait(lambda state: state['count'] == 1)
+            ipc('ui', normal, 'leave')
+            wait(lambda state: state['count'] == 0)
+            assert ('NotificationClosed', (normal, 2)) in signals
+
+            critical = notify('Critical fixture', urgency=2)
+            persistent = notify('Persistent fixture', timeout=0)
+            normal = notify('Expiry fixture', timeout=5000)
+            state = wait(lambda state: state['count'] == 3)
+            assert row(state, critical)['deadline'] == 0
+            assert not row(state, critical)['timeoutVisible']
+            assert row(state, persistent)['deadline'] == 0
+            assert not row(state, persistent)['timeoutVisible']
+            deadline = row(state, normal)['deadline']
+            ipc('expireAt', deadline + 1)
+            wait(lambda state: state['count'] == 2)
+            assert ('NotificationClosed', (normal, 1)) in signals
+            ipc('ui', persistent, 'leave')
+            wait(lambda state: state['count'] == 1)
+            ipc('ui', critical, 'leave')
+            assert ipc('status')['count'] == 1, 'Hover dismissed a critical alert'
+
+            normal = notify('Reload fixture')
+            state = wait(lambda state: state['count'] == 2)
+            saved = row(state, normal)
+            shell.write_text(shell.read_text() + '\n// trigger reload\n')
+            state = wait(lambda state: state['count'] == 2 and row(state, normal)['deadline'] == saved['deadline'])
+            time.sleep(0.2)
+            state = ipc('status')
+            assert row(state, normal)['deadline'] == saved['deadline'], 'Reload reset the deadline'
+            call('CloseNotification', GLib.Variant('(u)', (normal,)))
+            wait(lambda state: state['count'] == 1)
+            assert ('NotificationClosed', (normal, 3)) in signals
+            ipc('ui', critical, 'close')
+            wait(lambda state: state['count'] == 0)
+
+            normal = notify('Default action fixture', actions=('default', 'Open'))
+            wait(lambda state: state['count'] == 1)
+            ipc('ui', normal, 'default')
+            wait(lambda state: state['count'] == 0)
+            assert signals.count(('ActionInvoked', (normal, 'default'))) == 1
+
+            normal = notify('Resident action fixture', actions=('specific', 'Run action'),
+                hints={'resident': GLib.Variant('b', True)})
+            wait(lambda state: state['count'] == 1)
+            ipc('ui', normal, 'action')
+            assert ipc('status')['count'] == 1, 'Resident action closed its notification'
+            call('CloseNotification', GLib.Variant('(u)', (normal,)))
+            wait(lambda state: state['count'] == 0)
+
+            timed_critical = notify('Explicit critical timeout', urgency=2, timeout=5000)
+            state = wait(lambda state: state['count'] == 1)
+            entry = row(state, timed_critical)
+            assert entry['deadline'] - entry['arrived'] == 5000 and entry['timeoutVisible']
+            ipc('expireAt', entry['deadline'] + 1)
+            wait(lambda state: state['count'] == 0)
+            assert ('NotificationClosed', (timed_critical, 1)) in signals
+
+            normal = notify('Short timeout fixture', timeout=200)
+            wait(lambda state: state['count'] == 0 and ('NotificationClosed', (normal, 1)) in signals)
+            assert ('NotificationClosed', (normal, 1)) in signals
+
+            pixels = bytes([203, 166, 247, 255] * 256)
+            normal = notify('Image fixture', hints={'image-data': GLib.Variant('(iiibiiay)',
+                (16, 16, 64, True, 8, 4, pixels))})
+            wait(lambda state: state['count'] == 1 and row(state, normal)['imageReady'])
+            call('CloseNotification', GLib.Variant('(u)', (normal,)))
+            wait(lambda state: state['count'] == 0)
+            if '--deadline' in sys.argv:
+                normal = notify('Full deadline regression')
+                wait(lambda state: state['count'] == 1 and row(state, normal)['serial'] > 0)
+                ipc('watch', normal)
+                started = time.monotonic()
+                while time.monotonic() - started < 35:
+                    pump()
+                    if ('NotificationClosed', (normal, 1)) in signals:
+                        break
+                    time.sleep(0.025)
+                assert ('NotificationClosed', (normal, 1)) in signals
+                trace = ipc('trace')
+                print('Deadline animation:', trace, flush=True)
+                assert not trace['backwards'], trace
+                assert trace['peak'] > 0.99, trace
+            print('Notifications passed: native ownership/capabilities, sender/default deadlines, persistent notifications, identical replacements, stable cards, literal body, progress, actions, hover, critical alerts, expiration reasons, reload and sender withdrawal.')
+        except Exception:
+            log.flush(); log.seek(0)
+            print(log.read())
+            raise
+        finally:
+            process.terminate()
+            try: process.wait(timeout=4)
+            except subprocess.TimeoutExpired:
+                process.kill(); process.wait()

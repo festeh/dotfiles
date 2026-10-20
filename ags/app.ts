@@ -6,6 +6,7 @@ import Notifications from "./widget/Notifications"
 import Menu, { startRecording, menuVisible } from "./widget/Menu"
 import { Variable } from "astal"
 import "./service/WorkspaceNaming"
+import { legacyNotificationsEnabled } from "./features"
 
 const calendarVisible = Variable(false)
 const currentDate = Variable(new Date())
@@ -46,7 +47,7 @@ App.start({
   },
   main() {
     Bar(monitor, calendarVisible, currentDate, menuVisible)
-    Notifications(monitor)
+    if (legacyNotificationsEnabled) Notifications(monitor)
     Calendar(monitor, calendarVisible, currentDate)
     Menu(monitor)
 

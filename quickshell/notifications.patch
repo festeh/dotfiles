@@ -1,0 +1,27 @@
+diff --git a/src/services/notifications/notification.hpp b/src/services/notifications/notification.hpp
+index 7f5246c..380b9a5 100644
+--- a/src/services/notifications/notification.hpp
++++ b/src/services/notifications/notification.hpp
+@@ -182,6 +182,9 @@ public:
+ 	void setTracked(bool tracked);
+ 
+ signals:
++	/// Sent after a client replaces this notification, including identical updates.
++	void updated();
++
+ 	/// Sent when a notification has been closed.
+ 	///
+ 	/// The notification object will be destroyed as soon as all signal handlers exit.
+diff --git a/src/services/notifications/server.cpp b/src/services/notifications/server.cpp
+index 1919012..0b25d59 100644
+--- a/src/services/notifications/server.cpp
++++ b/src/services/notifications/server.cpp
+@@ -196,6 +196,8 @@ uint NotificationServer::Notify(
+ 
+ 	auto id = notification->id();
+ 
++	if (old) emit notification->updated();
++
+ 	if (!old) {
+ 		emit this->notification(notification);
+ 
