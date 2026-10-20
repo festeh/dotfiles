@@ -169,8 +169,6 @@ shortcut(mainMod .. " + slash",     "Show shortcuts",          hl.dsp.exec_cmd("
 shortcut(mainMod .. " + SHIFT + Q", "Close window",            hl.dsp.window.close())
 shortcut(mainMod .. " + C",         "Close window",            hl.dsp.window.close())
 shortcut(mainMod .. " + Return",    "Open terminal",           hl.dsp.exec_cmd("kitty"))
--- Retired AGS recording shortcut; keep the implementation available.
--- shortcut(mainMod .. " + E",      "Start voice recording",   hl.dsp.exec_cmd('astal -i astal "toggle-recording"'))
 shortcut(mainMod .. " + D",         "Launch app",              hl.dsp.exec_cmd("shell-launcher apps"))
 shortcut(mainMod .. " + S",         "Capture screenshot",      hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot"))
 shortcut(mainMod .. " + SHIFT + D", "Show widgets",            hl.dsp.exec_cmd("shell-launcher widgets"))
