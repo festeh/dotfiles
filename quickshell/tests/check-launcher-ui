@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+"""Exercise keys, focus, mouse, dismissal and stdio using only private fixtures."""
+import json
+import os
+from pathlib import Path
+import subprocess
+import tempfile
+
+config=Path(__file__).resolve().parents[1]
+fixtures=config/'tests/fixtures'
+with tempfile.TemporaryDirectory(prefix='quickshell-launcher-ui-') as directory:
+    root=Path(directory)
+    runtime=root/'runtime'
+    runtime.mkdir(mode=0o700)
+    (root/'assets').symlink_to(config/'assets')
+    for name in ('LauncherLogic.js','Theme.qml','CalendarAction.qml'):
+        (root/name).symlink_to(config/name)
+    # Offscreen Qt has no layer-shell backend. Host the unchanged controller,
+    # content and key handlers in an ordinary private QQuickWindow instead.
+    source=(config/'Launcher.qml').read_text()
+    assert source.count('PanelWindow {')==1
+    source=source.replace('PanelWindow {','FloatingWindow {',1)
+    source='\n'.join(line for line in source.splitlines()
+        if 'exclusionMode:' not in line and 'WlrLayershell.' not in line)
+    (root/'Launcher.qml').write_text(source)
+    (root/'WorkspaceState.qml').write_text('''pragma Singleton
+import QtQuick
+QtObject {
+ function overrideInfo(ids) { return null; }
+ function desktopEntry(ids) { return null; }
+ function applicationInfo(ids,entry) { return {source:""}; }
+}
+''')
+    (root/'qmldir').write_text('singleton Theme 1.0 Theme.qml\nsingleton WorkspaceState 1.0 WorkspaceState.qml\nLauncher 1.0 Launcher.qml\nCalendarAction 1.0 CalendarAction.qml\n')
+    (root/'shell.qml').write_text((fixtures/'launcher-ui.qml').read_text())
+    (root/'mock.py').write_text((fixtures/'launcher-mock.py').read_text())
+    env=os.environ.copy()
+    env.update(QT_QPA_PLATFORM='offscreen',QT_QUICK_BACKEND='software',XDG_RUNTIME_DIR=str(runtime),
+               HYPRLAND_INSTANCE_SIGNATURE='launcher-fixture',QT_IM_MODULE='compose',QT_NO_XDG_DESKTOP_PORTAL='1')
+    result=subprocess.run(['quickshell','--path',str(root)],env=env,capture_output=True,text=True,timeout=12)
+    output=result.stdout+result.stderr
+    if result.returncode or 'LAUNCHER_UI_PASSED' not in output:
+        print(output)
+        raise SystemExit('Launcher UI check failed')
+    commands=[json.loads(line) for line in (root/'commands.jsonl').read_text().splitlines()]
+    assert not any(command['action']=='refresh' for command in commands),'Escape triggered refresh'
+    activations=[command for command in commands if command['action']=='activate']
+    assert [(item['category'],item.get('paste')) for item in activations]==[('apps',False),('clipboard',True),('widgets',False),('widgets',False)],activations
+    assert [item['id'] for item in activations if item['category']=='widgets']==['idle:awake','idle:auto'],'Sleep choice toggled instead of applying the requested mode'
+    for index,command in enumerate(commands):
+        if command['action']=='activate' and command['category']!='widgets':
+            assert commands[index-1]['action']=='hide','Action dispatched before hide'
+    print('Launcher UI passed: keyboard focus, Vim keys, retained search, covers preserve selection, mouse sidebar, dismissal, paste intent, embedded controls.')

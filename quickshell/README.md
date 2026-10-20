@@ -1,6 +1,6 @@
 # Quickshell bar experiment
 
-Volume, network, battery, clock, calendar, and tray built independently of AGS. `Theme.qml` borrows its Catppuccin colors,
+Launcher, workspaces, keyboard layout, volume, network, battery, clock, calendar, and tray built independently of AGS. `Theme.qml` borrows its Catppuccin colors,
 rounded container, and right alignment from `ags/style.css`.
 
 Run `./quickshell/run` from the dotfiles checkout, or
@@ -10,7 +10,10 @@ Install the `papirus-icon-theme` package, or install Papirus and Papirus-Dark
 under `~/.local/share/icons` for the current user. Theme changes require a
 preview restart so Qt rebuilds its icon lookup.
 Stop with `quickshell --path ~/dotfiles/quickshell kill`.
-This preview is started manually; it is not enabled at login.
+Hyprland starts the shared shell through UWSM at graphical login using
+`shell-launcher --start`. This keeps the preview bar and app catalog warm without
+opening the launcher or taking focus. Category hotkeys can also recover the shell
+if it is not running.
 
 Each monitor gets a transparent row below panels that already reserve space
 (currently AGS). The compositor handles placement without polling or a fixed
@@ -18,6 +21,112 @@ AGS height. Only the workspace strip and the layout, volume, network, battery,
 clock, and tray widgets receive pointer input. The row reserves 44 pixels;
 the clock remains visible when there are no tray items. All tray items remain visible, including
 passive items, so applications do not silently disappear.
+
+## Launcher
+
+The launcher replaces the Rofi bindings in the Hyprland template and its generated
+host config. `~/.local/bin/shell-launcher` links to `quickshell/launcher`; it starts
+the shared shell when necessary, then sends a typed IPC request. The centered
+overlay follows the focused monitor, takes keyboard focus, and dismisses on an
+outside click. Opening the same category toggles it; another category hotkey
+switches it. The sidebar is alphabetical.
+The `quickshell-launcher` layer has its animations disabled, so the popup appears
+immediately instead of inheriting the desktop's long layer/fade transitions.
+
+| Category | Hotkey |
+| --- | --- |
+| Apps | Super+D |
+| Books | Super+B |
+| Clipboard | Super+V |
+| Power | Super+Shift+M |
+| Shortcuts | Super+/ |
+| Widgets | Super+Shift+D |
+
+Super+S opens the existing screenshot capture tool.
+
+Ctrl+J/K and Up/Down select results or widget controls. Ctrl+H/L switches
+categories without losing search text. Reopening starts a fresh search in the
+requested category, defaulting to Apps. Enter activates; Escape always closes,
+including from cards and buttons. Escape/Enter tips are deliberately omitted.
+There are no Normal/Insert modes, global All view, or Commands category; the old
+Super+R command binding is retired. Clipboard uses Enter to copy and close, or
+Shift+Enter to copy and paste into the original window. The launcher hides before
+dispatching actions. Paste uses Hyprland's addressed `send_shortcut` and checks
+that the original window regained focus; it never types into an unrelated window.
+
+Apps use GIO's desktop catalog, visibility rules, change monitor and launch API,
+preserving desktop field codes, working directories, terminal apps and D-Bus
+activation. Search runs in QML over normalized cached metadata, with match
+quality ahead of local usage when ranking. There is no subprocess per keystroke.
+The backend has no arbitrary shell-command execution interface.
+
+Books show compact cover rows, title, author, shelf and format. A background
+initial scan indexes the library; subsequent file events rescan the changed
+directory, recursing only into new subtrees. Opening again reuses the index.
+F5/Refresh forces a rescan. Missing mounts produce an explanatory state.
+Visible covers render one at a time in low-priority, time-limited processes and
+update without moving keyboard selection. FB2 covers come from their embedded
+cover image; blank thumbnails use the reader icon instead. PDF/DjVu use Zathura,
+other supported formats Foliate, with `xdg-open` when the preferred reader is
+absent. Existing book recency is imported locally; Reading Desktop remains a
+separate app/hotkey.
+`QS_BOOK_LIBRARY` optionally overrides the default library root before startup.
+
+Clipboard retains `cliphist` storage and the existing text/image capture watchers.
+Text entries use a T icon and images a picture icon, without redundant type labels.
+It reads on opening, then follows database changes only while visible. Search
+covers cliphist's previews (currently truncated to 100 characters), not full
+stored text. Selected contents remain binary bytes through decode/copy, so images
+are preserved. Shortcuts are discovered from described live Hyprland bindings,
+and their actions run after focus returns. Power actions execute immediately;
+unavailable system capabilities are disabled. Lock is unavailable until a screen
+locker is configured, rather than issuing a lock request that does nothing.
+
+Widgets is a card dashboard without a search field: four firmware power-profile
+choices and a separate Sleep behavior card. Calendar and Audio stay in the bar.
+Sleep behavior offers explicit **Sleep after 25 min** and **Stay awake** choices,
+with a mauve border and label marking the selected choice. Supporting copy explains
+the current mode; a separate amber message reports other apps preventing sleep
+without changing that selection. There is no explanatory footer.
+Leaf, moon, scales and lightning icons identify Low power, Quiet, Balanced and
+Performance; the active profile keeps its mauve border and label.
+Profile state follows sysfs priority notifications and is refreshed on opening
+and resume. Changes use the existing installed Polkit helper and are read back
+before success; Quiet is preserved without installing power-profiles-daemon.
+No profile polling timer or new native Quickshell patch is used.
+
+The Stay awake choice owns an idle-only logind inhibitor through the optional
+`quickshell-keep-awake.service` user unit. The host configuration installs its
+symlink; run `systemctl --user daemon-reload` after installation. It is not enabled
+for automatic startup. The lease survives closing/reloading the shell and normal
+suspend/resume, but stops with `graphical-session.target` at logout. The existing
+25-minute swayidle suspend timer stays running. Releasing the final idle inhibitor
+starts a fresh 25-minute interval on the installed swayidle/Hyprland versions.
+Manual suspend and lid behavior remain available. The card reads acquired
+inhibitors instead of maintaining an optimistic Boolean; other apps' inhibition
+is also reported.
+
+History is private local data under `$XDG_STATE_HOME/quickshell/launcher.json`
+(default `~/.local/state`); covers live under `$XDG_CACHE_HOME/quickshell/launcher`
+(default `~/.cache`). Filenames and clipboard values are never logged or written
+into repository files. Runtime IPC `launcher.status` exposes counts/state, not
+queries or result contents. Example:
+
+```sh
+quickshell ipc --path ~/dotfiles/quickshell call launcher open widgets
+quickshell ipc --path ~/dotfiles/quickshell call launcher close
+node --test quickshell/tests/launcher-logic.test.cjs
+python3 quickshell/tests/launcher-backend.test.py
+python3 quickshell/tests/check-launcher-ui
+```
+
+The UI check uses an offscreen window with the production content/controller and
+a mock transport. It never sends keys to desktop applications or executes power
+actions. Backend checks include a harmless fixture desktop launch to verify field
+codes and working directory, binary copy, safe addressed paste, incremental
+indexing, unavailable actions and failed profile authorization.
+
+## Tray
 
 - Left click activates an application, or opens its menu for menu-only items.
 - Right click opens the native menu, including dynamic and nested submenus.

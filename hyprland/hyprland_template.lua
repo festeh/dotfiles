@@ -54,6 +54,7 @@ hl.config({
 hl.on("hyprland.start", function()
     hl.exec_cmd("~/.config/hypr/scripts/monitor.sh")
     hl.exec_cmd("uwsm app -- ~/.config/hypr/scripts/sleep.sh")
+    hl.exec_cmd("uwsm app -- ~/.local/bin/shell-launcher --start")
 
     -- clipboard history (text and images)
     hl.exec_cmd("wl-paste --type text --watch cliphist store")
@@ -134,6 +135,13 @@ hl.animation({ leaf = "borderangle", enabled = true, speed = 8,  bezier = "defau
 hl.animation({ leaf = "fade",        enabled = true, speed = 7,  bezier = "default" })
 hl.animation({ leaf = "workspaces",  enabled = true, speed = 6,  bezier = "default" })
 
+-- Make the launcher appear immediately, independent of desktop fade durations.
+hl.layer_rule({
+    name = "quickshell-launcher-instant",
+    match = { namespace = "^quickshell-launcher$" },
+    no_anim = true,
+})
+
 ---------------------
 ---- KEYBINDINGS ----
 ---------------------
@@ -150,21 +158,22 @@ function shortcut(keys, description, action, opts)
     return hl.bind(keys, action, opts)
 end
 
-shortcut(mainMod .. " + slash",     "Show shortcuts",          hl.dsp.exec_cmd('rofi -show shortcuts -modes "shortcuts:rofi-shortcuts"'))
+shortcut(mainMod .. " + slash",     "Show shortcuts",          hl.dsp.exec_cmd("shell-launcher shortcuts"))
 shortcut(mainMod .. " + SHIFT + Q", "Close window",            hl.dsp.window.close())
 shortcut(mainMod .. " + C",         "Close window",            hl.dsp.window.close())
 shortcut(mainMod .. " + Return",    "Open terminal",           hl.dsp.exec_cmd("kitty"))
 shortcut(mainMod .. " + E",         "Start voice recording",   hl.dsp.exec_cmd('astal -i astal "toggle-recording"'))
-shortcut(mainMod .. " + D",         "Launch app",              hl.dsp.exec_cmd("rofi -show drun"))
-shortcut(mainMod .. " + R",         "Run command",             hl.dsp.exec_cmd("rofi -show run"))
-shortcut(mainMod .. " + B",         "Open book",               hl.dsp.exec_cmd('rofi -show books -modes "books:rofi-books" -show-icons'))
+shortcut(mainMod .. " + D",         "Launch app",              hl.dsp.exec_cmd("shell-launcher apps"))
+shortcut(mainMod .. " + S",         "Capture screenshot",      hl.dsp.exec_cmd("~/.config/hypr/scripts/screenshot"))
+shortcut(mainMod .. " + SHIFT + D", "Show widgets",            hl.dsp.exec_cmd("shell-launcher widgets"))
+shortcut(mainMod .. " + B",         "Open book",               hl.dsp.exec_cmd("shell-launcher books"))
 shortcut(mainMod .. " + P",         "Pseudotile window",       hl.dsp.window.pseudo())
 shortcut(mainMod .. " + J",         "Toggle split direction",  hl.dsp.layout("togglesplit"))
 shortcut(mainMod .. " + F",         "Toggle fullscreen",       hl.dsp.window.fullscreen())
-shortcut(mainMod .. " + SHIFT + M", "Power menu",              hl.dsp.exec_cmd('rofi -show power-menu -modi "power-menu:rofi-power-menu --confirm=lockscreen "'))
+shortcut(mainMod .. " + SHIFT + M", "Power menu",              hl.dsp.exec_cmd("shell-launcher power"))
 
 -- clipboard picker
-shortcut(mainMod .. " + V", "Clipboard history", hl.dsp.exec_cmd("cliphist list | rofi -dmenu | cliphist decode | wl-copy"))
+shortcut(mainMod .. " + V", "Clipboard history", hl.dsp.exec_cmd("shell-launcher clipboard"))
 
 -- Navigate existing workspaces horizontally; move window focus vertically.
 shortcut(mainMod .. " + left",  "Previous workspace", hl.dsp.focus({ workspace = "e-1" }))

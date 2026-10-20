@@ -1,0 +1,28 @@
+#!/bin/sh
+# One entry point for bindings; also starts the shared shell after a fresh login.
+set -eu
+config_dir=$(CDPATH= cd -- "$(dirname -- "$(readlink -f -- "$0")")" && pwd)
+category=${1:-apps}
+if [ "$category" = "--start" ]; then
+    # UWSM owns this foreground process for the graphical session. Keep the
+    # catalog warm at login without mapping the launcher or taking focus.
+    exec "$config_dir/run"
+fi
+case "$category" in apps|books|widgets|shortcuts|clipboard|power) ;; *) exit 64 ;; esac
+call_launcher() {
+    # Quickshell can return exit status zero with a "Not ready" response while
+    # reloading. A successful void IPC call has an empty response.
+    launcher_reply=$(quickshell ipc --path "$config_dir" call launcher open "$category" 2>&1) && [ -z "$launcher_reply" ]
+}
+if call_launcher; then
+    exit 0
+fi
+"$config_dir/run" --daemonize
+attempt=0
+while [ "$attempt" -lt 40 ]; do
+    if call_launcher; then exit 0; fi
+    attempt=$((attempt + 1))
+    sleep 0.05
+done
+printf '%s\n' 'Quickshell launcher did not become ready.' >&2
+exit 1

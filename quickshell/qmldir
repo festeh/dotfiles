@@ -1,4 +1,5 @@
 singleton Theme 1.0 Theme.qml
+Launcher 1.0 Launcher.qml
 singleton LayoutState 1.0 LayoutState.qml
 LayoutWidget 1.0 LayoutWidget.qml
 Tray 1.0 Tray.qml

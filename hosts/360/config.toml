@@ -34,6 +34,14 @@ name = "~/.config/zed"
 target = "rofi"
 name = "~/.config/rofi"
 
+[symlinks.shell_launcher]
+target = "quickshell/launcher"
+name = "~/.local/bin/shell-launcher"
+
+[symlinks.quickshell_keep_awake]
+target = "quickshell/quickshell-keep-awake.service"
+name = "~/.config/systemd/user/quickshell-keep-awake.service"
+
 [symlinks.aiderconfig]
 target = "aider/.aider.conf.yml"
 name = "~/.aider.conf.yml"

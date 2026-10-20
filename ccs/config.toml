@@ -8,7 +8,5 @@ effort = "xhigh"
 yolo = true
 
 [resume.codex]
-# Reasoning effort: minimal, low, medium, high, xhigh (-c model_reasoning_effort=…)
-effort = "xhigh"
 # Skip all approval prompts & sandbox (codex --dangerously-bypass-approvals-and-sandbox)
 yolo = true

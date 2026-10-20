@@ -14,6 +14,7 @@ import Quickshell
 import Quickshell.Wayland
 
 ShellRoot {
+    Launcher {}
     Variants {
         model: Quickshell.screens
 

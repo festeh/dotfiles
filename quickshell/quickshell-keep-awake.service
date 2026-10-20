@@ -1,0 +1,10 @@
+[Unit]
+Description=Keep awake for the current graphical session
+PartOf=graphical-session.target
+Requisite=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=exec
+ExecStart=/usr/bin/systemd-inhibit --what=idle --mode=block --who=quickshell-keep-awake --why=Keep\x20awake /usr/bin/sleep infinity
+Restart=no
