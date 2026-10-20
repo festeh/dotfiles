@@ -1,0 +1,69 @@
+/* Native menu behavior with the bar's Catppuccin palette. */
+QMenu {
+    background-color: #313244;
+    color: #cdd6f4;
+    border: 1px solid #585b70;
+    border-radius: 12px;
+    padding: 6px;
+    min-width: 200px;
+    font-family: "JetBrainsMono Nerd Font";
+    font-size: 13px;
+}
+
+QMenu::item {
+    background-color: transparent;
+    padding: 7px 28px 7px 12px;
+    margin: 2px 0;
+    border-radius: 6px;
+}
+
+QMenu::item:selected {
+    background-color: #45475a;
+    color: #cba6f7;
+}
+
+QMenu::item:disabled {
+    color: #6c7086;
+}
+
+QMenu::separator {
+    height: 1px;
+    background-color: #45475a;
+    margin: 5px 10px;
+}
+
+QMenu::indicator {
+    width: 14px;
+    height: 14px;
+    border: 1px solid #585b70;
+    border-radius: 4px;
+    background-color: #1e1e2e;
+}
+
+QMenu::indicator:checked {
+    background-color: #cba6f7;
+    border-color: #cba6f7;
+}
+
+QMenu::indicator:non-exclusive:checked {
+    image: url(@CONFIG_DIR@/assets/menu-check.svg);
+}
+
+QMenu::indicator:exclusive {
+    border-radius: 8px;
+}
+
+QMenu::indicator:exclusive:checked {
+    image: url(@CONFIG_DIR@/assets/menu-radio.svg);
+}
+
+QMenu::right-arrow {
+    image: url(@CONFIG_DIR@/assets/menu-chevron.svg);
+    width: 12px;
+    height: 12px;
+}
+
+QMenu::scroller {
+    height: 20px;
+    background-color: #45475a;
+}

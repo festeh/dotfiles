@@ -1,0 +1,21 @@
+singleton Theme 1.0 Theme.qml
+Tray 1.0 Tray.qml
+TrayItem 1.0 TrayItem.qml
+TrayTooltip 1.0 TrayTooltip.qml
+singleton ClockState 1.0 ClockState.qml
+ClockWidget 1.0 ClockWidget.qml
+CalendarAction 1.0 CalendarAction.qml
+CalendarPopup 1.0 CalendarPopup.qml
+singleton BatteryState 1.0 BatteryState.qml
+BatteryWidget 1.0 BatteryWidget.qml
+BatteryIcon 1.0 BatteryIcon.qml
+singleton NetworkState 1.0 NetworkState.qml
+NetworkWidget 1.0 NetworkWidget.qml
+NetworkIcon 1.0 NetworkIcon.qml
+NetworkPicker 1.0 NetworkPicker.qml
+NetworkPopup 1.0 NetworkPopup.qml
+singleton VolumeState 1.0 VolumeState.qml
+VolumeWidget 1.0 VolumeWidget.qml
+VolumeAction 1.0 VolumeAction.qml
+VolumeIcon 1.0 VolumeIcon.qml
+VolumePopup 1.0 VolumePopup.qml

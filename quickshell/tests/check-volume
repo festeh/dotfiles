@@ -1,0 +1,185 @@
+#!/usr/bin/env python3
+"""Exercise the real Quickshell/PipeWire path on a private server with null sinks."""
+
+import json
+import math
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import tempfile
+import time
+
+config = Path(__file__).resolve().parents[1]
+fixtures = Path(__file__).resolve().parent / "fixtures"
+
+
+def require(condition, message):
+    if not condition:
+        raise AssertionError(message)
+
+
+def close(actual, expected):
+    return len(actual) == len(expected) and all(math.isclose(a, b, abs_tol=0.0001) for a, b in zip(actual, expected))
+
+
+with tempfile.TemporaryDirectory(prefix="quickshell-volume-check-") as directory:
+    root = Path(directory)
+    runtime = root / "runtime"
+    runtime.mkdir(mode=0o700)
+    for item in config.iterdir():
+        if item.is_file() and item.name != "shell.qml":
+            (root / item.name).symlink_to(item)
+    (root / "shell.qml").write_text((fixtures / "volume-native.qml").read_text())
+    shutil.copyfile(fixtures / "volume-pipewire.conf", root / "pipewire.conf")
+    env = os.environ.copy()
+    env["PIPEWIRE_RUNTIME_DIR"] = str(runtime)
+    env["PIPEWIRE_CLIENT_CONFIG_DIR"] = str(root / "client-config")
+    env["QT_QPA_PLATFORM"] = "offscreen"
+    env["QT_QUICK_BACKEND"] = "software"
+    env["QT_IM_MODULE"] = "compose"
+    env.pop("PIPEWIRE_REMOTE", None)
+    server_log = (root / "pipewire.log").open("w")
+    shell_log = (root / "quickshell.log").open("w")
+    server = shell = None
+
+    def run(*args):
+        return subprocess.check_output(args, env=env, text=True, stderr=subprocess.PIPE, timeout=5).strip()
+
+    def start_server():
+        process = subprocess.Popen(["pipewire", "-c", str(root / "pipewire.conf")],
+            env=env, stdout=server_log, stderr=server_log)
+        deadline = time.monotonic() + 5
+        while not (runtime / "pipewire-0").exists():
+            require(process.poll() is None and time.monotonic() < deadline, "Private PipeWire failed to start")
+            time.sleep(0.05)
+        return process
+
+    def metadata(key, value):
+        run("pw-metadata", "-n", "default", "0", key, json.dumps({"name": value}), "Spa:String:JSON")
+
+    def call(method, *args):
+        return run("quickshell", "ipc", "--path", str(root), "call", "volume-test", method, *(str(arg) for arg in args))
+
+    def state():
+        return json.loads(call("state"))
+
+    def wait_for(predicate, label):
+        deadline = time.monotonic() + 5
+        last = None
+        while time.monotonic() < deadline:
+            try:
+                last = state()
+                if predicate(last):
+                    return last
+            except (subprocess.SubprocessError, json.JSONDecodeError):
+                pass
+            time.sleep(0.05)
+        raise AssertionError(label + ": " + repr(last))
+
+    def server_node(node_id):
+        objects = json.loads(run("pw-dump"))
+        return next(obj for obj in objects if obj["id"] == node_id)
+
+    def server_props(node_id):
+        return server_node(node_id)["info"]["params"]["Props"][0]
+
+    def seed(node_id, volumes, muted=False):
+        raw = " ".join(str(value ** 3) for value in volumes)
+        run("pw-cli", "set-param", str(node_id), "Props", "{ channelVolumes = [ " + raw + " ] mute = " + str(muted).lower() + " }")
+
+    try:
+        server = start_server()
+        metadata("default.audio.sink", "volume-test-a")
+        shell = subprocess.Popen(["quickshell", "--path", str(root)], env=env, stdout=shell_log, stderr=shell_log)
+        initial = wait_for(lambda s: s["status"]["known"] and s["windowReady"] and len(s["outputs"]) == 2, "native initialization")
+        a = next(output["id"] for output in initial["outputs"] if output["name"] == "volume-test-a")
+        b = next(output["id"] for output in initial["outputs"] if output["name"] == "volume-test-b")
+        require(initial["widgetWidth"] == 112 and initial["nodeName"] == "volume-test-a", "Wrong initial output or width")
+        print("PASS: real native nodes, readiness, and widget initialization", flush=True)
+
+        seed(a, [0.5, 0.8], True)
+        muted = wait_for(lambda s: close(s["channels"], [0.5, 0.8]) and s["status"]["muted"], "external volume/mute update")
+        require(muted["foreground"] == "#f38ba8" and muted["status"]["label"] == "80%", "Muted appearance/peak volume incorrect")
+        call("clickControl", "decrease")
+        wait_for(lambda s: close(s["channels"], [0.46875, 0.75]) and s["status"]["muted"], "minus button preserves balance/mute")
+        call("clickControl", "increase")
+        wait_for(lambda s: close(s["channels"], [0.5, 0.8]) and s["status"]["muted"], "plus button preserves balance/mute")
+        call("wheel", "120")
+        wait_for(lambda s: s["status"]["label"] == "82%" and s["status"]["muted"], "wheel up preserves mute")
+        call("wheel", "-120")
+        wait_for(lambda s: s["status"]["label"] == "80%" and s["status"]["muted"], "wheel down preserves mute")
+        call("openContextMenu")
+        wait_for(lambda s: s["popupOpen"] and s["status"]["muted"], "right-click opens popup without toggling mute")
+        call("closePopup")
+        wait_for(lambda s: not s["popupOpen"], "popup dismissal")
+        props = server_props(a)
+        require(props["mute"] and close(props["channelVolumes"], [0.5 ** 3, 0.8 ** 3]), "Buttons did not update the native server correctly")
+        call("clickControl", "mute")
+        wait_for(lambda s: not s["status"]["muted"] and not s["popupOpen"], "speaker click toggles mute without popup")
+        call("clickControl", "mute")
+        wait_for(lambda s: s["status"]["muted"], "speaker click restores mute")
+        print("PASS: real mouse/wheel events: left-click mute, −/+ by 5%, scrolling by 2%, right-click popup", flush=True)
+        call("moveSlider", 0.6)
+        wait_for(lambda s: close(s["channels"], [0.375, 0.6]), "slider change")
+        props = server_props(a)
+        require(props["mute"] and close(props["channelVolumes"], [0.375 ** 3, 0.6 ** 3]), "Slider did not preserve balance/mute on server")
+        print("PASS: external changes and slider preserve channel balance and mute", flush=True)
+
+        call("setVolume", 0)
+        wait_for(lambda s: close(s["channels"], [0, 0]), "zero volume")
+        require(call("clickControl", "decrease") == "false", "Minus is enabled at zero")
+        call("setVolume", 0.4)
+        wait_for(lambda s: close(s["channels"], [0.25, 0.4]), "balance through zero")
+        call("setVolume", 2)
+        wait_for(lambda s: close(s["channels"], [0.625, 1]), "100 percent cap")
+        require(call("clickControl", "increase") == "false", "Plus is enabled at 100%")
+        call("mute")
+        wait_for(lambda s: not s["status"]["muted"], "explicit unmute")
+        print("PASS: balance survives zero, controls cap at 100%, mute is explicit", flush=True)
+
+        seed(a, [0.8, 1.2])
+        wait_for(lambda s: s["status"]["label"] == "120%", "external amplification")
+        call("adjust", 0.02)
+        require(close(state()["channels"], [0.8, 1.2]), "Wheel-up increased external boost")
+        call("adjust", -0.02)
+        wait_for(lambda s: close(s["channels"], [0.8 * 1.18 / 1.2, 1.18]), "gradual boosted decrease")
+        print("PASS: external boost is shown honestly and can only decrease", flush=True)
+
+        call("hold")
+        require(call("select", "volume-test-b") == "true", "Output selection rejected")
+        wait_for(lambda s: s["preferredName"] == "volume-test-b", "preferred output metadata")
+        metadata("default.audio.sink", "volume-test-b")  # Simulate policy accepting the preference.
+        wait_for(lambda s: s["nodeName"] == "volume-test-b" and s["status"]["known"], "active output change")
+        require(call("setHeld", 0.2) == "false", "Stale interaction wrote to the new default")
+        require(close(state()["channels"], [1, 1]), "New output was modified by stale interaction")
+        print("PASS: output preference, actual default change, and stale interaction guard", flush=True)
+
+        run("pw-cli", "destroy", str(b))
+        missing = wait_for(lambda s: s["ready"] and not s["status"]["known"] and len(s["outputs"]) == 1, "output removal")
+        require(missing["status"]["label"] == "—" and missing["foreground"] == "#6c7086", "Missing output looks like 0% or mute")
+        metadata("default.audio.sink", "volume-test-a")
+        wait_for(lambda s: s["status"]["known"], "output restoration")
+        print("PASS: disappearing output clears controls and restores correctly", flush=True)
+
+        server.terminate(); server.wait(timeout=3)
+        wait_for(lambda s: not s["ready"] and not s["status"]["known"], "server disconnect")
+        server = start_server()
+        metadata("default.audio.sink", "volume-test-a")
+        wait_for(lambda s: s["status"]["known"] and len(s["outputs"]) == 2, "server reconnect")
+        print("PASS: PipeWire restart reconnects without polling", flush=True)
+
+        output = (root / "quickshell.log").read_text()
+        require(not any(message in output for message in ("TypeError:", "ReferenceError:", "Binding loop detected")), "QML runtime error")
+        print("All volume checks passed using private null sinks; real audio was not changed.")
+    except Exception:
+        print((root / "quickshell.log").read_text())
+        print((root / "pipewire.log").read_text())
+        raise
+    finally:
+        for process in (shell, server):
+            if process and process.poll() is None:
+                process.terminate()
+                process.wait(timeout=3)
+        server_log.close()
+        shell_log.close()

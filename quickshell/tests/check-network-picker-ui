@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+"""Exercise QML password entry/retry over a mock stdio transport."""
+
+import json
+from pathlib import Path
+import subprocess
+import tempfile
+
+config = Path(__file__).resolve().parents[1]
+fixtures = Path(__file__).resolve().parent / "fixtures"
+with tempfile.TemporaryDirectory(prefix="quickshell-picker-mock-ui-") as directory:
+    root = Path(directory)
+    for item in config.iterdir():
+        if item.is_file() and item.name != "shell.qml":
+            (root / item.name).symlink_to(item)
+    (root / "mock.py").write_text((fixtures / "network-picker-mock.py").read_text())
+    (root / "shell.qml").write_text((fixtures / "network-picker-ui.qml").read_text())
+    result = subprocess.run(["quickshell", "--path", str(root)], capture_output=True, text=True, timeout=10)
+    output = result.stdout + result.stderr
+    if result.returncode or "PICKER_MOCK_UI_PASSED" not in output:
+        print(output)
+        raise SystemExit("Mock picker UI check failed")
+    commands = [json.loads(line) for line in (root / "commands.jsonl").read_text().splitlines()]
+    assert commands == [{"action": "connect", "id": "new", "password": "example-password"},
+                        {"action": "connect", "id": "saved"}], "Unexpected commands"
+    print("Picker UI checks passed: masked password entry, clearing, retry, and saved-profile activation.")

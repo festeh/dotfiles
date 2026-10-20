@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+config_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+source_dir=${QUICKSHELL_SOURCE_DIR:-"$HOME/github/quickshell"}
+
+if git -C "$source_dir" apply --check "$config_dir/runtime.patch" 2>/dev/null; then
+    git -C "$source_dir" apply "$config_dir/runtime.patch"
+elif ! git -C "$source_dir" apply --reverse --check "$config_dir/runtime.patch" 2>/dev/null; then
+    echo "The Quickshell runtime patch conflicts with this checkout; review it before rebuilding." >&2
+    exit 1
+fi
+
+cmake --build "$source_dir/build" --parallel 4
+cmake --install "$source_dir/build"

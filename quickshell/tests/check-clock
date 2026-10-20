@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+test_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+source_dir=${QUICKSHELL_SOURCE_DIR:-"$HOME/github/quickshell"}
+test_build_dir=$(mktemp -d)
+trap 'rm -rf -- "$test_build_dir"' EXIT HUP INT TERM
+
+cmake -S "$test_dir" -B "$test_build_dir" -G Ninja \
+    -DQUICKSHELL_SOURCE_DIR="$source_dir"
+cmake --build "$test_build_dir" --parallel 2
+"$test_build_dir/clock-check"
