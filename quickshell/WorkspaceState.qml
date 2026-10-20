@@ -123,6 +123,13 @@ QtObject {
         return {name: name, source: iconSource(icon)};
     }
 
+    function programInfo(program): var {
+        const app = applicationInfo([program], Logic.resolveProgram([program], catalog));
+        if (app.source) return app;
+        return overrideInfo([program]) || {name: Logic.clean(program) || "Terminal",
+            source: (overrideInfo(["kitty"]) || {source: ""}).source};
+    }
+
     function info(window): var {
         if (!window) return {name: "Window", source: ""};
         const terminal = TerminalState.appFor(window);

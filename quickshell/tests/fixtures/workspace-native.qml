@@ -29,6 +29,10 @@ ShellRoot {
         }
         return null;
     }
+    function agentButton(window, index, pane) {
+        return root.find(strip, index === 0 ? "workspace-window-" + window.address
+            : "workspace-agent-" + window.address + "-" + pane);
+    }
     IpcHandler {
         target: "workspace-test"
         function state(): string {
@@ -43,6 +47,12 @@ ShellRoot {
                         focused: WorkspaceState.isFocused(w), info: WorkspaceState.info(w),
                         delegate: String(root.find(strip, 'workspace-window-' + w.address)),
                         agentState: TerminalState.statusFor(w),
+                        agents: TerminalState.agentsFor(w).map((agent, index) => ({pane: agent.pane,
+                            source: root.agentButton(w, index, agent.pane).app.source,
+                            selected: root.agentButton(w, index, agent.pane).selected,
+                            state: root.agentButton(w, index, agent.pane).agentState,
+                            delegate: String(root.agentButton(w, index, agent.pane)),
+                            color: String(root.find(root.agentButton(w, index, agent.pane), 'agent-status-overline').color)})),
                         overlineVisible: root.find(root.find(strip, 'workspace-window-' + w.address), 'agent-status-overline').visible,
                         overlineColor: String(root.find(root.find(strip, 'workspace-window-' + w.address), 'agent-status-overline').color),
                         overlineWidth: root.find(root.find(strip, 'workspace-window-' + w.address), 'agent-status-overline').width,
@@ -62,7 +72,12 @@ ShellRoot {
         function agents(address: string, status: string): void {
             const state = Object.assign({}, TerminalState.applications);
             state[address] = {kitty: true, programs: ["codex"], agentState: status,
-                agents: status ? [{agent: "codex", pane: 1, tab: 2, state: status}] : []};
+                agents: status ? [{agent: "codex", pane: 1, tab: 2, state: status, active: true}] : []};
+            TerminalState.applications = state;
+        }
+        function agentPanes(address: string, payload: string): void {
+            const state = Object.assign({}, TerminalState.applications);
+            state[address] = {kitty: true, programs: ["codex"], agents: JSON.parse(Qt.atob(payload))};
             TerminalState.applications = state;
         }
         function reveal(name: string): bool {

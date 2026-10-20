@@ -10,14 +10,19 @@ Button {
     required property var workspace
     property var toplevel: null
     property bool windowButton: false
+    property int agentPane: 0
     property bool emptyWorkspace: false
     property bool keyboardNavigation: false
-    readonly property bool selected: windowButton ? WorkspaceState.isFocused(toplevel) : workspace && WorkspaceState.workspaceFocused(workspace)
-    readonly property var app: windowButton ? WorkspaceState.info(toplevel) : ({name: "", source: ""})
-    readonly property string agentState: windowButton ? TerminalState.statusFor(toplevel) : ""
-    readonly property string agentDescription: windowButton ? TerminalState.agentDescription(toplevel) : ""
+    readonly property var agent: agentPane ? TerminalState.agentFor(toplevel, agentPane) : null
+    readonly property bool selected: windowButton
+        ? WorkspaceState.isFocused(toplevel) && (!agentPane || !!agent && agent.active)
+        : workspace && WorkspaceState.workspaceFocused(workspace)
+    readonly property var app: agent ? WorkspaceState.programInfo(agent.agent)
+        : windowButton ? WorkspaceState.info(toplevel) : ({name: "", source: ""})
+    readonly property string agentState: agent ? agent.state : ""
+    readonly property string agentDescription: agent ? TerminalState.describeAgent(agent) : ""
     readonly property string caption: Logic.label(workspace)
-    readonly property string tooltip: windowButton
+    readonly property string tooltip: agent ? app.name : windowButton
         ? app.name + (toplevel && Logic.clean(toplevel.title) ? " · " + Logic.clean(toplevel.title) : "")
         : "Workspace " + caption + (workspace && workspace.name !== caption ? " · " + Logic.clean(workspace.name) : "")
     readonly property bool interactionHighlighted: keyboardNavigation ? activeFocus : hovered
@@ -43,7 +48,8 @@ Button {
         + (agentDescription ? " · " + agentDescription : "")
     onHoveredChanged: if (hovered) root.pointerInteraction()
     onActiveFocusChanged: if (activeFocus) root.revealRequested(root)
-    onClicked: windowButton ? WorkspaceState.activateWindow(toplevel) : WorkspaceState.activateWorkspace(workspace)
+    onClicked: agentPane ? TerminalState.activateAgent(toplevel, agentPane)
+        : windowButton ? WorkspaceState.activateWindow(toplevel) : WorkspaceState.activateWorkspace(workspace)
     Keys.onPressed: event => {
         root.keyboardInteraction();
         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {

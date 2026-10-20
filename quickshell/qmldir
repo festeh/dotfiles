@@ -33,4 +33,5 @@ singleton WorkspaceState 1.0 WorkspaceState.qml
 singleton TerminalState 1.0 TerminalState.qml
 WorkspaceStrip 1.0 WorkspaceStrip.qml
 WorkspaceGroup 1.0 WorkspaceGroup.qml
+WorkspaceWindow 1.0 WorkspaceWindow.qml
 WorkspaceButton 1.0 WorkspaceButton.qml

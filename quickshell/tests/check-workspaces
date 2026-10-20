@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Native Hyprland models and rendered controls against private IPC sockets."""
 
+import base64
 import json
 import os
 from pathlib import Path
@@ -199,6 +200,37 @@ with tempfile.TemporaryDirectory(prefix="quickshell-workspace-check-") as direct
         wait_for(lambda s: not windows(s)['a1']['overlineVisible'], 'non-agent overline removed')
         print('PASS: idle/running/needs-action colors, matched line lengths, and no non-agent marker', flush=True)
 
+        panes = [dict(agent='codex', pane=1, tab=1, state='idle', active=False),
+            dict(agent='claude', pane=2, tab=2, state='waiting', active=True),
+            dict(agent='codex', pane=3, tab=2, state='running', active=False)]
+        call('agentPanes', 'a1', base64.b64encode(json.dumps(panes).encode()).decode())
+        snapshot = wait_for(lambda s: len(windows(s)['a1']['agents']) == 3, 'all agent panes visible')
+        buttons = windows(snapshot)['a1']['agents']
+        assert [b['pane'] for b in buttons] == [1, 2, 3]
+        assert [b['state'] for b in buttons] == ['idle', 'waiting', 'running']
+        assert [b['color'] for b in buttons] == ['#a6e3a1', '#f9e2af', '#89b4fa']
+        assert [b['selected'] for b in buttons] == [False, True, False]
+        assert all(button['source'].endswith('/assets/' + agent['agent'] + '.svg')
+            for button, agent in zip(buttons, panes))
+        panes[1]['state'] = 'idle'
+        call('agentPanes', 'a1', base64.b64encode(json.dumps(panes).encode()).decode())
+        changed = wait_for(lambda s: windows(s)['a1']['agents'][1]['state'] == 'idle', 'individual status update')
+        assert [b['delegate'] for b in windows(changed)['a1']['agents']] == [b['delegate'] for b in buttons]
+        assert call('click', 'workspace-agent-a1-2') == 'true'
+        deadline = time.monotonic() + 3
+        while not reader_requests()[-1].get('activate'):
+            assert time.monotonic() < deadline
+            time.sleep(.02)
+        assert reader_requests()[-1]['activate'] == dict(address='a1', pane=2)
+        deadline = time.monotonic() + 3
+        while not dispatches or dispatches[-1] != 'dispatch hl.dsp.focus({ window = "address:0xa1" })':
+            assert time.monotonic() < deadline
+            time.sleep(.02)
+        assert dispatches[-1] == 'dispatch hl.dsp.focus({ window = "address:0xa1" })'
+        call('agents', 'a1', '')
+        wait_for(lambda s: not windows(s)['a1']['agents'], 'agent panes removed')
+        print('PASS: all agent tabs/splits have separate icons, statuses and focus; state updates preserve buttons; clicks select the exact pane', flush=True)
+
         desktop("org.example.Themed", "ThemedApp", icon, "themed-cli")
         clients.append(client("e1", workspaces[0], app="ThemedApp"))
         emit("openwindow", "e1,1,ThemedApp,Themed window")
@@ -217,7 +249,7 @@ with tempfile.TemporaryDirectory(prefix="quickshell-workspace-check-") as direct
         wait_for(lambda s: not any(w["focused"] for w in windows(s).values()), "empty focus clears highlight")
         assert call("click", "workspace-window-a2") == "true"
         deadline = time.monotonic() + 3
-        while not dispatches:
+        while not dispatches or dispatches[-1] != 'dispatch hl.dsp.focus({ window = "address:0xa2" })':
             assert time.monotonic() < deadline
             time.sleep(0.02)
         assert dispatches[-1] == 'dispatch hl.dsp.focus({ window = "address:0xa2" })'

@@ -477,7 +477,8 @@ artwork remains readable against the dark menu background.
 ## Hyprland workspaces and window icons
 
 The left strip groups every normal workspace with an icon for each of its
-windows, including separate icons for multiple windows of the same app. Empty
+windows. Kitty windows containing agents show one icon per agent pane, including
+inactive tabs and splits; repeated agents keep separate icons and statuses. Empty
 workspaces retain their numbered button. Numbered workspaces sort numerically;
 named workspaces have a stable name order. Special workspaces are identified by
 their names and omitted, without hiding normal named workspaces with negative IDs.
@@ -487,7 +488,8 @@ monitor has a subtle border. The focused window has a mauve underline; when the
 focused workspace is empty, its number gets the same underline instead.
 
 Click a workspace number to activate it, or an app icon to focus that exact
-window. Tab moves between buttons; Enter/Space activates the focused button.
+window. An agent icon selects its Kitty tab/pane before focusing the window.
+Tab moves between buttons; Enter/Space activates the focused button.
 Each button has an independent hover/focus highlight and a compact one-line
 tooltip. Window tooltips show the app name and title to distinguish duplicates.
 Unknown applications and unavailable artwork use a neutral window symbol and
@@ -542,13 +544,15 @@ Healthy watched instances have no periodic timer or `/proc` polling. Only an
 instance that rejects watcher attachment after three attempts falls back to a
 five-second snapshot; a valid watcher snapshot ends that fallback.
 
-All tabs and split panes contribute agent status, including inactive panes.
-A static 18×2px overline above the window's icon shows green for idle, blue for
-running, and amber for needs action. Needs action takes priority over running,
-then idle; unknown states do not produce a misleading green marker. Windows
-without agents have no overline. The focus underline is also 18px wide. Hover
-includes each agent's tab number and state without adding new buttons or timers.
-The active tab/pane still determines the window's app icon.
+Each agent pane has its own app icon and static 18×2px overline: green for idle,
+blue for running, and amber for needs action. Unknown states have no overline.
+The focused agent pane also has an 18px underline. Hover identifies its tab,
+pane and state. Pane IDs keep buttons stable through status updates, including
+multiple instances of the same agent. Windows without agents keep the existing
+single app icon, following the active terminal program, and have no overline.
+This reuses the shared event stream without adding polling or helper processes.
+Agent activation uses the same worker's Kitty socket, validates current pane
+ownership and process identity, then focuses the Hyprland window after success.
 
 Codex state comes from its terminal activity title. Shared app-server/exec-server
 processes are excluded. Claude and Kimi use `agent-hook` and `agent_events.py`:

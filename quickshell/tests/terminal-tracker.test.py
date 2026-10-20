@@ -146,6 +146,23 @@ class TrackerTests(unittest.IsolatedAsyncioTestCase):
         model.event({"pid": 123, "start": "42", "event": "close", "pane": 3})
         self.assertEqual(model.windows()["a1"]["agentState"], "idle")
 
+    async def test_agent_activation_selects_only_a_current_owned_pane(self):
+        model = await self.model()
+        model.schedule_publish = lambda: None
+        self.assertEqual([agent['active'] for agent in model.windows()['a1']['agents']], [True, False, False])
+        with patch.object(tracker, 'process_identity', return_value=('42', 'kitty')), \
+                patch.object(tracker, 'kitty_request', return_value=None) as request, redirect_stdout(io.StringIO()) as output:
+            await model.activate(dict(address='a1', pane=3))
+            request.assert_awaited_once_with(123, 'focus-window', {'match': 'id:3'})
+            self.assertTrue(json.loads(output.getvalue())['activated']['ok'])
+            await model.activate(dict(address='a1', pane=99))
+            await model.activate(dict(address='missing', pane=3))
+            request.assert_awaited_once()
+        with patch.object(tracker, 'process_identity', return_value=('43', 'kitty')), \
+                patch.object(tracker, 'kitty_request') as request, redirect_stdout(io.StringIO()):
+            await model.activate(dict(address='a1', pane=3))
+            request.assert_not_awaited()
+
     async def test_ambiguous_os_windows_never_borrow_another_agent(self):
         model = await self.model()
         model.clients.append({"pid": 123, "address": "a2", "appId": "kitty"})

@@ -89,6 +89,11 @@ async def main():
             await wait(lambda value: state(value) == "running")
             await hook(third, "PermissionRequest")
             await wait(lambda value: state(value) == "waiting")
+            worker.stdin.write(json.dumps({"activate": {"address": "a1", "pane": third}}).encode() + b"\n")
+            await worker.stdin.drain()
+            await wait(lambda value: value.get("activated", {}).get("ok"))
+            await wait(lambda value: any(agent["pane"] == third and agent["active"]
+                for agent in value.get("windows", {}).get("a1", {}).get("agents", [])))
             await hook(third, "PostToolUse")
             await wait(lambda value: state(value) == "running")
             await hook(third, "Stop")
@@ -116,7 +121,7 @@ async def main():
             except asyncio.TimeoutError:
                 pass
             assert latest["health"]["requests"] == 1, latest["health"]
-            print("PASS: existing-pane attachment, inactive tabs, split panes, hook events, status precedence, pane removal, restart recovery and zero spinner/idle queries.")
+            print("PASS: existing-pane attachment, inactive tabs, split panes, exact-pane activation, hook events, status precedence, pane removal, restart recovery and zero spinner/idle queries.")
         except Exception:
             print("Last synthetic state:", latest)
             log.seek(0)

@@ -30,13 +30,25 @@ QtObject {
         return terminal ? terminal.agentState || "" : "";
     }
 
-    function agentDescription(window): string {
+    function agentsFor(window): var {
         const terminal = appFor(window);
-        if (!terminal || !terminal.agents) return "";
-        const names = {codex: "Codex", claude: "Claude", kimi: "Kimi"};
+        return terminal && terminal.agents ? terminal.agents : [];
+    }
+
+    function agentFor(window, pane): var {
+        return agentsFor(window).find(agent => agent.pane === pane) || null;
+    }
+
+    function describeAgent(agent): string {
         const states = {idle: "Idle", running: "Running", waiting: "Needs action"};
-        return terminal.agents.map(agent => (names[agent.agent] || agent.agent)
-            + " · tab " + agent.tab + " · " + (states[agent.state] || "Status unavailable")).join("; ");
+        return "Tab " + agent.tab + " · pane " + agent.pane + " · "
+            + (states[agent.state] || "Status unavailable");
+    }
+
+    function activateAgent(window, pane): bool {
+        if (!helper.running || !agentFor(window, pane)) return false;
+        helper.write(JSON.stringify({activate: {address: Logic.address(window.address), pane: pane}}) + "\n");
+        return true;
     }
 
     function sync(): void {
@@ -66,6 +78,15 @@ QtObject {
             onRead: line => {
                 try {
                     const value = JSON.parse(line);
+                    if (value.activated) {
+                        if (value.activated.ok) {
+                            const window = Hyprland.toplevels.values.find(window =>
+                                Logic.address(window.address) === value.activated.address);
+                            if (window && root.agentFor(window, value.activated.pane))
+                                WorkspaceState.activateWindow(window);
+                        }
+                        return;
+                    }
                     root.applications = value.windows;
                     root.health = value.health;
                     root.ready = true;

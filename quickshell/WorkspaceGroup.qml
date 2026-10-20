@@ -36,11 +36,11 @@ Rectangle {
                 values: WorkspaceState.windowsFor(root.workspace)
                 comparisonMode: ObjectComparison.Identity
             }
-            delegate: WorkspaceButton {
+            // Show every agent pane belonging to each terminal window.
+            delegate: WorkspaceWindow {
                 required property var modelData
                 workspace: root.workspace
                 toplevel: modelData
-                windowButton: true
                 keyboardNavigation: root.keyboardNavigation
                 onPointerInteraction: root.pointerInteraction()
                 onKeyboardInteraction: root.keyboardInteraction()

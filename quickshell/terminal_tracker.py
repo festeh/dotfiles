@@ -169,7 +169,8 @@ class Tracker:
                 panes = matches[0]["panes"] if len(matches) == 1 and unique else []
                 active = next((pane for pane in panes if pane["active"]), None)
                 agents = [{"agent": pane["agent"], "pane": pane["id"], "tab": pane["tab"],
-                    "state": self.hook_state(pid, pane, record)} for pane in panes if pane["agent"]]
+                    "active": pane["active"], "state": self.hook_state(pid, pane, record)}
+                    for pane in panes if pane["agent"]]
                 result[client["address"]] = {"kitty": True, "programs": active["programs"] if active else [],
                     "agents": agents, "agentState": aggregate(agents)}
         return result
@@ -188,6 +189,27 @@ class Tracker:
             print(json.dumps(value, separators=(",", ":")), flush=True)
             self.previous = value
 
+    async def activate(self, target):
+        if (not isinstance(target, dict) or not isinstance(target.get("address"), str)
+                or type(target.get("pane")) is not int or target["pane"] <= 0):
+            return
+        address, pane = target["address"], target["pane"]
+        ok = False
+        client = next((client for client in self.clients if client["address"] == address), None)
+        record = self.instances.get(client["pid"]) if client else None
+        identity = process_identity(client["pid"]) if record else None
+        agents = self.windows().get(address, {}).get("agents", [])
+        if identity and identity[0] == record["start"] and any(agent["pane"] == pane for agent in agents):
+            try:
+                self.requests += 1
+                await asyncio.wait_for(kitty_request(client["pid"], "focus-window", {"match": f"id:{pane}"}), 1)
+                ok = True
+            except (OSError, ValueError, asyncio.TimeoutError, asyncio.IncompleteReadError,
+                    asyncio.LimitOverrunError):
+                pass
+            self.schedule_publish()
+        print(json.dumps({"activated": {"address": address, "pane": pane, "ok": ok}}), flush=True)
+
     async def input(self):
         reader = asyncio.StreamReader()
         transport, _ = await asyncio.get_running_loop().connect_read_pipe(
@@ -197,7 +219,10 @@ class Tracker:
                 try:
                     value = json.loads(line)
                     if isinstance(value, dict):
-                        self.receive(value)
+                        if "activate" in value:
+                            await self.activate(value["activate"])
+                        else:
+                            self.receive(value)
                 except (ValueError, TypeError):
                     pass
         finally:
