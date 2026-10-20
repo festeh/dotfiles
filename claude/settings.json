@@ -29,17 +29,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
-          }
-        ]
-      },
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash '/home/dima/.claude/hooks/herdr-agent-state.sh' session",
-            "timeout": 10
+            "command": "python3 \"$HOME/dotfiles/quickshell/agent-hook\" claude",
+            "timeout": 2
           }
         ]
       }
@@ -49,7 +40,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+            "command": "python3 \"$HOME/dotfiles/quickshell/agent-hook\" claude",
+            "timeout": 2
           }
         ]
       }
@@ -59,7 +51,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+            "command": "python3 \"$HOME/dotfiles/quickshell/agent-hook\" claude",
+            "timeout": 2
           }
         ]
       }
@@ -69,7 +62,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+            "command": "python3 \"$HOME/dotfiles/quickshell/agent-hook\" claude",
+            "timeout": 2
           }
         ]
       }
@@ -79,17 +73,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
-          }
-        ]
-      }
-    ],
-    "PostToolBatch": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+            "command": "python3 \"$HOME/dotfiles/quickshell/agent-hook\" claude",
+            "timeout": 2
           }
         ]
       }
@@ -99,7 +84,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+            "command": "python3 \"$HOME/dotfiles/quickshell/agent-hook\" claude",
+            "timeout": 2
           }
         ]
       }
@@ -109,7 +95,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+            "command": "python3 \"$HOME/dotfiles/quickshell/agent-hook\" claude",
+            "timeout": 2
           }
         ]
       }
@@ -119,7 +106,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+            "command": "python3 \"$HOME/dotfiles/quickshell/agent-hook\" claude",
+            "timeout": 2
           }
         ]
       }
@@ -129,7 +117,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+            "command": "python3 \"$HOME/dotfiles/quickshell/agent-hook\" claude",
+            "timeout": 2
           }
         ]
       }
@@ -139,7 +128,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+            "command": "python3 \"$HOME/dotfiles/quickshell/agent-hook\" claude",
+            "timeout": 2
           }
         ]
       }
@@ -149,7 +139,41 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 /home/dima/.claude/hooks/ags-status.py"
+            "command": "python3 \"$HOME/dotfiles/quickshell/agent-hook\" claude",
+            "timeout": 2
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$HOME/dotfiles/quickshell/agent-hook\" claude",
+            "timeout": 2
+          }
+        ]
+      }
+    ],
+    "Elicitation": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$HOME/dotfiles/quickshell/agent-hook\" claude",
+            "timeout": 2
+          }
+        ]
+      }
+    ],
+    "ElicitationResult": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$HOME/dotfiles/quickshell/agent-hook\" claude",
+            "timeout": 2
           }
         ]
       }

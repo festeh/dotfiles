@@ -99,9 +99,14 @@ If symlinks fail to create, ensure:
 - No file already exists at the symlink destination
 - You have write permissions to the destination
 
-## AGS (Astal) Management
+## Archived AGS (Astal)
 
-AGS is managed as a systemd user service. **NEVER run `ags` command directly.**
+Quickshell replaces AGS on host `360`. AGS is stopped, disabled, and no longer
+installed as a startup service by that host's configuration. Keep its sources
+available for reference; do not start it while working on Quickshell.
+
+The instructions below apply only when explicitly restoring the legacy AGS setup.
+Manage it through its systemd user service. **NEVER run `ags` command directly.**
 
 ### Starting/Stopping AGS
 

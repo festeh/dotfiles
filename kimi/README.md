@@ -1,13 +1,19 @@
-# Kimi Code AGS Status Widget
+# Kimi Code status in Quickshell
 
-Kimi Code hooks feed the AGS agent pills. `hooks/ags-status.py` is a thin entry point into the shared `../ags/hooks/agent_status.py`, which writes the state of the agent in the current Kitty window to `~/.cache/ags-agents/windows/<KITTY_PID>-<KITTY_WINDOW_ID>.json`. AGS (`../ags/service/Agents.ts`) shows a pill while a Kitty window's foreground process is `kimi` and colors it from that file. The event-to-state mapping lives in `agent_status.py`.
+Kimi hooks call `../quickshell/agent-hook kimi`. The hook writes only pane identity
+and normalized state to private runtime files, and only when the state changes.
+Quickshell combines all agents in a Kitty window, including inactive tabs/splits:
+amber needs action, blue running, green all idle. No AGS or Herdr hooks remain.
 
 ## Install
 
-Kimi Code hooks only live in `~/.kimi-code/config.toml` (there is no separate hooks file), so append the snippet:
+Kimi Code hooks live in `~/.kimi-code/config.toml`. Remove the former AGS/Herdr hook
+blocks, then append this repo's snippet once, preserving provider/account settings:
 
 ```sh
 cat ~/dotfiles/kimi/hooks.toml >> ~/.kimi-code/config.toml
 ```
 
-This repo does not overwrite the full Kimi Code config because it also contains provider, model, and OAuth settings. Hook changes apply to newly started sessions.
+This repo does not overwrite the full Kimi Code config because it also contains
+provider, model, and OAuth settings. Restart existing Kimi sessions after changing
+hooks so they stop using cached commands.

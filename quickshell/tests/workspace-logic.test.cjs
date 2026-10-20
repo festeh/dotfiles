@@ -20,16 +20,6 @@ test('numeric sorting and readable labels survive workspace renaming', () => {
     assert.equal(logic.clean('a\n b\t c'), 'a b c');
 });
 
-test('terminal title comparison ignores activity prefixes and preserves meaningful changes', () => {
-    for (const frame of ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏', '◐', '◓', '✳', '✳️', '✻', '·', ''])
-        assert.equal(logic.terminalTitleKey(` ${frame}  Editor, file `), 'Editor, file');
-    assert.notEqual(logic.terminalTitleKey('⠋ First tab'), logic.terminalTitleKey('⠙ Second tab'));
-    assert.equal(logic.terminalTitleKey('/usr/bin/nvim'), '/usr/bin/nvim');
-    assert.equal(logic.terminalTitleKey('-option | /path'), '-option | /path');
-    assert.notEqual(logic.terminalTitleKey('file ⠋'), logic.terminalTitleKey('file ⠙'));
-    assert.equal(logic.terminalTitleKey(null), '');
-});
-
 test('workspace identity and activation use IDs even when names are identical', () => {
     for (const id of [1, 2]) {
         const workspace = {id, address: String(id), name: 'shared'};

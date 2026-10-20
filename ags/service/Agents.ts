@@ -4,6 +4,7 @@ import GLib from "gi://GLib"
 import Hyprland from "gi://AstalHyprland"
 import { codexToolCount } from "./CodexToolCount"
 import { focusWorkspace } from "./HyprlandActions"
+import { legacyAgentStatusEnabled } from "../features"
 
 // An agent pill exists while a Kitty window's foreground process is a known agent
 // (`kitty @ ls`). Hook-driven agents add state through ~/.cache/ags-agents/windows,
@@ -435,16 +436,16 @@ function watchHookStates(): void {
   })
 }
 
-watchHookStates()
-
-hypr.connect("client-added", () => { void pollKitty() })
-hypr.connect("client-removed", () => { void pollKitty() })
-GLib.timeout_add(GLib.PRIORITY_DEFAULT, POLL_INTERVAL_MS, () => {
-  pollTriggeredKeys.clear()
+if (legacyAgentStatusEnabled) {
+  watchHookStates()
+  hypr.connect("client-added", () => { void pollKitty() })
+  hypr.connect("client-removed", () => { void pollKitty() })
+  GLib.timeout_add(GLib.PRIORITY_DEFAULT, POLL_INTERVAL_MS, () => {
+    pollTriggeredKeys.clear()
+    void pollKitty()
+    agentClock.set(agentClock.get() + 1)
+    return GLib.SOURCE_CONTINUE
+  })
+  readHookStates()
   void pollKitty()
-  agentClock.set(agentClock.get() + 1)
-  return GLib.SOURCE_CONTINUE
-})
-
-readHookStates()
-void pollKitty()
+}

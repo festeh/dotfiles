@@ -24,12 +24,14 @@ Rectangle {
         WorkspaceButton {
             id: number
             workspace: root.workspace
+            emptyWorkspace: windowButtons.count === 0
             keyboardNavigation: root.keyboardNavigation
             onPointerInteraction: root.pointerInteraction()
             onKeyboardInteraction: root.keyboardInteraction()
             onRevealRequested: item => root.revealRequested(item)
         }
         Repeater {
+            id: windowButtons
             model: ScriptModel {
                 values: WorkspaceState.windowsFor(root.workspace)
                 comparisonMode: ObjectComparison.Identity

@@ -125,7 +125,7 @@ QtObject {
 
     function info(window): var {
         if (!window) return {name: "Window", source: ""};
-        const terminal = KittyApps.appFor(window);
+        const terminal = TerminalState.appFor(window);
         if (terminal && terminal.kitty) {
             // Foreground identities take precedence over Kitty's app ID, even
             // when a launcher keeps a custom ID after the command exits.

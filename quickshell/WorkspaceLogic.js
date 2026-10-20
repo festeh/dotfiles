@@ -6,14 +6,6 @@ function clean(value) {
 
 function key(value) { return clean(value).replace(/\.desktop$/i, "").toLowerCase(); }
 
-function terminalTitleKey(value) {
-    // Ignore leading activity frames, including their emoji presentation marks.
-    // Preserve paths, punctuation and any spinner-like symbols inside the title.
-    return typeof value === "string"
-        ? value.replace(/^[\s\u2800-\u28ff\u25d0-\u25d3\u2733\u2722\u2736-\u273d\u00b7\ufe0e\ufe0f]+/u, "").trim()
-        : "";
-}
-
 function address(value) {
     value = clean(value).replace(/^0x/i, "");
     return /^[0-9a-f]+$/i.test(value) && !/^0+$/.test(value) ? value.toLowerCase() : "";

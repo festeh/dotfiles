@@ -16,6 +16,7 @@ QtObject {
     readonly property color warning: "#fab387"
     readonly property color critical: "#f38ba8"
     readonly property color positive: "#a6e3a1"
+    readonly property color running: "#89b4fa"
     readonly property string fontFamily: "JetBrainsMono Nerd Font"
     readonly property int iconSize: 18
     readonly property int buttonSize: 28

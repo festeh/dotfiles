@@ -32,7 +32,7 @@ ShellRoot {
     IpcHandler {
         target: "workspace-test"
         function state(): string {
-            return JSON.stringify({lua: Hyprland.usingLua, terminalReady: KittyApps.ready,
+            return JSON.stringify({lua: Hyprland.usingLua, terminalReady: TerminalState.ready,
                 themedIconAvailable: Quickshell.hasThemeIcon("org.example.Themed"),
                 width: strip.width, implicitWidth: strip.implicitWidth,
                 scrollX: root.find(strip, "workspace-scroll").contentX,
@@ -41,7 +41,12 @@ ShellRoot {
                     delegate: String(root.find(strip, 'workspace-number-' + ws.address)),
                     windows: WorkspaceState.windowsFor(ws).map(w => ({address: w.address, title: w.title,
                         focused: WorkspaceState.isFocused(w), info: WorkspaceState.info(w),
-                        delegate: String(root.find(strip, 'workspace-window-' + w.address))}))}))});
+                        delegate: String(root.find(strip, 'workspace-window-' + w.address)),
+                        agentState: TerminalState.statusFor(w),
+                        overlineVisible: root.find(root.find(strip, 'workspace-window-' + w.address), 'agent-status-overline').visible,
+                        overlineColor: String(root.find(root.find(strip, 'workspace-window-' + w.address), 'agent-status-overline').color),
+                        overlineWidth: root.find(root.find(strip, 'workspace-window-' + w.address), 'agent-status-overline').width,
+                        underlineWidth: root.find(root.find(strip, 'workspace-window-' + w.address), 'window-focus-underline').width}))}))});
         }
         function click(name: string): bool {
             const button = root.find(strip, name);
@@ -49,10 +54,16 @@ ShellRoot {
         }
         function narrow(): void { strip.width = 120; }
         function terminal(address: string, programs: string): void {
-            const state = Object.assign({}, KittyApps.applications);
+            const state = Object.assign({}, TerminalState.applications);
             if (programs === "-") delete state[address];
             else state[address] = {kitty: true, programs: programs ? programs.split(",") : []};
-            KittyApps.applications = state;
+            TerminalState.applications = state;
+        }
+        function agents(address: string, status: string): void {
+            const state = Object.assign({}, TerminalState.applications);
+            state[address] = {kitty: true, programs: ["codex"], agentState: status,
+                agents: status ? [{agent: "codex", pane: 1, tab: 2, state: status}] : []};
+            TerminalState.applications = state;
         }
         function reveal(name: string): bool {
             const button = root.find(strip, name);

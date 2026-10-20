@@ -10,6 +10,7 @@ name = "~/.config/kitty"
 target = "uwsm"
 name = "~/.config/uwsm"
 
+# Keep the retired AGS config available; Quickshell owns the session bar.
 [symlinks.ags]
 target = "ags"
 name = "~/.config/ags"
@@ -97,12 +98,6 @@ SCALING = "1"
 USER = "dima"
 GTK_THEME = "catppuccin-mocha-mauve-standard+default"
 BIND_WORKSPACES_TO_EDP1 = "true"
-
-[templates.ags_daemon]
-target = "systemd/ags_template.service"
-name = "~/.config/systemd/user/ags.service"
-GTK_THEME = "catppuccin-mocha-mauve-standard+default"
-AGS_PATH = "/home/dima/.local/bin"
 
 [symlinks.mise]
 target = "mise/config.toml"

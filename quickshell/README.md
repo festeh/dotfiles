@@ -1,24 +1,27 @@
-# Quickshell bar experiment
+# Quickshell desktop shell
 
 Launcher, workspaces, keyboard layout, volume, network, battery, clock, calendar, and tray built independently of AGS. `Theme.qml` borrows its Catppuccin colors,
 rounded container, and right alignment from `ags/style.css`.
 
 Run `./quickshell/run` from the dotfiles checkout, or
 `quickshell --path ~/dotfiles/quickshell`. Quickshell reloads QML edits live;
-restart the preview after editing imported JavaScript logic.
+restart the shell after editing imported JavaScript logic.
 Install the `papirus-icon-theme` package, or install Papirus and Papirus-Dark
 under `~/.local/share/icons` for the current user. Theme changes require a
-preview restart so Qt rebuilds its icon lookup.
+shell restart so Qt rebuilds its icon lookup.
 Stop with `quickshell --path ~/dotfiles/quickshell kill`.
 Hyprland starts the shared shell through UWSM at graphical login using
-`shell-launcher --start`. This keeps the preview bar and app catalog warm without
+`shell-launcher --start`. This keeps the bar and app catalog warm without
 opening the launcher or taking focus. Category hotkeys can also recover the shell
 if it is not running.
 
-Each monitor gets a transparent row below panels that already reserve space
-(currently AGS). The compositor handles placement without polling or a fixed
-AGS height. Only the workspace strip and the layout, volume, network, battery,
-clock, and tray widgets receive pointer input. The row reserves 44 pixels;
+Quickshell is the active bar on host `360`; AGS is stopped and its startup service
+is no longer installed by that host's configuration. The AGS sources remain
+available for reference. pCloud's autostart waits for the tray watcher without
+starting AGS.
+
+Each monitor gets a transparent top row that reserves 44 pixels. Only the
+workspace strip and status widgets receive pointer input;
 the clock remains visible when there are no tray items. All tray items remain visible, including
 passive items, so applications do not silently disappear.
 
@@ -138,9 +141,10 @@ keeps the popup open. Failures preserve the count and allow retry.
 The AGS implementations and styles are retained. `ags/features.ts` sets
 `legacyStatusWidgetsEnabled` and `legacyGoogleWidgetsEnabled` to `false`, disabling
 the old right-hand bar controls and Google extra row. The Google polling helper
-and clock timer also stay inactive behind these flags. AGS workspaces and agent
-status remain active. The recording implementation is retained, with its Super+E
-shortcut disabled.
+and clock timer also stay inactive behind these flags. The AGS service is retired
+on host `360`, including its workspace row. Agent pills and their polling tracker
+are retained behind `legacyAgentStatusEnabled = false`. The recording implementation is retained,
+with its Super+E shortcut removed.
 
 Calendar shows a meeting icon and the current/next meeting's start time only for
 today. `outOfOffice` uses a palm, including all-day absences. Left click opens the
@@ -479,7 +483,8 @@ named workspaces have a stable name order. Special workspaces are identified by
 their names and omitted, without hiding normal named workspaces with negative IDs.
 The number sits close to its window icons. Spacing stays the same when focus
 changes, and workspace backgrounds stay neutral. A workspace visible on another
-monitor has a subtle border. The focused window has a mauve underline.
+monitor has a subtle border. The focused window has a mauve underline; when the
+focused workspace is empty, its number gets the same underline instead.
 
 Click a workspace number to activate it, or an app icon to focus that exact
 window. Tab moves between buttons; Enter/Space activates the focused button.
@@ -520,23 +525,53 @@ resolve the artwork first. Codex and Claude use bundled overrides when their
 foreground executables have no usable app icon. Other unknown apps and shell
 prompts fall back to Kitty; failed image loads also retain that fallback.
 
-`KittyApps.qml` owns one shared Python reader. It talks directly to the configured
-abstract Kitty sockets, without spawning `kitty @` commands. Focus/title changes
-request a refresh, coalesced to at most four queries per second per Kitty process.
-Leading activity spinners and their presentation/spacing changes are removed
-before comparing titles. Spinner-only updates never request a reader refresh;
-meaningful title changes and focus events still do. Initial titles are seeded
-from the native model, and cached keys are removed when windows close.
-A one-second check reads `/proc` stat fields for known Kitty pane/foreground PIDs
-so foreground-group changes and exits also update icons with fixed titles. There
-are no periodic process-tree scans or idle Kitty IPC queries. With no Kitty
-windows the reader blocks on input. Only app executable basenames reach QML;
-command arguments, environment, working directories and session metadata stay
-out of the icon state. Multiple OS windows in one Kitty process are matched only
-when their classes identify them uniquely; ambiguous windows use the Kitty icon.
-Kitty tab/pane switches refresh through meaningful compositor title/focus events.
-A switch that leaves both the normalized title and the previously observed
-foreground processes unchanged is detected on the next meaningful title/focus event.
+`TerminalState.qml` owns one shared `terminal_tracker.py` worker for all monitors.
+It attaches `kitty/terminal-watcher.py` to each Kitty instance over its existing
+abstract remote-control socket. The small no-UI attachment kitten adds callbacks
+to existing panes, so current terminals do not need restarting. The watcher is
+also configured in `kitty.conf` for new terminals. Attachment and updates use no
+`kitty @` subprocesses or new Quickshell native patches. The attachment adapter
+uses Kitty's watcher objects; validate it after Kitty upgrades.
+
+Kitty pushes inventory changes and normalized agent-state transitions over one
+private Unix datagram socket. Tab/pane switches, command start/stop, closes and
+meaningful title changes refresh inventory in-process after a short coalescing
+delay. Shell integration is enabled in the supplied Kitty config. Spinner and
+blinking permission frames do not rescan processes or publish repeated states.
+Healthy watched instances have no periodic timer or `/proc` polling. Only an
+instance that rejects watcher attachment after three attempts falls back to a
+five-second snapshot; a valid watcher snapshot ends that fallback.
+
+All tabs and split panes contribute agent status, including inactive panes.
+A static 18×2px overline above the window's icon shows green for idle, blue for
+running, and amber for needs action. Needs action takes priority over running,
+then idle; unknown states do not produce a misleading green marker. Windows
+without agents have no overline. The focus underline is also 18px wide. Hover
+includes each agent's tab number and state without adding new buttons or timers.
+The active tab/pane still determines the window's app icon.
+
+Codex state comes from its terminal activity title. Shared app-server/exec-server
+processes are excluded. Claude and Kimi use `agent-hook` and `agent_events.py`:
+small state-only hooks write atomic, private runtime files only on state changes.
+One inotify watch reads changed files; publishing never rereads every agent file.
+Compaction counts as running, explicit user questions/permissions need action,
+and stop/interruption is idle. Claude's later idle title can settle a stale running
+hook after an Esc interrupt. A Kitty process start token prevents PID reuse from
+adopting another instance's hook state. Ambiguous OS-window mappings keep the
+Kitty icon and no agent marker instead of borrowing another window's agents.
+
+App basenames, agent names, pane/tab IDs and normalized states reach QML;
+arguments, environment, paths, prompts and transcripts do not. Runtime hook files
+contain only identity/state metadata, live under `$XDG_RUNTIME_DIR/quickshell-agents`
+with mode 0600, and are removed on session end. No AGS cache is read.
+`codex/hooks.json` is empty; Claude's tracked settings and Kimi's local config use
+only the Quickshell state hook. Former AGS/Herdr hook scripts are removed, with no
+compatibility forwarding. Existing clients may need restarting to forget cached
+hook commands.
+
+References: [Kitty watcher callbacks](https://sw.kovidgoyal.net/kitty/launch/#watching-launched-windows),
+[custom kittens](https://sw.kovidgoyal.net/kitty/kittens/custom/), and
+[Claude hook events](https://code.claude.com/docs/en/hooks).
 
 The open-window event supplies class metadata before the first full IPC snapshot.
 Since that event contains only a workspace name, a single-shot 40 ms timer
@@ -544,8 +579,8 @@ coalesces open bursts into one client snapshot to obtain workspace IDs. Initial
 load and monitor/configuration changes also refresh metadata once.
 Hyprland membership uses no repeating timers, `hyprctl` polling, per-window
 processes, or new Quickshell core patches. AGS supplies visual references and
-Codex/Claude artwork only. Agent status, agent pills, session tracking, and
-workspace renaming are out of scope.
+Codex/Claude artwork only. Expanded agent pills, transcript/session inspection,
+tool counts and workspace renaming are out of scope.
 
 Workspace activation uses the native Hyprland dispatcher with numeric IDs for
 numbered workspaces and explicit names for named workspaces, with Lua-mode
@@ -578,8 +613,11 @@ Run the workspace checks with:
 
 ```sh
 node --test quickshell/tests/workspace-logic.test.cjs
-python3 quickshell/tests/kitty-apps.test.py
+python3 quickshell/tests/terminal-tracker.test.py
 python3 quickshell/tests/check-workspaces
+# Real Kitty event check with synthetic agents, on the graphical session:
+quickshell/tests/check-terminal-events
+quickshell ipc --path ~/dotfiles/quickshell call terminals status
 ```
 
 References: [native Hyprland service](https://quickshell.org/docs/v0.3.2/types/Quickshell.Hyprland/Hyprland/),

@@ -1,0 +1,134 @@
+#!/usr/bin/python3
+"""Real Kitty tabs/splits and production tracker, using only synthetic agents."""
+
+import asyncio
+import json
+import os
+from pathlib import Path
+import sys
+import tempfile
+
+source = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(source))
+from terminal_tracker import kitty_request
+
+
+async def main():
+    with tempfile.TemporaryDirectory(prefix="quickshell-terminal-check-") as directory:
+        root = Path(directory)
+        runtime = root / "runtime"
+        runtime.mkdir(mode=0o700)
+        env = dict(os.environ, XDG_RUNTIME_DIR=str(runtime),
+            WAYLAND_DISPLAY=str(Path(os.environ["XDG_RUNTIME_DIR"]) / os.environ["WAYLAND_DISPLAY"]))
+        program = ('#!/usr/bin/python3\nimport sys\n'
+            'print("\\x1b]0;Test agent\\x07",end="",flush=True)\n'
+            'while True:\n with open(sys.argv[1]) as control:\n'
+            '  for line in control: print("\\x1b]0;"+line.strip()+"\\x07",end="",flush=True)\n')
+        for name in ("codex", "claude"):
+            (root / name).write_text(program)
+            (root / name).chmod(0o700)
+        for name in ("one", "two", "three", "four"):
+            os.mkfifo(root / name)
+        log = (root / "kitty.log").open("w+")
+        kitty = await asyncio.create_subprocess_exec("kitty", "--config", "NONE", "--class", "quickshell-terminal-check",
+            "--listen-on", "unix:@kitty-{kitty_pid}", "-o", "allow_remote_control=yes", "-o", "font_size=10",
+            str(root / "codex"), str(root / "one"), env=env, stdout=log, stderr=log)
+        worker = None
+        latest = None
+
+        async def start():
+            nonlocal worker
+            worker = await asyncio.create_subprocess_exec("/usr/bin/python3", str(source / "terminal_tracker.py"), env=env,
+                stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            worker.stdin.write(json.dumps({"windows": [dict(pid=kitty.pid, address="a1", appId="quickshell-terminal-check")]}).encode() + b"\n")
+            await worker.stdin.drain()
+
+        async def wait(predicate, timeout=6):
+            nonlocal latest
+            deadline = asyncio.get_running_loop().time() + timeout
+            while True:
+                line = await asyncio.wait_for(worker.stdout.readline(), deadline - asyncio.get_running_loop().time())
+                if not line:
+                    raise RuntimeError((await worker.stderr.read()).decode())
+                latest = json.loads(line)
+                if predicate(latest):
+                    return latest
+
+        def state(value):
+            return value["windows"].get("a1", {}).get("agentState")
+
+        def title(name, value):
+            descriptor = os.open(root / name, os.O_WRONLY | os.O_NONBLOCK)
+            try:
+                os.write(descriptor, (value + "\n").encode())
+            finally:
+                os.close(descriptor)
+
+        async def hook(pane, event):
+            process = await asyncio.create_subprocess_exec("/usr/bin/python3", str(source / "agent-hook"), "claude",
+                env=dict(env, KITTY_PID=str(kitty.pid), KITTY_WINDOW_ID=str(pane)), stdin=asyncio.subprocess.PIPE,
+                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            stdout, stderr = await process.communicate(json.dumps(dict(session_id="fixture", hook_event_name=event)).encode())
+            assert process.returncode == 0 and not stdout and not stderr, (stdout, stderr)
+
+        try:
+            for _ in range(100):
+                try:
+                    await kitty_request(kitty.pid)
+                    break
+                except (OSError, ValueError):
+                    await asyncio.sleep(.03)
+            await start()
+            await wait(lambda value: value["health"]["watched"] == 1 and value["health"]["agents"] == 1)
+            await kitty_request(kitty.pid, "launch", dict(args=[str(root / "codex"), str(root / "two")], type="tab", keep_focus=True))
+            third = int(await kitty_request(kitty.pid, "launch", dict(args=[str(root / "claude"), str(root / "three")], type="tab", keep_focus=True)))
+            await wait(lambda value: value["health"]["agents"] == 3)
+            await hook(third, "SessionStart")
+            await wait(lambda value: state(value) == "idle")
+            title("two", "⠋ Test agent")
+            await wait(lambda value: state(value) == "running")
+            await hook(third, "PermissionRequest")
+            await wait(lambda value: state(value) == "waiting")
+            await hook(third, "PostToolUse")
+            await wait(lambda value: state(value) == "running")
+            await hook(third, "Stop")
+            await wait(lambda value: state(value) == "running" and value["windows"]["a1"]["agents"][-1]["state"] == "idle")
+            title("two", "Test agent")
+            await wait(lambda value: state(value) == "idle")
+            fourth = int(await kitty_request(kitty.pid, "launch", dict(args=[str(root / "codex"), str(root / "four")], type="window", keep_focus=True)))
+            await wait(lambda value: value["health"]["agents"] == 4)
+            title("four", "[ ! ] Action Required | Test agent")
+            await wait(lambda value: state(value) == "waiting")
+            await kitty_request(kitty.pid, "close-window", {"match": f"id:{fourth}"})
+            await wait(lambda value: state(value) == "idle" and value["health"]["agents"] == 3)
+
+            # Restart the tracker, retaining Kitty and the inactive agent panes.
+            worker.stdin.close()
+            await asyncio.wait_for(worker.wait(), 5)
+            await start()
+            await wait(lambda value: value["health"]["watched"] == 1 and value["health"]["agents"] == 3)
+            title("two", "⠋ Test agent")
+            await wait(lambda value: state(value) == "running")
+            title("two", "\n".join(frame + " Test agent" for frame in ["⠙", "⠹", "⠸", "⠼"] * 25))
+            try:
+                line = await asyncio.wait_for(worker.stdout.readline(), 1.2)
+                raise AssertionError("Spinner-only frames or idle polling published: " + line.decode())
+            except asyncio.TimeoutError:
+                pass
+            assert latest["health"]["requests"] == 1, latest["health"]
+            print("PASS: existing-pane attachment, inactive tabs, split panes, hook events, status precedence, pane removal, restart recovery and zero spinner/idle queries.")
+        except Exception:
+            print("Last synthetic state:", latest)
+            log.seek(0)
+            print(log.read()[-4000:])
+            raise
+        finally:
+            if kitty.returncode is None:
+                kitty.terminate()
+                await asyncio.wait_for(kitty.wait(), 5)
+            if worker is not None and worker.returncode is None:
+                worker.stdin.close()
+                await asyncio.wait_for(worker.wait(), 5)
+
+
+asyncio.run(main())

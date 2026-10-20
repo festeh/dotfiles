@@ -27,8 +27,7 @@ ShellRoot {
             implicitHeight: Theme.panelHeight
             color: "transparent"
 
-            // Normal exclusion respects AGS's reserved space, including height changes.
-            // Reserve our own row so maximized windows remain below the preview.
+            // Reserve the bar's row so maximized windows remain below it.
             exclusiveZone: implicitHeight
             WlrLayershell.namespace: "quickshell-tray-preview"
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand

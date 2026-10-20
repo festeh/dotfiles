@@ -1,0 +1,12 @@
+#!/usr/bin/python3
+"""Entry point for the Quickshell Claude/Kimi state hooks."""
+
+import json
+import sys
+from agent_events import record_event
+
+try:
+    if len(sys.argv) == 2:
+        record_event(sys.argv[1], json.loads(sys.stdin.read(1024 * 1024)))
+except (OSError, ValueError):
+    pass

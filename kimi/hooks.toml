@@ -1,75 +1,66 @@
-# AGS status widget hooks (dotfiles/kimi/hooks/ags-status.py)
+# Quickshell state-only hooks; the full provider/account config stays local.
+
 [[hooks]]
 event = "SessionStart"
-command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
-timeout = 5
+command = "python3 \"$HOME/dotfiles/quickshell/agent-hook\" kimi"
+timeout = 2
 
 [[hooks]]
 event = "SessionEnd"
-command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
-timeout = 5
+command = "python3 \"$HOME/dotfiles/quickshell/agent-hook\" kimi"
+timeout = 2
 
 [[hooks]]
 event = "UserPromptSubmit"
-command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
-timeout = 5
+command = "python3 \"$HOME/dotfiles/quickshell/agent-hook\" kimi"
+timeout = 2
 
 [[hooks]]
 event = "PreToolUse"
-command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
-timeout = 5
+command = "python3 \"$HOME/dotfiles/quickshell/agent-hook\" kimi"
+timeout = 2
 
 [[hooks]]
 event = "PostToolUse"
-command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
-timeout = 5
+command = "python3 \"$HOME/dotfiles/quickshell/agent-hook\" kimi"
+timeout = 2
 
 [[hooks]]
 event = "PostToolUseFailure"
-command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
-timeout = 5
+command = "python3 \"$HOME/dotfiles/quickshell/agent-hook\" kimi"
+timeout = 2
 
 [[hooks]]
 event = "PermissionRequest"
-command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
-timeout = 5
+command = "python3 \"$HOME/dotfiles/quickshell/agent-hook\" kimi"
+timeout = 2
 
 [[hooks]]
 event = "PermissionResult"
-command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
-timeout = 5
+command = "python3 \"$HOME/dotfiles/quickshell/agent-hook\" kimi"
+timeout = 2
 
 [[hooks]]
 event = "Stop"
-command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
-timeout = 5
+command = "python3 \"$HOME/dotfiles/quickshell/agent-hook\" kimi"
+timeout = 2
 
 [[hooks]]
 event = "StopFailure"
-command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
-timeout = 5
+command = "python3 \"$HOME/dotfiles/quickshell/agent-hook\" kimi"
+timeout = 2
 
 [[hooks]]
 event = "Interrupt"
-command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
-timeout = 5
+command = "python3 \"$HOME/dotfiles/quickshell/agent-hook\" kimi"
+timeout = 2
 
 [[hooks]]
 event = "PreCompact"
-command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
-timeout = 5
+command = "python3 \"$HOME/dotfiles/quickshell/agent-hook\" kimi"
+timeout = 2
 
 [[hooks]]
 event = "PostCompact"
-command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
-timeout = 5
-
-[[hooks]]
-event = "SubagentStart"
-command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
-timeout = 5
-
-[[hooks]]
-event = "SubagentStop"
-command = "python3 ~/dotfiles/kimi/hooks/ags-status.py"
-timeout = 5
+command = "python3 \"$HOME/dotfiles/quickshell/agent-hook\" kimi"
+timeout = 2

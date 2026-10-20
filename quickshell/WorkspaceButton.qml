@@ -10,9 +10,12 @@ Button {
     required property var workspace
     property var toplevel: null
     property bool windowButton: false
+    property bool emptyWorkspace: false
     property bool keyboardNavigation: false
     readonly property bool selected: windowButton ? WorkspaceState.isFocused(toplevel) : workspace && WorkspaceState.workspaceFocused(workspace)
     readonly property var app: windowButton ? WorkspaceState.info(toplevel) : ({name: "", source: ""})
+    readonly property string agentState: windowButton ? TerminalState.statusFor(toplevel) : ""
+    readonly property string agentDescription: windowButton ? TerminalState.agentDescription(toplevel) : ""
     readonly property string caption: Logic.label(workspace)
     readonly property string tooltip: windowButton
         ? app.name + (toplevel && Logic.clean(toplevel.title) ? " · " + Logic.clean(toplevel.title) : "")
@@ -36,7 +39,8 @@ Button {
     hoverEnabled: true
     focusPolicy: Qt.StrongFocus
     Accessible.name: tooltip
-    Accessible.description: windowButton ? "Focus this window" : "Activate this workspace"
+    Accessible.description: (windowButton ? "Focus this window" : "Activate this workspace")
+        + (agentDescription ? " · " + agentDescription : "")
     onHoveredChanged: if (hovered) root.pointerInteraction()
     onActiveFocusChanged: if (activeFocus) root.revealRequested(root)
     onClicked: windowButton ? WorkspaceState.activateWindow(toplevel) : WorkspaceState.activateWorkspace(workspace)
@@ -100,10 +104,19 @@ Button {
             Rectangle { x: 1; y: 3; width: parent.width - 2; height: 1; color: Theme.subtext }
         }
         Rectangle {
+            objectName: "agent-status-overline"
+            anchors { top: parent.top; horizontalCenter: parent.horizontalCenter }
+            width: 18; height: 2; radius: 1
+            color: root.agentState === "waiting" ? Theme.attention
+                : root.agentState === "running" ? Theme.running : Theme.positive
+            visible: root.agentState.length > 0
+        }
+        Rectangle {
+            objectName: "window-focus-underline"
             anchors { bottom: parent.bottom; horizontalCenter: parent.horizontalCenter }
-            width: 12; height: 2; radius: 1
+            width: 18; height: 2; radius: 1
             color: Theme.accent
-            visible: root.windowButton && root.selected
+            visible: root.selected && (root.windowButton || root.emptyWorkspace)
         }
     }
     HoverHandler { onPointChanged: if (hovered) root.pointerInteraction() }
@@ -111,6 +124,7 @@ Button {
     TrayTooltip {
         anchorItem: root
         title: root.tooltip
+        description: root.agentDescription
         visible: root.wantsTooltip && root.tooltipReady
     }
 }

@@ -42,16 +42,16 @@ with tempfile.TemporaryDirectory(prefix="quickshell-workspace-check-") as direct
     (root / "assets").symlink_to(config / "assets")
     for item in config.iterdir():
         if item.is_file() and item.name != "shell.qml":
-            if item.name == "KittyApps.qml":
-                # Exercise the real QML event filter with an observable private
-                # helper transport; it never connects to the user's terminals.
+            if item.name == "TerminalState.qml":
+                # Observe the production QML transport without attaching to
+                # the user's terminal processes.
                 source = item.read_text()
-                replacement = source.replace('shellPath("kitty_apps.py")', 'shellPath("kitty-apps-probe.py")')
+                replacement = source.replace('shellPath("terminal_tracker.py")', 'shellPath("terminal-probe.py")')
                 assert replacement != source
                 (root / item.name).write_text(replacement)
             else:
                 (root / item.name).symlink_to(item)
-    (root / "kitty-apps-probe.py").symlink_to(config / "tests/fixtures/kitty-apps-probe.py")
+    (root / "terminal-probe.py").symlink_to(config / "tests/fixtures/terminal-probe.py")
     (root / "shell.qml").write_text((config / "tests/fixtures/workspace-native.qml").read_text())
 
     env = os.environ.copy()
@@ -158,25 +158,23 @@ with tempfile.TemporaryDirectory(prefix="quickshell-workspace-check-") as direct
         assert all("null" != window["delegate"] for window in windows(initial).values())
         print("PASS: native startup, numeric/named/special workspaces, duplicate icons, missing artwork", flush=True)
 
-        baseline_refreshes = refreshes()
+        baseline_requests = len(reader_requests())
         emit("windowtitlev2", "a1,⠋ Background, editor")
-        wait_for(lambda s: refreshes() == baseline_refreshes + 1, "meaningful title requests app refresh")
-        spinner_refreshes = refreshes()
+        wait_for(lambda s: windows(s)["a1"]["title"] == "⠋ Background, editor", "native title event")
         frames = ["⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏", "✳️"]
         for index in range(100):
             emit("windowtitlev2", "a1," + frames[index % len(frames)] + " Background, editor")
         wait_for(lambda s: windows(s)["a1"]["title"] == frames[-1] + " Background, editor", "spinner frames processed")
         time.sleep(.35)
-        assert refreshes() == spinner_refreshes, "spinner-only frames reached the reader"
+        assert len(reader_requests()) == baseline_requests, "title frames reached the tracker"
         emit("windowtitlev2", "a1,Background, editor")
         wait_for(lambda s: windows(s)["a1"]["title"] == "Background, editor", "spinner disappears")
-        assert refreshes() == spinner_refreshes
         emit("windowtitlev2", "a1,⠋ Another tab, editor")
-        wait_for(lambda s: refreshes() == spinner_refreshes + 1, "meaningful title change remains observable")
-        focus_refreshes = refreshes()
+        wait_for(lambda s: windows(s)["a1"]["title"] == "⠋ Another tab, editor", "meaningful title remains observable")
         emit("activewindowv2", "a1")
-        wait_for(lambda s: refreshes() == focus_refreshes + 1, "focus refresh bypasses title filter")
-        print("PASS: 100 spinner frames and spinner removal cause zero reader requests; real title/focus changes refresh", flush=True)
+        time.sleep(.1)
+        assert len(reader_requests()) == baseline_requests
+        print("PASS: title/focus events and 100 spinner frames cause zero tracker requests", flush=True)
 
         for program, expected in [("codex", "/assets/codex.svg"), ("claude", "/assets/claude.svg"),
                 ("editor-cli", "/editor.svg"), ("unknown-cli", "/assets/whitesur/terminal.svg")]:
@@ -190,6 +188,16 @@ with tempfile.TemporaryDirectory(prefix="quickshell-workspace-check-") as direct
         call("terminal", "a1", "-")
         wait_for(lambda s: windows(s)["a1"]["info"]["source"].endswith("/editor.svg"), "ordinary window metadata restored")
         print("PASS: Kitty foreground app, executable desktop matching, Codex/Claude overrides, unknown/shell fallback", flush=True)
+
+        for status, color in [('idle', '#a6e3a1'), ('running', '#89b4fa'), ('waiting', '#f9e2af')]:
+            call('agents', 'a1', status)
+            snapshot = wait_for(lambda s: windows(s)['a1']['agentState'] == status, 'agent overline ' + status)
+            button = windows(snapshot)['a1']
+            assert button['overlineVisible'] and button['overlineColor'] == color, button
+            assert button['overlineWidth'] == button['underlineWidth'] == 18
+        call('agents', 'a1', '')
+        wait_for(lambda s: not windows(s)['a1']['overlineVisible'], 'non-agent overline removed')
+        print('PASS: idle/running/needs-action colors, matched line lengths, and no non-agent marker', flush=True)
 
         desktop("org.example.Themed", "ThemedApp", icon, "themed-cli")
         clients.append(client("e1", workspaces[0], app="ThemedApp"))
