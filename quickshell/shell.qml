@@ -19,6 +19,7 @@ ShellRoot {
         model: Quickshell.screens
 
         PanelWindow {
+            id: panel
             required property var modelData
             screen: modelData
             anchors { top: true; left: true; right: true }
@@ -51,6 +52,22 @@ ShellRoot {
                 anchors { right: parent.right; verticalCenter: parent.verticalCenter }
                 anchors.rightMargin: 4
                 spacing: 8
+
+                GoogleWorkWidget {
+                    kind: "gmail"
+                    monitor: panel.modelData
+                    keyboardNavigation: statusRow.keyboardNavigation
+                    onPointerInteraction: statusRow.keyboardNavigation = false
+                    onKeyboardInteraction: statusRow.keyboardNavigation = true
+                }
+
+                GoogleWorkWidget {
+                    kind: "calendar"
+                    monitor: panel.modelData
+                    keyboardNavigation: statusRow.keyboardNavigation
+                    onPointerInteraction: statusRow.keyboardNavigation = false
+                    onKeyboardInteraction: statusRow.keyboardNavigation = true
+                }
 
                 LayoutWidget {
                     keyboardNavigation: statusRow.keyboardNavigation

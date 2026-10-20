@@ -1,5 +1,8 @@
 singleton Theme 1.0 Theme.qml
 Launcher 1.0 Launcher.qml
+singleton GoogleWorkState 1.0 GoogleWorkState.qml
+GoogleWorkWidget 1.0 GoogleWorkWidget.qml
+GoogleWorkPopup 1.0 GoogleWorkPopup.qml
 singleton LayoutState 1.0 LayoutState.qml
 LayoutWidget 1.0 LayoutWidget.qml
 Tray 1.0 Tray.qml

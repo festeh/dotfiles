@@ -126,6 +126,81 @@ actions. Backend checks include a harmless fixture desktop launch to verify fiel
 codes and working directory, binary copy, safe addressed paste, incremental
 indexing, unavailable actions and failed profile authorization.
 
+## Work Gmail and Calendar
+
+Two compact widgets live in the main status row. Gmail shows an envelope and an
+unread-inbox count only when nonzero. Left click opens sender/subject/snippet
+previews with a separate **Mark as read** action; right click opens work Gmail.
+Clicking a message opens its thread in Gmail. Reading a preview does not mark it
+read. The read action removes only `UNREAD` after Google confirms success and
+keeps the popup open. Failures preserve the count and allow retry.
+
+The AGS implementations and styles are retained. `ags/features.ts` sets
+`legacyStatusWidgetsEnabled` and `legacyGoogleWidgetsEnabled` to `false`, disabling
+the old right-hand bar controls and Google extra row. The Google polling helper
+and clock timer also stay inactive behind these flags. AGS workspaces, agent
+status and the recording workflow remain available.
+
+Calendar shows a meeting icon and the current/next meeting's start time only for
+today. `outOfOffice` uses a palm, including all-day absences. Left click opens the
+upcoming agenda; each row opens its Google Calendar link. Right click opens work
+Calendar. Both popups close with Escape or an outside click. Event titles and
+message text are plain text; mail HTML, remote images and attachments are not loaded.
+
+`GoogleWorkState` owns one persistent Python process across monitors. Gmail
+bootstraps an exact paginated unread-inbox ID list, then checks mailbox history
+every 60 seconds. Only changed IDs are reconciled. Preview pages are fetched on
+opening and cached; private custom Gmail queries tag messages on demand. An
+expired history cursor causes a full unread-index refresh. Calendar fetches a
+paginated eight-day agenda every three minutes. Meeting boundaries and midnight
+update locally using the shared clock and one boundary timer. Resume and network
+reconnection trigger a coalesced refresh; failed requests use bounded backoff.
+Gmail and Calendar have separate error states, preserving cached data as stale.
+
+Install the small Google authentication environment using the system interpreter
+so it also sees the installed PyGObject D-Bus bindings:
+
+```sh
+uv venv --python /usr/bin/python3 --system-site-packages \
+  ~/.local/share/quickshell/google-work-venv
+uv pip install --python ~/.local/share/quickshell/google-work-venv/bin/python \
+  'google-auth-oauthlib>=1.2,<2'
+```
+
+The `google-work` wrapper can use another interpreter via `QS_GOOGLE_PYTHON`.
+OAuth desktop credentials live in
+`~/.config/quickshell/google-work/credentials.json`; account and optional bucket
+settings use `config.json` beside it (see `google-work.example.json`). Tokens live
+in `~/.local/state/quickshell/google-work/token.json`, with private cached state
+under `~/.cache/quickshell/google-work`. All writes use mode 0600 and atomic
+replacement. Standard XDG roots and `QS_GOOGLE_CONFIG`, `QS_GOOGLE_STATE`,
+`QS_GOOGLE_CACHE` overrides are supported. Never commit account data or tokens.
+
+`./quickshell/google-work --migrate-ags` imports existing local credentials,
+authorization and custom queries once without overwriting a new configuration.
+The Google project/client is retained under Desktop Work Hub branding. The work
+mailbox is pinned after validation, and web links select that account instead of
+relying on browser account index 1. Enabling **Mark as read** requests
+`gmail.modify`; Calendar retains `calendar.events.readonly`. Existing read-only
+tokens continue to show mail and meetings while the popup offers authorization.
+Only an explicit Connect/Enable action opens the browser consent flow, using
+PKCE and a loopback callback. A sign-in to a different mailbox is rejected.
+Google apps in external Testing status normally need renewed consent after seven
+days; renaming the app does not change that Google setting.
+
+Counts-only diagnostics and checks:
+
+```sh
+quickshell ipc --path ~/dotfiles/quickshell call work status
+python3 quickshell/tests/google-work.test.py
+node --test quickshell/tests/google-work-logic.test.cjs
+python3 quickshell/tests/check-google-work-ui
+```
+
+The UI check uses fake mail/meetings in an offscreen window. It verifies both
+mouse buttons, event links, individual read actions, failed writes, zero counts,
+out-of-office icons and Escape without modifying actual mail.
+
 ## Tray
 
 - Left click activates an application, or opens its menu for menu-only items.

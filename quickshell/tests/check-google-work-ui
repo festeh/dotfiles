@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+"""Production work widgets and popup content, with private offscreen fake mail."""
+import json
+import os
+from pathlib import Path
+import subprocess
+import tempfile
+
+config = Path(__file__).resolve().parents[1]
+fixtures = config/'tests/fixtures'
+with tempfile.TemporaryDirectory(prefix='quickshell-google-work-ui-') as temporary:
+    root=Path(temporary)
+    runtime=root/'runtime'; runtime.mkdir(mode=0o700)
+    (root/'assets').symlink_to(config/'assets')
+    for name in ('GoogleWorkWidget.qml','GoogleWorkLogic.js','ClockState.qml','Theme.qml','CalendarAction.qml','TrayTooltip.qml'):
+        (root/name).symlink_to(config/name)
+    source=(config/'GoogleWorkState.qml').read_text().replace('[Quickshell.shellPath("google-work")]', '["python3", Quickshell.shellPath("mock.py")]')
+    (root/'GoogleWorkState.qml').write_text(source)
+    source=(config/'GoogleWorkPopup.qml').read_text().replace('PopupWindow {','FloatingWindow {',1)
+    source='\n'.join(line for line in source.splitlines() if not line.strip().startswith(('anchor.','grabFocus:')))
+    (root/'GoogleWorkPopup.qml').write_text(source)
+    (root/'qmldir').write_text('singleton Theme 1.0 Theme.qml\nsingleton ClockState 1.0 ClockState.qml\nsingleton GoogleWorkState 1.0 GoogleWorkState.qml\nGoogleWorkWidget 1.0 GoogleWorkWidget.qml\nGoogleWorkPopup 1.0 GoogleWorkPopup.qml\nCalendarAction 1.0 CalendarAction.qml\nTrayTooltip 1.0 TrayTooltip.qml\n')
+    (root/'shell.qml').write_text((fixtures/'google-work-ui.qml').read_text())
+    (root/'mock.py').write_text((fixtures/'google-work-mock.py').read_text())
+    env=dict(os.environ,QT_QPA_PLATFORM='offscreen',QT_QUICK_BACKEND='software',XDG_RUNTIME_DIR=str(runtime),
+             HYPRLAND_INSTANCE_SIGNATURE='google-work-fixture',QT_IM_MODULE='compose',QT_NO_XDG_DESKTOP_PORTAL='1')
+    try:
+        result=subprocess.run(['quickshell','--path',str(root)],env=env,capture_output=True,text=True,timeout=12)
+    except subprocess.TimeoutExpired as error:
+        print((error.stdout or b'').decode() if isinstance(error.stdout,bytes) else error.stdout)
+        print((error.stderr or b'').decode() if isinstance(error.stderr,bytes) else error.stderr)
+        raise SystemExit('Google Work UI check timed out')
+    output=result.stdout+result.stderr
+    if result.returncode or 'GOOGLE_WORK_UI_PASSED' not in output:
+        print(output)
+        raise SystemExit('Google Work UI check failed')
+    commands=[json.loads(line) for line in (root/'commands.jsonl').read_text().splitlines()]
+    opens=[command for command in commands if command['action']=='open']
+    assert [(command['kind'],command.get('id')) for command in opens]==[('gmail',None),('calendar','meeting'),('calendar',None)],opens
+    assert [command['id'] for command in commands if command['action']=='read']==['one','two']
+    print('Google Work UI passed: mouse actions, per-message read, failed writes, zero count, meeting links, palm, Escape.')

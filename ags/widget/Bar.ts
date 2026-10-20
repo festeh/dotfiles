@@ -11,6 +11,7 @@ import TimeDate from "./TimeDate"
 import Volume from "./Volume"
 import Network from "./Network"
 import Gmail from "./Gmail"
+import { legacyStatusWidgetsEnabled, legacyGoogleWidgetsEnabled } from "../features"
 
 
 export default function Bar(monitor: Gdk.Monitor, calendarVisible: Variable<boolean>,
@@ -46,7 +47,7 @@ export default function Bar(monitor: Gdk.Monitor, calendarVisible: Variable<bool
             css_classes: ["bar-main-row"],
             children: [
               leftScroll,
-              Widget.Box({
+              ...(legacyStatusWidgetsEnabled ? [Widget.Box({
                 children: [
                   LayoutStatus(),
                   IdleStatus(),
@@ -57,16 +58,16 @@ export default function Bar(monitor: Gdk.Monitor, calendarVisible: Variable<bool
                   TimeDate(currentDate, calendarVisible),
                   Tray()
                 ]
-              })
+              })] : [])
             ]
           }),
-          Widget.Box({
+          ...(legacyGoogleWidgetsEnabled ? [Widget.Box({
             css_classes: ["bar-extra-row"],
             setup: (self: Gtk.Box) => self.set_size_request(-1, 22),
             children: [
               Gmail(),
             ],
-          })
+          })] : [])
         ]
       })
     })()

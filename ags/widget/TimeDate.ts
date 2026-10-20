@@ -1,6 +1,7 @@
 import { Gtk, Widget } from "astal/gtk4";
 import { Variable, bind } from "astal";
 import GLib from "gi://GLib"
+import { legacyStatusWidgetsEnabled } from "../features"
 
 function formatTime(date = new Date()) {
   return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`
@@ -18,7 +19,7 @@ function scheduleMinuteTick() {
   })
 }
 
-scheduleMinuteTick()
+if (legacyStatusWidgetsEnabled) scheduleMinuteTick()
 
 export default function DateWidget(currentDate: Variable<Date>, calendarVisible: Variable<boolean>) {
   const button = Widget.Button({

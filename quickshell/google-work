@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+config_dir=$(CDPATH= cd -- "$(dirname -- "$(readlink -f -- "$0")")" && pwd)
+work_python=${QS_GOOGLE_PYTHON:-${XDG_DATA_HOME:-$HOME/.local/share}/quickshell/google-work-venv/bin/python}
+if [ ! -x "$work_python" ]; then
+    printf '%s\n' '{"type":"snapshot","gmail":{"status":"setup","message":"Install the Google Work Python environment. See the Quickshell README.","rows":[]},"calendar":{"status":"setup","rows":[]},"authorizing":false}'
+    exit 1
+fi
+exec "$work_python" "$config_dir/google_work.py" "$@"

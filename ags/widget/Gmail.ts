@@ -3,6 +3,7 @@ import { Variable, bind } from "astal"
 import Gio from "gi://Gio"
 import GLib from "gi://GLib"
 import Gtk from "gi://Gtk?version=4.0"
+import { legacyGoogleWidgetsEnabled } from "../features"
 
 const GOOGLE_POLL_SECONDS = 180
 const GOOGLE_ACCOUNT_INDEX = "1"
@@ -309,11 +310,13 @@ function workCalendarUrl(url: string): string {
   return `${base}${separator}authuser=${GOOGLE_ACCOUNT_INDEX}${hash}`
 }
 
-refreshGmail()
-GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, GOOGLE_POLL_SECONDS, () => {
+if (legacyGoogleWidgetsEnabled) {
   refreshGmail()
-  return GLib.SOURCE_CONTINUE
-})
+  GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, GOOGLE_POLL_SECONDS, () => {
+    refreshGmail()
+    return GLib.SOURCE_CONTINUE
+  })
+}
 
 export default function Gmail() {
   return Widget.Box({
