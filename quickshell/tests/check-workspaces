@@ -203,6 +203,8 @@ with tempfile.TemporaryDirectory(prefix="quickshell-workspace-check-") as direct
         panes = [dict(agent='codex', pane=1, tab=1, state='idle', active=False),
             dict(agent='claude', pane=2, tab=2, state='waiting', active=True),
             dict(agent='codex', pane=3, tab=2, state='running', active=False)]
+        for item, name in zip(panes, ['shell/tray', 'shell/auth', 'shell/auth·2']):
+            item.update(label=name, fullLabel=name, project='shell')
         call('agentPanes', 'a1', base64.b64encode(json.dumps(panes).encode()).decode())
         snapshot = wait_for(lambda s: len(windows(s)['a1']['agents']) == 3, 'all agent panes visible')
         buttons = windows(snapshot)['a1']['agents']
@@ -210,12 +212,16 @@ with tempfile.TemporaryDirectory(prefix="quickshell-workspace-check-") as direct
         assert [b['state'] for b in buttons] == ['idle', 'waiting', 'running']
         assert [b['color'] for b in buttons] == ['#a6e3a1', '#f9e2af', '#89b4fa']
         assert [b['selected'] for b in buttons] == [False, True, False]
+        assert [b['label'] for b in buttons] == ['shell/tray', 'shell/auth', 'shell/auth·2']
+        assert all(b['width'] > 28 for b in buttons)
+        assert 'shell/auth' in buttons[1]['description']
         assert all(button['source'].endswith('/assets/' + agent['agent'] + '.svg')
             for button, agent in zip(buttons, panes))
         panes[1]['state'] = 'idle'
         call('agentPanes', 'a1', base64.b64encode(json.dumps(panes).encode()).decode())
         changed = wait_for(lambda s: windows(s)['a1']['agents'][1]['state'] == 'idle', 'individual status update')
         assert [b['delegate'] for b in windows(changed)['a1']['agents']] == [b['delegate'] for b in buttons]
+        assert [b['width'] for b in windows(changed)['a1']['agents']] == [b['width'] for b in buttons]
         assert call('click', 'workspace-agent-a1-2') == 'true'
         deadline = time.monotonic() + 3
         while not reader_requests()[-1].get('activate'):
@@ -227,6 +233,33 @@ with tempfile.TemporaryDirectory(prefix="quickshell-workspace-check-") as direct
             assert time.monotonic() < deadline
             time.sleep(.02)
         assert dispatches[-1] == 'dispatch hl.dsp.focus({ window = "address:0xa1" })'
+        dispatch_count = len(dispatches)
+        assert call('rightClick', 'workspace-agent-a1-2') == 'true'
+        deadline = time.monotonic() + 3
+        while not json.loads(call('editorState'))['open']:
+            assert time.monotonic() < deadline
+            time.sleep(.02)
+        assert json.loads(call('editorState'))['text'] == 'shell/auth'
+        assert len(dispatches) == dispatch_count, 'right click activated the agent'
+        call('saveLabel', 'fail')
+        deadline = time.monotonic() + 3
+        while not json.loads(call('editorState'))['message']:
+            assert time.monotonic() < deadline
+            time.sleep(.02)
+        assert json.loads(call('editorState'))['open'], 'failed save closed the editor'
+        call('popupKey', 16777216)
+        deadline = time.monotonic() + 3
+        while json.loads(call('editorState'))['open']:
+            assert time.monotonic() < deadline
+            time.sleep(.02)
+        call('rightClick', 'workspace-agent-a1-2')
+        call('saveLabel', 'shell/rename')
+        deadline = time.monotonic() + 3
+        while json.loads(call('editorState'))['open']:
+            assert time.monotonic() < deadline
+            time.sleep(.02)
+        assert reader_requests()[-1]['rename'] == dict(address='a1', pane=2, label='shell/rename')
+        print('PASS: compact stable labels, full hover context, right-click editor, failed save, Escape and successful rename', flush=True)
         call('agents', 'a1', '')
         wait_for(lambda s: not windows(s)['a1']['agents'], 'agent panes removed')
         print('PASS: all agent tabs/splits have separate icons, statuses and focus; state updates preserve buttons; clicks select the exact pane', flush=True)

@@ -79,12 +79,18 @@ async def main():
                 except (OSError, ValueError):
                     await asyncio.sleep(.03)
             await start()
-            await wait(lambda value: value["health"]["watched"] == 1 and value["health"]["agents"] == 1)
+            await wait(lambda value: value["health"]["watched"] == 1 and value["health"]["agents"] == 1
+                and value["windows"]["a1"]["agents"][0]["label"])
+            title('one', 'Refactor upload cache | fixture-project')
+            await wait(lambda value: value['windows']['a1']['agents'][0]['fullLabel'] == 'Refactor upload cache')
             await kitty_request(kitty.pid, "launch", dict(args=[str(root / "codex"), str(root / "two")], type="tab", keep_focus=True))
             third = int(await kitty_request(kitty.pid, "launch", dict(args=[str(root / "claude"), str(root / "three")], type="tab", keep_focus=True)))
             await wait(lambda value: value["health"]["agents"] == 3)
             await hook(third, "SessionStart")
             await wait(lambda value: state(value) == "idle")
+            title('three', '✳ Refresh search index')
+            await wait(lambda value: any(agent['pane'] == third and agent['fullLabel'] == 'Refresh search index'
+                for agent in value['windows']['a1']['agents']))
             title("two", "⠋ Test agent")
             await wait(lambda value: state(value) == "running")
             await hook(third, "PermissionRequest")
@@ -93,6 +99,11 @@ async def main():
             await worker.stdin.drain()
             await wait(lambda value: value.get("activated", {}).get("ok"))
             await wait(lambda value: any(agent["pane"] == third and agent["active"]
+                for agent in value.get("windows", {}).get("a1", {}).get("agents", [])))
+            worker.stdin.write(json.dumps({"rename": {"address": "a1", "pane": third, "label": "shell/auth"}}).encode() + b"\n")
+            await worker.stdin.drain()
+            await wait(lambda value: value.get("renamed", {}).get("ok"))
+            await wait(lambda value: any(agent["pane"] == third and agent["label"] == "shell/auth"
                 for agent in value.get("windows", {}).get("a1", {}).get("agents", [])))
             await hook(third, "PostToolUse")
             await wait(lambda value: state(value) == "running")
@@ -111,7 +122,10 @@ async def main():
             worker.stdin.close()
             await asyncio.wait_for(worker.wait(), 5)
             await start()
-            await wait(lambda value: value["health"]["watched"] == 1 and value["health"]["agents"] == 3)
+            await wait(lambda value: value["health"]["watched"] == 1 and value["health"]["agents"] == 3
+                and value['windows']['a1']['agents'][0]['fullLabel'] == 'Refactor upload cache'
+                and any(agent['pane'] == third and agent['label'] == 'shell/auth'
+                    for agent in value['windows']['a1']['agents']))
             title("two", "⠋ Test agent")
             await wait(lambda value: state(value) == "running")
             title("two", "\n".join(frame + " Test agent" for frame in ["⠙", "⠹", "⠸", "⠼"] * 25))
@@ -121,7 +135,7 @@ async def main():
             except asyncio.TimeoutError:
                 pass
             assert latest["health"]["requests"] == 1, latest["health"]
-            print("PASS: existing-pane attachment, inactive tabs, split panes, exact-pane activation, hook events, status precedence, pane removal, restart recovery and zero spinner/idle queries.")
+            print("PASS: existing-pane attachment, inactive tabs, split panes, exact-pane activation, project labels, per-pane rename, label persistence, hook events, status precedence, pane removal, restart recovery and zero spinner/idle queries.")
         except Exception:
             print("Last synthetic state:", latest)
             log.seek(0)

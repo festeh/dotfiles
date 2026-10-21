@@ -14,6 +14,7 @@ import sys
 import time
 
 from terminal_protocol import aggregate, process_identity, runtime_directory, snapshot, socket_path, STATES
+from terminal_labels import LABEL_VARIABLE, clean_label, context as label_context, display_label, make_context, project_name
 
 FRAME, END = b"\x1bP@kitty-cmd", b"\x1b\\"
 ATTACHER = Path(__file__).resolve().parents[1] / "kitty/attach-terminal-watcher.py"
@@ -70,7 +71,8 @@ class Tracker:
                 identity = process_identity(pid)
                 if identity and identity[1] == "kitty":
                     self.instances[pid] = {"start": identity[0], "windows": [], "watched": False,
-                        "titles": {}, "hooks": {}, "task": self.task(self.attach(pid))}
+                        "initialized": False, "labels": {}, "titles": {}, "hooks": {}, "task": self.task(self.attach(pid))}
+            self.prepare_labels()
             self.schedule_publish()
     async def attach(self, pid):
         record = self.instances[pid]
@@ -90,11 +92,14 @@ class Tracker:
                     await asyncio.sleep(.4 * (attempt + 1))
         # A compatibility fallback is restricted to unsupported Kitty instances.
         # There is no timer or /proc polling for successfully watched instances.
+        record["initialized"] = True
+        self.prepare_labels()
         while pid in self.instances and not record["watched"]:
             try:
                 self.requests += 1
                 value = await asyncio.wait_for(kitty_request(pid), .8)
                 record["windows"] = snapshot(json.loads(value) if isinstance(value, str) else value)
+                self.prepare_labels()
                 self.schedule_publish()
             except (OSError, ValueError, TypeError, asyncio.TimeoutError, asyncio.IncompleteReadError,
                     asyncio.LimitOverrunError):
@@ -109,16 +114,19 @@ class Tracker:
         kind = message.get("event")
         if kind == "snapshot" and isinstance(message.get("windows"), list):
             record["watched"] = True
+            record["initialized"] = True
             record["windows"] = message["windows"]
             present = {pane["id"] for window in record["windows"] for pane in window["panes"] if pane["agent"]}
             record["hooks"] = {key: value for key, value in record["hooks"].items() if key in present}
             for pane_id in present - record["hooks"].keys():
                 record["hooks"][pane_id] = self.read_hook(pid, pane_id, record)
+            self.prepare_labels()
         elif kind in {"state", "close"}:
             pane_id = message.get("pane")
             for window in record["windows"]:
                 if kind == "close":
                     window["panes"] = [pane for pane in window["panes"] if pane["id"] != pane_id]
+                    record.get("labels", {}).pop(pane_id, None)
                 else:
                     for pane in window["panes"]:
                         if pane["id"] == pane_id and message.get("state") in STATES | {""}:
@@ -127,6 +135,97 @@ class Tracker:
         else:
             return
         self.schedule_publish()
+
+    def prepare_labels(self):
+        # Restore every instance's existing labels before assigning duplicate
+        # suffixes. A bar reload must preserve names regardless of attach order.
+        for record in self.instances.values():
+            labels = record.setdefault("labels", {})
+            present = set()
+            for window in record["windows"]:
+                for pane in window["panes"]:
+                    if not pane["agent"]:
+                        continue
+                    present.add(pane["id"])
+                    agent, process = pane["agent"], pane.get("agentPid", 0)
+                    restored = label_context(pane.get("context"), agent, process)
+                    old = label_context(labels.get(pane["id"]), agent, process)
+                    if restored or old:
+                        labels[pane["id"]] = restored or old
+                    else:
+                        labels.pop(pane["id"], None)
+            record["labels"] = {key: value for key, value in labels.items() if key in present}
+        if any(not record.get("initialized", True) for record in self.instances.values()):
+            return
+        for pid, record in self.instances.items():
+            for window in record["windows"]:
+                for pane in window["panes"]:
+                    if not pane["agent"]:
+                        continue
+                    current = record["labels"].get(pane["id"])
+                    thread = pane.get("threadName", "")
+                    if current and (current["custom"] or not thread
+                            or current["label"] == thread and current.get("source") == "thread"):
+                        continue
+                    project = current["project"] if current else project_name(pane.get("directory"))
+                    others = [label for item in self.instances.values() for key, label in item["labels"].items()
+                        if item is not record or key != pane["id"]]
+                    value = make_context(pane["agent"], pane.get("agentPid", 0), project,
+                        thread or project, others, source="thread" if thread else "project")
+                    if current and current["label"] == value["label"]:
+                        value["number"] = current["number"]
+                    record["labels"][pane["id"]] = value
+                    self.task(self.persist_label(pid, pane["id"], value))
+
+    async def persist_label(self, pid, pane, value):
+        record = self.instances.get(pid)
+        process = process_identity(pid) if record else None
+        current = next((item for window in record["windows"] for item in window["panes"]
+            if item["id"] == pane and item["agent"]), None) if record else None
+        if (not process or process[0] != record["start"] or not current
+                or value["identity"] != f"{current['agent']}:{current.get('agentPid', 0)}"):
+            return False
+        try:
+            self.requests += 1
+            await asyncio.wait_for(kitty_request(pid, "set-user-vars", {"match": f"id:{pane}",
+                "var": [LABEL_VARIABLE + "=" + json.dumps(value, separators=(",", ":"))]}), 1)
+            return True
+        except (OSError, ValueError, asyncio.TimeoutError, asyncio.IncompleteReadError, asyncio.LimitOverrunError):
+            return False
+
+    async def rename(self, target):
+        if (not isinstance(target, dict) or not isinstance(target.get("address"), str)
+                or type(target.get("pane")) is not int or not isinstance(target.get("label"), str)):
+            return
+        address, pane = target["address"], target["pane"]
+        client = next((client for client in self.clients if client["address"] == address), None)
+        record = self.instances.get(client["pid"]) if client else None
+        identity = process_identity(client["pid"]) if record else None
+        current = record.get("labels", {}).get(pane) if record else None
+        owned = any(agent["pane"] == pane for agent in self.windows().get(address, {}).get("agents", []))
+        ok = False
+        if current and owned and identity and identity[0] == record["start"]:
+            others = [label for item in self.instances.values() for key, label in item.get("labels", {}).items()
+                if item is not record or key != pane]
+            agent, process = current["identity"].split(":", 1)
+            native = next(item for window in record["windows"] for item in window["panes"] if item["id"] == pane)
+            automatic = native.get("threadName", "")
+            requested = clean_label(target["label"])
+            name = requested or automatic or current["project"]
+            value = make_context(agent, process, current["project"], name, others,
+                source="custom" if requested else "thread" if automatic else "project")
+            if value["label"] == current["label"]:
+                value["number"] = current["number"]
+            ok = await self.persist_label(client["pid"], pane, value)
+            if ok:
+                record["labels"][pane] = value
+                for window in record["windows"]:
+                    for current_pane in window["panes"]:
+                        if current_pane["id"] == pane:
+                            current_pane["context"] = value
+                self.schedule_publish()
+        print(json.dumps({"renamed": {"address": address, "pane": pane, "ok": ok,
+            "error": "" if ok else "Could not save this label. The agent may have closed."}}), flush=True)
 
     def read_hook(self, pid, pane_id, record):
         name = f"{pid}-{pane_id}.json"
@@ -168,9 +267,15 @@ class Tracker:
                 unique = sum(item["appId"] == client["appId"] for item in clients) == 1
                 panes = matches[0]["panes"] if len(matches) == 1 and unique else []
                 active = next((pane for pane in panes if pane["active"]), None)
-                agents = [{"agent": pane["agent"], "pane": pane["id"], "tab": pane["tab"],
-                    "active": pane["active"], "state": self.hook_state(pid, pane, record)}
-                    for pane in panes if pane["agent"]]
+                agents = []
+                for pane in panes:
+                    if not pane["agent"]:
+                        continue
+                    label = record.get("labels", {}).get(pane["id"])
+                    agents.append({"agent": pane["agent"], "pane": pane["id"], "tab": pane["tab"],
+                        "active": pane["active"], "state": self.hook_state(pid, pane, record),
+                        "label": display_label(label) if label else "", "fullLabel": label["label"] if label else "",
+                        "project": label["project"] if label else ""})
                 result[client["address"]] = {"kitty": True, "programs": active["programs"] if active else [],
                     "agents": agents, "agentState": aggregate(agents)}
         return result
@@ -221,6 +326,8 @@ class Tracker:
                     if isinstance(value, dict):
                         if "activate" in value:
                             await self.activate(value["activate"])
+                        elif "rename" in value:
+                            await self.rename(value["rename"])
                         else:
                             self.receive(value)
                 except (ValueError, TypeError):

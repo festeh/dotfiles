@@ -19,7 +19,9 @@ def handle_result(args, data, target_window_id, boss):
     if not candidate.exists():
         candidate = Path(args[0]).with_name("terminal-watcher.py")
     path = str(candidate)
-    revision = candidate.stat().st_mtime_ns
+    source = candidate.resolve().parents[1] / "quickshell"
+    revision = tuple(item.stat().st_mtime_ns for item in (candidate,
+        source / "terminal_protocol.py", source / "terminal_labels.py"))
     global_callbacks = global_watchers()
     previous = watcher_modules.get(path)
     if not isinstance(previous, dict) or previous.get("_quickshell_revision") != revision:
@@ -32,8 +34,9 @@ def handle_result(args, data, target_window_id, boss):
                         if not getattr(callback, "__code__", None)
                         or Path(callback.__code__.co_filename).resolve() != candidate.resolve()]
         watcher_modules.pop(path, None)
-        if "terminal_protocol" in sys.modules:
-            importlib.reload(sys.modules["terminal_protocol"])
+        for module in ("terminal_labels", "terminal_protocol"):
+            if module in sys.modules:
+                importlib.reload(sys.modules[module])
     watchers = load_watch_modules([path])
     if watchers is None:
         return False

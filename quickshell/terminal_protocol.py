@@ -1,8 +1,10 @@
-"""Small, content-free terminal snapshots shared by the tracker and Kitty watcher."""
+"""Small terminal snapshots with explicit project/label metadata and no message content."""
 
 import os
 from pathlib import Path
 import re
+
+from terminal_labels import LABEL_VARIABLE, clean_label, context as label_context
 
 SHELLS = {"sh", "bash", "zsh", "fish", "dash", "nu", "xonsh"}
 STATES = {"idle", "running", "waiting"}
@@ -37,17 +39,21 @@ def programs(pane):
     return result
 
 
-def agent_kind(pane):
+def agent_process(pane):
     if pane.get("at_prompt"):
-        return ""
+        return "", 0
     for process in pane.get("foreground_processes", []):
         argv = process.get("cmdline") or []
         name = executable(argv)
         if name in {"codex", "claude", "kimi"}:
             if name == "codex" and any(arg in {"app-server", "exec-server"} for arg in argv):
                 continue
-            return name
-    return ""
+            return name, process.get("pid", 0)
+    return "", 0
+
+
+def agent_kind(pane):
+    return agent_process(pane)[0]
 
 
 def title_state(agent, title):
@@ -69,18 +75,59 @@ def title_key(title):
     return re.sub(r"^[\s\u2800-\u28ff\u25d0-\u25d3\u2733\u2722\u2736-\u273d\u00b7\ufe0e\ufe0f]+", "", title).strip()
 
 
+def codex_thread_name(title):
+    # Codex's default title is: activity, thread-name | project-name.
+    # An unnamed conversation has only the project, so keep its project label.
+    value = title_key(title)
+    if " | " not in value:
+        return ""
+    name = value.rsplit(" | ", 1)[0]
+    # Name generation can add a second spinner after the thread name.
+    return clean_label(re.sub(r"[\s\u2800-\u28ff]+$", "", name))
+
+
+def session_name(agent, title):
+    if agent == "codex":
+        return codex_thread_name(title)
+    if agent == "claude":
+        name = clean_label(title_key(title))
+        # The startup title is an application name, not a session name.
+        if not re.fullmatch(r"claude(?: code)?(?: v?\d+(?:\.\d+){1,3})?", name, re.I):
+            return name
+    return ""
+
+
+def semantic_title_key(agent, title):
+    value = title_key(title)
+    if agent == "codex" and " | " in value:
+        return codex_thread_name(title) + " | " + value.rsplit(" | ", 1)[1]
+    return value
+
+
 def snapshot(layout):
-    """Discard arguments, paths, environment, session names and message text."""
+    """Discard arguments, environment and message text.
+
+    An unlabeled agent's directory goes only to the worker for one-time project
+    discovery. Once labeled, the snapshot carries just that small context.
+    """
     result = []
     for window in layout:
         panes = []
         for tab_number, tab in enumerate(window.get("tabs", []), 1):
             for pane in tab.get("windows", []):
-                agent = agent_kind(pane)
-                panes.append({"id": pane["id"], "tab": tab_number,
+                agent, pid = agent_process(pane)
+                item = {"id": pane["id"], "tab": tab_number,
                     "active": bool(tab.get("is_active") and pane.get("is_active")),
                     "programs": programs(pane), "agent": agent,
-                    "titleState": title_state(agent, pane.get("title", ""))})
+                    "titleState": title_state(agent, pane.get("title", ""))}
+                if agent:
+                    item["agentPid"] = pid
+                    if agent in {"codex", "claude"}:
+                        item["threadName"] = session_name(agent, pane.get("title", ""))
+                    item["context"] = label_context(pane.get("user_vars", {}).get(LABEL_VARIABLE), agent, pid)
+                    if not item["context"]:
+                        item["directory"] = pane.get("cwd", "")
+                panes.append(item)
         result.append({"id": window["id"], "class": window.get("wm_class", ""), "panes": panes})
     return result
 

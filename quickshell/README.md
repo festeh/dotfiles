@@ -554,6 +554,34 @@ This reuses the shared event stream without adding polling or helper processes.
 Agent activation uses the same worker's Kitty socket, validates current pane
 ownership and process identity, then focuses the Hyprland window after success.
 
+Agent icons include a muted label, capped at 121 pixels and elided at the end, with the full
+name and project on hover. Codex uses its conversation name from the default
+`activity`, `thread-name`, `project-name` terminal title. Claude Code uses its
+session title after stripping activity markers, excluding generic startup
+titles such as `Claude Code`. Until an agent has a name,
+and for other agents, the default is the nearest Git/worktree root name or
+the launch directory's name outside Git. Right-click an agent icon (or use
+Menu/Shift+F10 while focused) to rename it. Enter saves; Escape or an outside click
+closes the editor. **Use automatic name** restores its automatic label. A failed
+save keeps the editor open and preserves the existing label.
+
+Manual labels and project defaults freeze for the running agent process. Codex
+and Claude Code automatically adopt their session names when available, and
+follow actual name changes. Status frames, tab reordering, working-directory changes
+and bar reloads do not rename labels. Duplicate names
+receive stable suffixes, such as `shell` and `shell·2`. Each pane stores its small
+label record in Kitty's `quickshell_agent_label` user variable; no agent session
+database or transcript is read. A new agent process in that pane gets a fresh
+project label. Labels survive Quickshell reloads for that pane; opening a new
+terminal or resuming in another pane does not transfer an alias automatically.
+Automatic conversation names are currently supported for Codex and Claude Code.
+Other agents use project defaults or manual task aliases.
+
+An unlabeled agent sends its directory to the existing local worker, which
+finds the project root without running Git. After saving its label, snapshots
+carry only the project name and alias. Label creation/renaming uses one targeted
+Kitty request; ongoing state updates do not discover projects or rewrite labels.
+
 Codex state comes from its terminal activity title. Shared app-server/exec-server
 processes are excluded. Claude and Kimi use `agent-hook` and `agent_events.py`:
 small state-only hooks write atomic, private runtime files only on state changes.
@@ -564,8 +592,9 @@ hook after an Esc interrupt. A Kitty process start token prevents PID reuse from
 adopting another instance's hook state. Ambiguous OS-window mappings keep the
 Kitty icon and no agent marker instead of borrowing another window's agents.
 
-App basenames, agent names, pane/tab IDs and normalized states reach QML;
-arguments, environment, paths, prompts and transcripts do not. Runtime hook files
+App basenames, agent names, pane/tab IDs, normalized states, project names and
+labels and supported session names reach QML; arguments, environment, full paths, prompts and transcripts do
+not. Runtime hook files
 contain only identity/state metadata, live under `$XDG_RUNTIME_DIR/quickshell-agents`
 with mode 0600, and are removed on session end. No AGS cache is read.
 `codex/hooks.json` is empty; Claude's tracked settings and Kimi's local config use

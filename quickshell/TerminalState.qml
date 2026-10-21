@@ -9,6 +9,8 @@ import "WorkspaceLogic.js" as Logic
 QtObject {
     id: root
     // Share one worker and inventory across every monitor and workspace view.
+    // Kitty owns per-pane labels so this worker can reload without losing them.
+    // Codex and Claude supply session names through the existing terminal event stream.
     readonly property var clients: Hyprland.toplevels.values.map(window => ({
         address: Logic.address(window.address), pid: window.lastIpcObject.pid || 0,
         appId: window.lastIpcObject.class || ""
@@ -19,6 +21,8 @@ QtObject {
     property var health: ({})
     property bool ready: false
     property int restarts: 0
+    property var labelEditorOwner: null
+    signal labelRenamed(string address, int pane, bool ok, string message)
     onClientSnapshotChanged: syncDelay.restart()
 
     function appFor(window): var {
@@ -41,8 +45,16 @@ QtObject {
 
     function describeAgent(agent): string {
         const states = {idle: "Idle", running: "Running", waiting: "Needs action"};
-        return "Tab " + agent.tab + " · pane " + agent.pane + " · "
+        const name = agent.fullLabel ? agent.fullLabel
+            + (agent.project && agent.project !== agent.fullLabel ? " · " + agent.project : "") + " · " : "";
+        return name + "Tab " + agent.tab + " · pane " + agent.pane + " · "
             + (states[agent.state] || "Status unavailable");
+    }
+
+    function renameAgent(window, pane, label): bool {
+        if (!helper.running || !agentFor(window, pane)) return false;
+        helper.write(JSON.stringify({rename: {address: Logic.address(window.address), pane: pane, label: label}}) + "\n");
+        return true;
     }
 
     function activateAgent(window, pane): bool {
@@ -78,6 +90,10 @@ QtObject {
             onRead: line => {
                 try {
                     const value = JSON.parse(line);
+                    if (value.renamed) {
+                        root.labelRenamed(value.renamed.address, value.renamed.pane, value.renamed.ok, value.renamed.error || "");
+                        return;
+                    }
                     if (value.activated) {
                         if (value.activated.ok) {
                             const window = Hyprland.toplevels.values.find(window =>

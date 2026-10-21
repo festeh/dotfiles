@@ -33,6 +33,7 @@ ShellRoot {
         return root.find(strip, index === 0 ? "workspace-window-" + window.address
             : "workspace-agent-" + window.address + "-" + pane);
     }
+    Component { id: popupEvents; TestEvent {} }
     IpcHandler {
         target: "workspace-test"
         function state(): string {
@@ -51,6 +52,9 @@ ShellRoot {
                             source: root.agentButton(w, index, agent.pane).app.source,
                             selected: root.agentButton(w, index, agent.pane).selected,
                             state: root.agentButton(w, index, agent.pane).agentState,
+                            label: root.agentButton(w, index, agent.pane).agentLabel,
+                            width: root.agentButton(w, index, agent.pane).width,
+                            description: root.agentButton(w, index, agent.pane).agentDescription,
                             delegate: String(root.agentButton(w, index, agent.pane)),
                             color: String(root.find(root.agentButton(w, index, agent.pane), 'agent-status-overline').color)})),
                         overlineVisible: root.find(root.find(strip, 'workspace-window-' + w.address), 'agent-status-overline').visible,
@@ -61,6 +65,23 @@ ShellRoot {
         function click(name: string): bool {
             const button = root.find(strip, name);
             return button ? events.mouseClick(button, button.width/2, button.height/2, Qt.LeftButton, Qt.NoModifier, 0) : false;
+        }
+        function rightClick(name: string): bool {
+            const button = root.find(strip, name);
+            return button ? events.mouseClick(button, button.width/2, button.height/2, Qt.RightButton, Qt.NoModifier, 0) : false;
+        }
+        function editorState(): string {
+            const owner = TerminalState.labelEditorOwner;
+            const popup = owner ? owner.labelEditor : null;
+            return JSON.stringify({open: !!popup, text: popup ? popup.text : "",
+                message: popup ? popup.message : "", pending: popup ? popup.pending : false});
+        }
+        function saveLabel(text: string): void { TerminalState.labelEditorOwner.labelEditor.save(text); }
+        function popupKey(code: int): bool {
+            const popup = TerminalState.labelEditorOwner.labelEditor;
+            const test = popupEvents.createObject(popup.contentItem);
+            // Closing the popup also destroys its test-event child.
+            return test.keyClick(code, Qt.NoModifier, 0);
         }
         function narrow(): void { strip.width = 120; }
         function terminal(address: string, programs: string): void {

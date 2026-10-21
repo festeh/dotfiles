@@ -7,7 +7,7 @@ import socket
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "quickshell"))
-from terminal_protocol import process_identity, snapshot, socket_path, title_key, title_state
+from terminal_protocol import process_identity, semantic_title_key, snapshot, socket_path, title_state
 
 _socket = None
 _inventory = {}
@@ -47,9 +47,9 @@ def resync(boss, force=False):
                 if native is not None:
                     pane["title"] = native.child_title
     value = snapshot(layout)
-    _title_keys = {pane["id"]: title_key(pane.get("title", ""))
-        for window in layout for tab in window["tabs"] for pane in tab["windows"]}
     _panes = {pane["id"]: pane for window in value for pane in window["panes"]}
+    _title_keys = {pane["id"]: semantic_title_key(_panes[pane["id"]]["agent"], pane.get("title", ""))
+        for window in layout for tab in window["tabs"] for pane in tab["windows"]}
     _inventory = {key: signature(manager) for key, manager in boss.os_window_map.items()}
     if force or value != _last:
         _last = value
@@ -89,12 +89,17 @@ def on_cmd_startstop(boss, window, data):
     schedule(boss, 0.08)
 
 
+def on_set_user_var(boss, window, data):
+    if data.get("key") == "quickshell_agent_label":
+        schedule(boss)
+
+
 def on_title_change(boss, window, data):
     pane = _panes.get(window.id)
     if pane is None:
         schedule(boss, 0.08)
         return
-    key = title_key(data.get("title", ""))
+    key = semantic_title_key(pane["agent"], data.get("title", ""))
     if key != _title_keys.get(window.id):
         _title_keys[window.id] = key
         # Also catches wrappers that exec an app after the shell's command-start

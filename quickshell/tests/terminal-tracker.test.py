@@ -19,6 +19,7 @@ sys.path.insert(0, str(config))
 import agent_events
 import terminal_protocol as protocol
 import terminal_tracker as tracker
+import terminal_labels as labels
 
 
 def pane(identifier=1, program="codex", title="Agent", active=True):
@@ -28,11 +29,32 @@ def pane(identifier=1, program="codex", title="Agent", active=True):
 
 def layout():
     return [{"id": 1, "wm_class": "kitty", "tabs": [
-        {"is_active": True, "windows": [pane(), pane(2, "claude", "✳ Agent", False)]},
+        {"is_active": True, "windows": [pane(), pane(2, "claude", "✳ Claude Code", False)]},
         {"is_active": False, "windows": [pane(3, title="[ ! ] Action Required | Agent")]}]}]
 
 
 class ProtocolTests(unittest.TestCase):
+    def test_claude_session_names_strip_activity_and_skip_startup_titles(self):
+        for marker in ('✳', '✳️', '✻', '⠋', '⠙', '◐', '◓', ''):
+            self.assertEqual(protocol.session_name('claude', marker + ' Refactor upload cache'), 'Refactor upload cache')
+        for generic in ('Claude', 'Claude Code', '✳ Claude Code', 'Claude Code v2.1.305', ''):
+            self.assertEqual(protocol.session_name('claude', generic), '')
+        self.assertEqual(protocol.session_name('kimi', 'Unknown title'), '')
+        current = layout()
+        current[0]['tabs'][0]['windows'][1]['title'] = '✳ Refactor upload cache'
+        self.assertEqual(protocol.snapshot(current)[0]['panes'][1]['threadName'], 'Refactor upload cache')
+
+    def test_codex_thread_name_comes_from_default_title_without_activity_frames(self):
+        name = 'Refactor upload cache'
+        for prefix in ('', '⠋ ', '⠙ ', '[ ! ] Action Required | ', '[ . ] Action Required | '):
+            for suffix in ('', ' ⠋', ' ⠙'):
+                title = prefix + name + suffix + ' | fixture-project'
+                self.assertEqual(protocol.codex_thread_name(title), name)
+                self.assertEqual(protocol.semantic_title_key('codex', title), name + ' | fixture-project')
+        self.assertEqual(protocol.codex_thread_name('⠋ fixture-project'), '')
+        self.assertEqual(protocol.codex_thread_name('⠋ ⠙ | fixture-project'), '')
+        self.assertEqual(protocol.codex_thread_name('Name | with separator | project'), 'Name | with separator')
+
     def test_title_comparison_ignores_frames_and_preserves_real_changes(self):
         for frame in ['⠋', '⠙', '⠹', '◐', '◓', '✳', '✳️', '✻', '·', '']:
             self.assertEqual(protocol.title_key(f' {frame}  Editor, file '), 'Editor, file')
@@ -82,6 +104,39 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual([message["state"] for message in messages], ["running", "waiting", "idle"])
 
 
+class LabelTests(unittest.TestCase):
+    def test_project_root_worktree_and_non_git_folder(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            project = Path(temporary) / 'feature-auth'
+            child = project / 'src/package'
+            child.mkdir(parents=True)
+            (project / '.git').write_text('gitdir: /unused')
+            self.assertEqual(labels.project_name(str(child)), 'feature-auth')
+            self.assertEqual(labels.project_name(str(Path(temporary) / 'notes')), 'notes')
+
+    def test_bounded_names_and_stable_duplicate_suffixes(self):
+        first = labels.make_context('codex', 1, 'shell', '', [])
+        second = labels.make_context('claude', 2, 'shell', '', [first])
+        self.assertEqual(labels.display_label(first), 'shell')
+        self.assertEqual(labels.display_label(second), 'shell·2')
+        self.assertEqual(labels.context(json.dumps(second), 'claude', 2), second)
+        self.assertIsNone(labels.context(second, 'claude', 3))
+        long = labels.make_context('codex', 3, 'project', 'a very long feature name', [first])
+        self.assertEqual(len(labels.display_label(long)), 12)
+        self.assertEqual(labels.clean_label('  shell\n tray\u202e  '), 'shell tray')
+
+    def test_only_unlabeled_agents_include_directory_for_discovery(self):
+        native = layout()
+        current = native[0]['tabs'][0]['windows'][0]
+        current['cwd'] = '/private/project/src'
+        self.assertEqual(protocol.snapshot(native)[0]['panes'][0]['directory'], current['cwd'])
+        value = labels.make_context('codex', 21, 'project', 'tray', [])
+        current['user_vars'] = {labels.LABEL_VARIABLE: json.dumps(value)}
+        self.assertNotIn('directory', protocol.snapshot(native)[0]['panes'][0])
+        current['foreground_processes'][0]['pid'] = 42
+        self.assertIsNone(protocol.snapshot(native)[0]['panes'][0]['context'])
+
+
 class HookTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
@@ -128,6 +183,9 @@ class HookTests(unittest.TestCase):
 
 
 class TrackerTests(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
+        self.enterContext(patch.object(tracker, 'process_identity', return_value=('42', 'kitty')))
+
     async def model(self):
         model = tracker.Tracker()
         model.clients = [{"pid": 123, "address": "a1", "appId": "kitty"}]
@@ -146,6 +204,93 @@ class TrackerTests(unittest.IsolatedAsyncioTestCase):
         model.event({"pid": 123, "start": "42", "event": "close", "pane": 3})
         self.assertEqual(model.windows()["a1"]["agentState"], "idle")
 
+    async def test_labels_discover_once_and_survive_metadata_and_state_changes(self):
+        model = await self.model()
+        with patch.object(tracker, 'project_name', return_value='shell') as project, \
+                patch.object(tracker, 'kitty_request', return_value=None) as request:
+            model.prepare_labels()
+            await asyncio.gather(*model.tasks)
+            self.assertEqual([a['label'] for a in model.windows()['a1']['agents']], ['shell', 'shell·2', 'shell·3'])
+            for _ in range(5):
+                model.instances[123]['windows'][0]['panes'][0]['directory'] = '/another/project'
+                model.prepare_labels()
+            self.assertEqual(project.call_count, 3)
+            self.assertEqual(request.call_count, 3)
+            self.assertNotIn('/another/project', json.dumps(model.windows()))
+
+    async def test_agent_automatic_name_promotes_from_project_and_custom_names_win(self):
+        model = await self.model()
+        model.schedule_publish = lambda: None
+        native = model.instances[123]['windows'][0]['panes'][0]
+        other = model.instances[123]['windows'][0]['panes'][1]
+        with patch.object(tracker, 'project_name', return_value='project'), \
+                patch.object(tracker, 'kitty_request', return_value=None) as request, redirect_stdout(io.StringIO()):
+            model.prepare_labels()
+            await asyncio.gather(*model.tasks)
+            native['threadName'] = 'Refactor upload cache'
+            other['threadName'] = 'Refresh search index'
+            model.prepare_labels()
+            await asyncio.gather(*model.tasks)
+            value = model.instances[123]['labels'][1]
+            self.assertEqual(value['source'], 'thread')
+            self.assertFalse(value['custom'])
+            self.assertEqual(model.windows()['a1']['agents'][0]['fullLabel'], native['threadName'])
+            self.assertEqual(model.windows()['a1']['agents'][1]['fullLabel'], other['threadName'])
+            self.assertEqual(labels.display_label(value), native['threadName'])
+            writes = request.call_count
+            for _ in range(30): model.prepare_labels()
+            self.assertEqual(request.call_count, writes)
+            await model.rename(dict(address='a1', pane=1, label='uploads'))
+            native['threadName'] = 'A different session'
+            model.prepare_labels()
+            self.assertEqual(model.windows()['a1']['agents'][0]['fullLabel'], 'uploads')
+            await model.rename(dict(address='a1', pane=1, label=''))
+            self.assertEqual(model.windows()['a1']['agents'][0]['fullLabel'], 'A different session')
+            await model.rename(dict(address='a1', pane=2, label='search'))
+            other['threadName'] = 'Another Claude session'
+            model.prepare_labels()
+            self.assertEqual(model.windows()['a1']['agents'][1]['fullLabel'], 'search')
+            await model.rename(dict(address='a1', pane=2, label=''))
+            self.assertEqual(model.windows()['a1']['agents'][1]['fullLabel'], 'Another Claude session')
+
+    async def test_rename_persists_only_that_pane_and_rejects_failed_writes(self):
+        model = await self.model()
+        model.schedule_publish = lambda: None
+        with patch.object(tracker, 'kitty_request', return_value=None):
+            model.prepare_labels()
+            await asyncio.gather(*model.tasks)
+        before = model.windows()['a1']['agents']
+        with patch.object(tracker, 'process_identity', return_value=('42', 'kitty')), \
+                patch.object(tracker, 'kitty_request', return_value=None) as request, redirect_stdout(io.StringIO()):
+            await model.rename(dict(address='a1', pane=2, label='shell/auth'))
+            self.assertEqual(request.call_args.args[:2], (123, 'set-user-vars'))
+            self.assertEqual(request.call_args.args[2]['match'], 'id:2')
+            after = model.windows()['a1']['agents']
+            self.assertEqual(after[1]['label'], 'shell/auth')
+            self.assertEqual(after[0], before[0])
+            self.assertEqual(after[2], before[2])
+        with patch.object(tracker, 'process_identity', return_value=('42', 'kitty')), \
+                patch.object(tracker, 'kitty_request', side_effect=OSError), redirect_stdout(io.StringIO()) as output:
+            await model.rename(dict(address='a1', pane=2, label='new-name'))
+            self.assertFalse(json.loads(output.getvalue())['renamed']['ok'])
+            self.assertEqual(model.windows()['a1']['agents'], after)
+
+    async def test_bootstrap_restores_suffixes_before_assigning_new_labels(self):
+        model = await self.model()
+        model.instances[123]['windows'][0]['panes'] = model.instances[123]['windows'][0]['panes'][:1]
+        model.instances[124] = dict(start='43', windows=[], labels={}, initialized=False)
+        model.prepare_labels()
+        self.assertFalse(model.instances[123]['labels'])
+        restored = protocol.snapshot(layout())[0]
+        restored['panes'] = restored['panes'][:1]
+        restored['panes'][0]['context'] = dict(identity='codex:21', project='shell', label='shell', number=7, custom=False)
+        model.instances[124].update(windows=[restored], initialized=True)
+        with patch.object(tracker, 'project_name', return_value='shell'), patch.object(tracker, 'kitty_request', return_value=None):
+            model.prepare_labels()
+            await asyncio.gather(*model.tasks)
+        self.assertEqual(model.instances[124]['labels'][1]['number'], 7)
+        self.assertEqual(model.instances[123]['labels'][1]['number'], 1)
+
     async def test_agent_activation_selects_only_a_current_owned_pane(self):
         model = await self.model()
         model.schedule_publish = lambda: None
@@ -161,6 +306,16 @@ class TrackerTests(unittest.IsolatedAsyncioTestCase):
         with patch.object(tracker, 'process_identity', return_value=('43', 'kitty')), \
                 patch.object(tracker, 'kitty_request') as request, redirect_stdout(io.StringIO()):
             await model.activate(dict(address='a1', pane=3))
+            request.assert_not_awaited()
+
+    async def test_pending_label_write_checks_pane_and_process_ownership(self):
+        model = await self.model()
+        value = labels.make_context('codex', 21, 'shell', 'tray', [])
+        with patch.object(tracker, 'kitty_request') as request:
+            self.assertFalse(await model.persist_label(123, 99, value))
+            self.assertFalse(await model.persist_label(123, 2, value))
+            with patch.object(tracker, 'process_identity', return_value=('43', 'kitty')):
+                self.assertFalse(await model.persist_label(123, 1, value))
             request.assert_not_awaited()
 
     async def test_ambiguous_os_windows_never_borrow_another_agent(self):
