@@ -45,6 +45,13 @@ def agent_process(pane):
     for process in pane.get("foreground_processes", []):
         argv = process.get("cmdline") or []
         name = executable(argv)
+        if name in {"agy", "antigravity"}:
+            args = argv[2:] if executable(argv[:1]) != name else argv[1:]
+            if (any(arg in {"-p", "--print", "--prompt"}
+                    or arg.startswith(("--print=", "--prompt=")) for arg in args)
+                    or args[:1] in (["remote-control"], ["mic-serve"])):
+                continue
+            return "antigravity", process.get("pid", 0)
         if name in {"codex", "claude", "kimi"}:
             if name == "codex" and any(arg in {"app-server", "exec-server"} for arg in argv):
                 continue
@@ -56,8 +63,27 @@ def agent_kind(pane):
     return agent_process(pane)[0]
 
 
+def antigravity_title(payload):
+    data = payload if isinstance(payload, dict) else {}
+    state = "unknown"
+    if data.get("tool_confirmation_pending") is True:
+        state = "waiting"
+    elif data.get("agent_state") == "idle":
+        state = "idle"
+    elif data.get("agent_state") in ("initializing", "thinking", "working", "tool_use"):
+        state = "running"
+    workspace = data.get("workspace")
+    directory = workspace.get("current_dir") if isinstance(workspace, dict) else None
+    directory = directory or data.get("cwd")
+    project = clean_label(os.path.basename(directory.rstrip("/"))) if isinstance(directory, str) else ""
+    return f"[agy:{state}] {project or 'Antigravity'}"
+
+
 def title_state(agent, title):
     title = str(title or "").lstrip()
+    if agent == "antigravity":
+        match = re.match(r"\[agy:(idle|running|waiting)\](?:\s|$)", title)
+        return match[1] if match else ""
     if agent == "codex":
         if re.match(r"\[\s*[!.]\s*\]\s*Action Required\b", title, re.I):
             return "waiting"
@@ -99,6 +125,8 @@ def session_name(agent, title):
 
 def semantic_title_key(agent, title):
     value = title_key(title)
+    if agent == "antigravity":
+        return re.sub(r"^\[agy:(?:idle|running|waiting|unknown)\]\s*", "", value)
     if agent == "codex" and " | " in value:
         return codex_thread_name(title) + " | " + value.rsplit(" | ", 1)[1]
     return value

@@ -1,0 +1,13 @@
+#!/usr/bin/python3
+"""Format Antigravity's state payload for the existing Kitty title watcher."""
+
+import json
+import sys
+
+from terminal_protocol import antigravity_title
+
+try:
+    payload = json.loads(sys.stdin.buffer.read(1024 * 1024))
+except (ValueError, OSError):
+    payload = None
+print(antigravity_title(payload))

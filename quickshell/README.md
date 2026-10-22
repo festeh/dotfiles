@@ -603,6 +603,31 @@ hook after an Esc interrupt. A Kitty process start token prevents PID reuse from
 adopting another instance's hook state. Ambiguous OS-window mappings keep the
 Kitty icon and no agent marker instead of borrowing another window's agents.
 
+Antigravity CLI (`agy` or `antigravity`) uses its installed app icon and the same
+project labels, rename controls and status colors. Its custom title command maps
+`idle` to green, `initializing`/`thinking`/`working`/`tool_use` to blue, and
+`tool_confirmation_pending` to amber. Print mode and remote-control/microphone
+helpers do not create agent icons. Merge this into
+`~/.gemini/antigravity-cli/settings.json`, preserving other settings:
+
+```json
+{
+  "title": {
+    "type": "command",
+    "command": "python3 \"$HOME/dotfiles/quickshell/antigravity-title\"",
+    "enabled": true
+  }
+}
+```
+
+Start a new Antigravity session after changing its settings. The formatter runs
+on Antigravity's title updates, consumes only state and the directory basename,
+and writes no files. Kitty forwards normalized state changes through the existing
+watcher; there is no added polling, daemon or Quickshell patch. Unknown payloads
+produce no status overline. See Antigravity's
+[title command](https://antigravity.google/docs/cli/title/) and
+[state payload](https://antigravity.google/docs/cli/statusline/).
+
 App basenames, agent names, pane/tab IDs, normalized states, project names and
 labels and supported session names reach QML; arguments, environment, full paths, prompts and transcripts do
 not. Runtime hook files

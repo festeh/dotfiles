@@ -8,6 +8,7 @@ import io
 import json
 import os
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import time
@@ -79,6 +80,70 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(protocol.agent_kind(current), "")
         current["at_prompt"] = True
         self.assertEqual(protocol.programs(current), [])
+
+    def test_antigravity_aliases_only_track_interactive_sessions(self):
+        current = pane()
+        process = current['foreground_processes'][0]
+        for executable in ('/opt/agy', '/opt/antigravity'):
+            for args in ([], ['--continue'], ['--remote-control'], ['-i', 'remote-control']):
+                process['cmdline'] = [executable, *args]
+                self.assertEqual(protocol.agent_process(current), ('antigravity', 21))
+            for args in (['-p', 'private prompt'], ['--print=private'], ['--prompt', 'private'],
+                    ['remote-control', 'start'], ['mic-serve']):
+                process['cmdline'] = [executable, *args]
+                self.assertEqual(protocol.agent_process(current), ('', 0))
+        process['cmdline'] = ['/usr/bin/python3', '/fixture/agy', '/fixture/control']
+        self.assertEqual(protocol.agent_kind(current), 'antigravity')
+        current['at_prompt'] = True
+        self.assertEqual(protocol.agent_kind(current), '')
+
+    def test_antigravity_payload_to_title_and_snapshot_discards_private_data(self):
+        payload = dict(agent_state='idle', tool_confirmation_pending=False,
+            workspace=dict(current_dir='/private/fixture-project'), session_id='private-session',
+            model=dict(display_name='private-model'), extra='private content')
+        current = layout()
+        native = current[0]['tabs'][0]['windows'][0]
+        native['foreground_processes'][0]['cmdline'] = ['/opt/agy', '-i', 'private prompt']
+        for state, expected in (('idle', 'idle'), ('thinking', 'running'), ('working', 'running'),
+                ('tool_use', 'running'), ('initializing', 'running'), ('future-state', '')):
+            payload['agent_state'] = state
+            native['title'] = protocol.antigravity_title(payload)
+            value = protocol.snapshot(current)[0]['panes'][0]
+            self.assertEqual(value['agent'], 'antigravity')
+            self.assertEqual(value['titleState'], expected)
+            self.assertEqual(protocol.semantic_title_key('antigravity', native['title']), 'fixture-project')
+            self.assertNotIn('private', json.dumps(value))
+        payload['tool_confirmation_pending'] = True
+        native['title'] = protocol.antigravity_title(payload)
+        self.assertEqual(protocol.snapshot(current)[0]['panes'][0]['titleState'], 'waiting')
+        for malformed in (None, [], {}, {'agent_state': []}, {'workspace': 'unexpected'}):
+            self.assertEqual(protocol.title_state('antigravity', protocol.antigravity_title(malformed)), '')
+        self.assertEqual(protocol.title_state('antigravity', '[agy:idle]invalid'), '')
+        self.assertEqual(protocol.antigravity_title(dict(agent_state='idle', cwd='/private/project\n\u202e')),
+            '[agy:idle] project')
+
+    def test_antigravity_title_command_accepts_json_and_handles_invalid_input(self):
+        for payload, expected in (('{"agent_state":"tool_use","tool_confirmation_pending":true}',
+                '[agy:waiting] Antigravity\n'), ('not JSON', '[agy:unknown] Antigravity\n')):
+            result = subprocess.run([sys.executable, str(config / 'antigravity-title')], input=payload,
+                capture_output=True, text=True, check=True)
+            self.assertEqual(result.stdout, expected)
+            self.assertEqual(result.stderr, '')
+
+    def test_antigravity_state_changes_do_not_refresh_foreground_inventory(self):
+        spec = importlib.util.spec_from_file_location('terminal_watcher', config.parent / 'kitty/terminal-watcher.py')
+        watcher = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(watcher)
+        watcher._panes = {1: {'agent': 'antigravity', 'titleState': 'idle'}}
+        watcher._title_keys = {1: 'fixture-project'}
+        window = type('Window', (), {'id': 1})()
+        with patch.object(watcher, 'send') as send, patch.object(watcher, 'schedule') as schedule:
+            for state in ('running', 'running', 'waiting', 'idle'):
+                watcher.on_title_change(None, window, {'title': f'[agy:{state}] fixture-project'})
+            self.assertEqual([call.args[0]['state'] for call in send.call_args_list], ['running', 'waiting', 'idle'])
+            schedule.assert_not_called()
+            watcher.on_title_change(None, window, {'title': 'shell prompt'})
+            schedule.assert_called_once()
 
     def test_precedence_and_unknown_are_not_false_idle(self):
         aggregate = lambda *states: protocol.aggregate([{"state": state} for state in states])

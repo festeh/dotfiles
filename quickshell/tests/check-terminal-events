@@ -24,7 +24,7 @@ async def main():
             'print("\\x1b]0;Test agent\\x07",end="",flush=True)\n'
             'while True:\n with open(sys.argv[1]) as control:\n'
             '  for line in control: print("\\x1b]0;"+line.strip()+"\\x07",end="",flush=True)\n')
-        for name in ("codex", "claude"):
+        for name in ("codex", "claude", "agy"):
             (root / name).write_text(program)
             (root / name).chmod(0o700)
         for name in ("one", "two", "three", "four"):
@@ -111,10 +111,17 @@ async def main():
             await wait(lambda value: state(value) == "running" and value["windows"]["a1"]["agents"][-1]["state"] == "idle")
             title("two", "Test agent")
             await wait(lambda value: state(value) == "idle")
-            fourth = int(await kitty_request(kitty.pid, "launch", dict(args=[str(root / "codex"), str(root / "four")], type="window", keep_focus=True)))
+            fourth = int(await kitty_request(kitty.pid, "launch", dict(args=[str(root / "agy"), str(root / "four")], type="window", keep_focus=True)))
             await wait(lambda value: value["health"]["agents"] == 4)
-            title("four", "[ ! ] Action Required | Test agent")
-            await wait(lambda value: state(value) == "waiting")
+            def fourth_state(value, expected):
+                return any(agent['pane'] == fourth and agent['agent'] == 'antigravity'
+                    and agent['state'] == expected for agent in value['windows']['a1']['agents'])
+            title("four", "[agy:idle] fixture-project")
+            await wait(lambda value: state(value) == "idle" and fourth_state(value, 'idle'))
+            title("four", "[agy:running] fixture-project")
+            await wait(lambda value: state(value) == "running" and fourth_state(value, 'running'))
+            title("four", "[agy:waiting] fixture-project")
+            await wait(lambda value: state(value) == "waiting" and fourth_state(value, 'waiting'))
             await kitty_request(kitty.pid, "close-window", {"match": f"id:{fourth}"})
             await wait(lambda value: state(value) == "idle" and value["health"]["agents"] == 3)
 
@@ -135,7 +142,7 @@ async def main():
             except asyncio.TimeoutError:
                 pass
             assert latest["health"]["requests"] == 1, latest["health"]
-            print("PASS: existing-pane attachment, inactive tabs, split panes, exact-pane activation, project labels, per-pane rename, label persistence, hook events, status precedence, pane removal, restart recovery and zero spinner/idle queries.")
+            print("PASS: existing-pane attachment, inactive tabs, split panes, exact-pane activation, project labels, per-pane rename, label persistence, hook events, Antigravity title states, status precedence, pane removal, restart recovery and zero spinner/idle queries.")
         except Exception:
             print("Last synthetic state:", latest)
             log.seek(0)
