@@ -3,11 +3,13 @@
 Launcher, workspaces, keyboard layout, volume, network, battery, clock, calendar, and tray built independently of AGS. `Theme.qml` borrows its Catppuccin colors,
 rounded container, and right alignment from `ags/style.css`.
 
-Run `./quickshell/run` from the dotfiles checkout, or
-`quickshell --path ~/dotfiles/quickshell`. Quickshell reloads QML edits live;
+Run `./quickshell/run` from the dotfiles checkout. This entry point also supplies
+the native menu palette; starting `quickshell --path ~/dotfiles/quickshell`
+directly uses the system menu colors. Quickshell reloads QML edits live;
 restart the shell after editing imported JavaScript logic.
 Install the `papirus-icon-theme` package, or install Papirus and Papirus-Dark
-under `~/.local/share/icons` for the current user. Theme changes require a
+under `~/.local/share/icons` for the current user. The shell selects Papirus-Dark
+directly, without a wrapper theme or custom fallback. Theme changes require a
 shell restart so Qt rebuilds its icon lookup.
 Stop with `quickshell --path ~/dotfiles/quickshell kill`.
 Hyprland starts the shared shell through UWSM at graphical login using
@@ -213,8 +215,8 @@ out-of-office icons and Escape without modifying actual mail.
 
 - Left click activates an application, or opens its menu for menu-only items.
 - Right click opens the native menu, including dynamic and nested submenus.
-  Its Catppuccin skin adds rounded corners, compact rows, mauve selection,
-  matching separators, and custom checkbox/radio indicators.
+  It uses our Catppuccin colors with Qt's standard shape, spacing, and
+  checkbox/radio indicators. Selection text is mauve.
 - Middle click sends the application's secondary action.
 - Vertical and horizontal scrolling are forwarded to the application.
 - After clicking an icon, use Left/Right, Home/End, or Tab to navigate.
@@ -298,25 +300,27 @@ actual default. A failed switch reports an inline message after five seconds.
 
 The network pill sits immediately left of the battery. Its vector icon shows
 Wi-Fi strength in three coarse levels (dot, one arc, two arcs), Ethernet, or
-another primary connection type. The tooltip retains the exact signal percentage.
-Connected metered
-Wi-Fi uses a phone icon, following the agreed hotspot heuristic; this does not
-prove the access point is a phone. The native service remembers the classification
-per SSID, uses cached recognition when metering is unknown, and updates it when
-NetworkManager reports a known value. Cache keys are hashes, not plaintext SSIDs.
+another connection type. The tooltip retains the exact signal percentage.
+Known mobile hotspots use a phone icon when an associated saved NetworkManager
+profile has `user.data["dotfiles.mobile-hotspot"] = "true"`. The profile is tagged
+once through NetworkManager; its name and credentials stay outside this checkout.
+`NetworkState.qml` reads the tag with the stock `NMSettings.read()` API and follows
+profile updates. This is explicit recognition of a known hotspot, without a
+metering heuristic, classification cache, or custom native module.
 
 Hover, or focus with Tab, for one compact line containing the connection name,
-Wi-Fi strength and band when available, metering, and connectivity status.
-Disabled radios, hardware blocks, connecting/disconnecting, failures, and
-disconnected states have distinct descriptions. Captive portals and limited/no
+Wi-Fi strength, the mobile-hotspot label when tagged, and connectivity status.
+Disabled radios, hardware blocks, connecting/disconnecting, and disconnected
+states have distinct descriptions. Captive portals and limited/no
 internet get a yellow warning only when NetworkManager connectivity checking is
 available and enabled. Unknown strength stays unknown rather than showing 0%.
 
-`NetworkState.qml` shares the local runtime's `NetworkStatus` D-Bus service across
-outputs. It observes the primary connection, its device, and active access point;
-signal changes update the icon and tooltip live. There are no polling commands,
-periodic timers, scan requests, or extra network probes. The service clears and
-reloads state when NetworkManager restarts or the system resumes.
+`NetworkState.qml` shares stock `Quickshell.Networking` across outputs. It chooses
+the first connected device, then a connecting/disconnecting device or Wi-Fi
+adapter. This does not identify NetworkManager's primary route. Native model
+and property changes update the icon and tooltip while the picker is closed.
+There is no persistent status helper, polling timer, scan request, connectivity
+probe, or Quickshell networking patch. The native Wi-Fi scanner remains disabled.
 Click or press Enter/Space/Down to open the Wi-Fi picker. It pins the connected
 network first and orders other networks by live strength, with stable name ties.
 List items show signal icons without percentages; the bar tooltip keeps the exact value.
@@ -388,8 +392,9 @@ default to 30 seconds; critical notifications stay until dismissed. An explicit
 positive timeout also applies to a critical notification.
 Hover does not extend a deadline; leaving a hovered noncritical card dismisses
 it immediately. A thin mauve outline traces the rounded border clockwise from
-the top center, completing one lap at the notification's deadline. It resets on replacement and resumes at
-the correct position after reload or suspend; only visible cards animate.
+the top center, completing one lap at the notification's deadline. It resets
+when notification content changes and resumes at the correct position after
+reload or suspend; only visible cards animate.
 Clock reconciliation never rewinds the outline, and a completed lap stays full
 until expiration instead of restarting for a final frame.
 Notifications without a deadline have no timeout indicator. Critical notifications
@@ -418,11 +423,12 @@ immediately, and visible relative timestamps reuse the existing shared clock.
 QML reloads retain only lifetime/monitor metadata through `PersistentProperties`;
 they preserve the original deadlines and live native actions without disk writes.
 
-`notifications.patch` adds a native replacement event, including replacements
-whose content is identical. This is needed to restart the deadline reliably;
-upstream only emits the arrival signal for new IDs, and property-change signals
-cannot detect identical replacements. The patch is separate from `runtime.patch`
-and applied by `build-runtime`. It adds no notification policy to C++.
+Notifications use the stock native service without a notification source patch.
+QML observes its public content, including action labels, hints, urgency, and
+timeout. Changes are combined into one deadline reset while preserving the card.
+An identical resend has no observable property change and retains its original
+arrival time and deadline; it does not restart the timeout outline. Reload also
+preserves existing deadlines.
 
 Validation uses a private D-Bus session, real notification method calls/signals,
 and the production cards with Qt mouse events:
@@ -445,20 +451,17 @@ next month, selecting a date, and returning to Today. Arrow keys move the
 selection, Page Up/Down changes the month, Home returns to today, and Escape
 or an outside click closes it. The calendar is created only while open.
 
-`ClockState.qml` shares one minute-precision `SystemClock` across all outputs.
-There is no per-second polling and no spawned clock/date process. On Linux,
-the local runtime uses a one-shot absolute `CLOCK_REALTIME` timerfd for the
-next minute boundary. It advances during suspend and becomes readable after
-an overdue deadline on resume; it does not wake the laptop. Clock changes
-cancel and immediately realign that deadline. A portable Qt timer remains
-available if timerfd cannot be created. Opening the calendar also refreshes
-the clock immediately.
-Precision rounding preserves the correct occurrence of an hour during DST
-fall-back, avoiding past deadlines and repeated immediate wakeups.
+`ClockState.qml` shares one stock minute-precision `SystemClock` across all
+outputs. There is no per-second polling, spawned clock/date process, or clock
+source patch. Its QML `refresh()` function toggles the clock's `enabled` property
+off and on to sample the current time and realign the next minute tick. The
+existing logind subscription in `NotificationState.qml` calls it on resume;
+opening the calendar also refreshes immediately. No additional resume monitor
+is started for the clock.
 
-AGS's current relative minute timer can preserve its remaining delay over
-suspend; that is a code-based explanation of the reported delay, rather than
-a captured lid-close trace. The new implementation does not use that timer.
+System-clock corrections appear at the next native tick or explicit refresh.
+DST handling follows upstream; the former timerfd and DST workarounds have been
+removed.
 Calendar arithmetic uses local civil dates at noon to handle month ends,
 leap years, and DST without skipping dates.
 
@@ -467,13 +470,18 @@ The tray uses Quickshell's event-driven StatusNotifier service and native menu
 anchors; it does not poll applications or run commands for clicks.
 It can share the existing StatusNotifierWatcher with AGS.
 Icons are sorted by category and application ID so their order survives reloads.
-Native menus use `menu.qss` for their appearance, including nested menus.
-Restart the preview after changing this stylesheet; QML edits reload live.
+Native menus use `menu-palette.json` for Catppuccin colors, including nested menus.
+The `run` entry point sets `QT_GUI_GTK_JSON` to its absolute path before Qt starts;
+login startup and launcher recovery both use that entry point. The palette is
+scoped to this shell process. Qt's GTK platform backend reads this file without a
+Quickshell source patch or stylesheet. This is an internal Qt backend setting;
+check it after Qt upgrades. Restart the shell after changing the palette.
+Menu shape, spacing, fonts, and indicators follow Qt's standard style.
 Missing icons remain empty in both the tray and menus. The preview uses the compose input
 context and skips portal registration to avoid Qt Wayland input and duplicate
 portal-registration warnings. The Wi-Fi picker uses a Qt Quick password field.
-Icons use Papirus-Dark, with Adwaita as a fallback for missing GTK symbolic names.
-The theme can be installed per user under `~/.local/share/icons`.
+Icons use Papirus-Dark directly, including its standard inherited themes. There
+is no added Adwaita icon fallback or custom Quickshell theme override.
 Symbolic icons are tinted to the menu text color so dark source
 artwork remains readable against the dark menu background.
 
@@ -688,17 +696,16 @@ CLI11 headers and their CMake package were installed to `~/.local` from
 `~/.cache/quickshell-deps/CLI11`; no system packages were replaced.
 
 `build-runtime` applies `runtime.patch` to the upstream checkout before building.
-The local patch supports a per-shell widget stylesheet, transparent menu
-corners, a fallback icon theme, symbolic icon tinting, and empty missing icons;
+The local patch supports symbolic icon tinting and empty missing icons;
 it also caches missing menu images so moving
 the pointer does not repeatedly load them. The shell opts in through the
-`QS_WIDGET_STYLE_SHEET`, `QS_FALLBACK_ICON_THEME`, `QS_SYMBOLIC_ICON_COLOR`,
-and `QS_HIDE_MISSING_ICONS`
+`QS_SYMBOLIC_ICON_COLOR` and `QS_HIDE_MISSING_ICONS`
 pragmas. It does not change
-the appearance of other Quickshell configurations unless they opt in. The
-clock part of the patch updates Linux `SystemClock` scheduling in this local
-runtime and adds an immediate `refresh()` method. The network part adds the
-read-only `NetworkStatus` singleton and a metered/phone classification cache.
+the appearance of other Quickshell configurations unless they opt in.
+Clock and networking use stock Quickshell APIs; the former clock and
+`NetworkStatus` source changes have been removed.
+Native menu styling also uses stock Qt configuration; the stylesheet loader and
+menu transparency changes have been removed.
 Reapply the patch when building a fresh upstream checkout; the helper detects
 conflicts and stops. Normal package updates do not update this custom binary.
 The vault task `Review local Quickshell source patches` records the audit and
@@ -719,11 +726,12 @@ the pristine upstream revision.
 
 Calendar navigation, Today, keyboard input, and outside-click dismissal were
 checked in the running preview. A real midnight rollover updated the clock
-and today's date. The live process has one realtime timerfd armed to the next
-minute, with no repeating interval. Native clock checks cover delayed event
-delivery, disable/re-enable, minute alignment, and simulated clock-change
-cancellation. Native checks also cover both DST transitions, including the
-repeated Berlin hour. An actual laptop suspend/resume has not been performed.
+and today's date. The clock check now exercises the production QML adapter and
+resume parser with the stock native clock on an isolated session bus. It freezes
+a timestamp, feeds a simulated logind resume event, and checks immediate catch-up,
+minute precision, repeated refresh, and formatted output. `check-clock --minute`
+also waits for a real native minute rollover. An actual laptop suspend/resume has
+not been performed.
 
 The battery and its one-line tooltip were inspected in the running panel against
 the laptop's live UPower data. Battery state checks cover unknown/absent data,
@@ -733,14 +741,16 @@ widget's colors, markers, visibility, and fixed width without changing hardware
 state. Physical charger transitions and battery behavior after actual suspend
 have not been exercised.
 
-The network icon and compact tooltip were inspected in the running bar against
-live NetworkManager data. Presentation checks cover signal levels, unknown data,
-disabled radios, failures, transitions, and checked versus unchecked connectivity.
-An isolated private D-Bus checks live signal changes, metering/cache updates,
-captive-portal warnings, NetworkManager disappearance/restart, and resume refresh
-without changing the real connection. It also checks that idle state causes no
-additional property reads. Actual network reconnects and laptop resume remain
-unverified. The private-bus check requires Python with PyGObject and dbus-daemon.
+The network icon and compact tooltip were inspected in the restarted bar against
+live NetworkManager data after rebuilding without the networking patch.
+Presentation checks cover signal levels, unknown data, explicit hotspot tags,
+disabled radios, transitions, and checked versus unchecked connectivity.
+A QML fixture exercises the production adapter with reactive stock-shaped
+device/network/profile models: signal updates while the picker is closed,
+hotspot tag updates, captive portals, reconnects, Ethernet selection, radio
+blocks and a missing backend. It does not change real connections. Actual
+network reconnects, a connection to the tagged hotspot, and laptop resume remain
+unverified; the adapter relies on the stock service for refreshing native state.
 The picker was opened and closed in the live panel, and its helper exited on
 close. Mock checks cover access-point grouping and live ordering, compatible
 saved profiles, profile validation, password retries, and asynchronous radio
@@ -776,6 +786,7 @@ TZ=Europe/Berlin node --test quickshell/tests/calendar-math.test.cjs
 TZ=America/New_York node --test quickshell/tests/calendar-math.test.cjs
 TZ=UTC node --test quickshell/tests/calendar-math.test.cjs
 ./quickshell/tests/check-clock
+./quickshell/tests/check-clock --minute
 ```
 
 The local runtime suppresses Quickshell's checkerboard fallback when an
@@ -787,4 +798,4 @@ for the dynamically registered `PanelWindow`, menu handle inheritance, and edge
 flag combinations; these paths were checked in the running preview.
 
 API reference: <https://quickshell.org/docs/v0.3.2/types/Quickshell.Services.SystemTray/SystemTrayItem/>.
-Timer behavior: <https://man7.org/linux/man-pages/man2/timerfd_create.2.html>.
+Clock API: <https://quickshell.org/docs/v0.3.2/types/Quickshell/SystemClock/>.

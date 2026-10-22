@@ -1,4 +1,5 @@
 #!/bin/sh
 set -eu
 config_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+export QT_GUI_GTK_JSON="$config_dir/menu-palette.json"
 exec quickshell --path "$config_dir" --no-duplicate "$@"

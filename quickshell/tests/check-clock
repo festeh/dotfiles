@@ -1,11 +1,51 @@
-#!/bin/sh
-set -eu
-test_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-source_dir=${QUICKSHELL_SOURCE_DIR:-"$HOME/github/quickshell"}
-test_build_dir=$(mktemp -d)
-trap 'rm -rf -- "$test_build_dir"' EXIT HUP INT TERM
+#!/usr/bin/env python3
+"""Check the production clock and resume handler on an isolated session bus."""
 
-cmake -S "$test_dir" -B "$test_build_dir" -G Ninja \
-    -DQUICKSHELL_SOURCE_DIR="$source_dir"
-cmake --build "$test_build_dir" --parallel 2
-"$test_build_dir/clock-check"
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+
+if "--private-bus" not in sys.argv:
+    raise SystemExit(subprocess.call([
+        "dbus-run-session", "--", sys.executable, __file__, "--private-bus", *sys.argv[1:]
+    ]))
+
+config = Path(__file__).resolve().parents[1]
+minute_check = "--minute" in sys.argv
+with tempfile.TemporaryDirectory(prefix="quickshell-clock-") as directory:
+    root = Path(directory)
+    for name in ("ClockState.qml", "NotificationState.qml", "NotificationLogic.js"):
+        (root / name).symlink_to(config / name)
+    (root / "qmldir").write_text(
+        "singleton ClockState 1.0 ClockState.qml\n"
+        "singleton NotificationState 1.0 NotificationState.qml\n"
+    )
+    (root / "shell.qml").write_text((config / "tests/fixtures/clock-state.qml").read_text())
+    # Feed the real resume parser harmless logind-shaped output. Neither signal
+    # is sent to the system bus, and the host's clock and sleep state stay intact.
+    bin_dir = root / "bin"
+    bin_dir.mkdir()
+    monitor = bin_dir / "gdbus"
+    monitor.write_text(
+        "#!/usr/bin/python3\n"
+        "import time\n"
+        "print('org.freedesktop.login1.Manager.PrepareForSleep (true,)', flush=True)\n"
+        "time.sleep(1.5)\n"
+        "print('org.freedesktop.login1.Manager.PrepareForSleep (false,)', flush=True)\n"
+    )
+    monitor.chmod(0o700)
+    env = dict(os.environ, PATH=str(bin_dir) + os.pathsep + os.environ["PATH"],
+        QT_QPA_PLATFORM="offscreen", QT_QUICK_BACKEND="software",
+        QT_IM_MODULE="compose", QT_NO_XDG_DESKTOP_PORTAL="1",
+        QS_CLOCK_CHECK_MINUTE="1" if minute_check else "0")
+    result = subprocess.run(["quickshell", "--path", str(root)], env=env,
+        capture_output=True, text=True, timeout=75 if minute_check else 10)
+    output = result.stdout + result.stderr
+    if result.returncode or "CLOCK_STATE_PASSED" not in output:
+        print(output)
+        raise SystemExit("Clock state check failed")
+    print("Clock state passed: stock API, minute precision, stale clock stays paused, "
+        "resume event refreshes immediately, repeated refresh and formatted output."
+        + (" Native minute rollover passed." if minute_check else ""))

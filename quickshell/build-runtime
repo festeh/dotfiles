@@ -3,14 +3,13 @@ set -eu
 config_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 source_dir=${QUICKSHELL_SOURCE_DIR:-"$HOME/github/quickshell"}
 
-for runtime_patch in runtime.patch notifications.patch; do
-    if git -C "$source_dir" apply --check "$config_dir/$runtime_patch" 2>/dev/null; then
-        git -C "$source_dir" apply "$config_dir/$runtime_patch"
-    elif ! git -C "$source_dir" apply --reverse --check "$config_dir/$runtime_patch" 2>/dev/null; then
-        echo "The Quickshell $runtime_patch conflicts with this checkout; review it before rebuilding." >&2
-        exit 1
-    fi
-done
+runtime_patch="$config_dir/runtime.patch"
+if git -C "$source_dir" apply --check "$runtime_patch" 2>/dev/null; then
+    git -C "$source_dir" apply "$runtime_patch"
+elif ! git -C "$source_dir" apply --reverse --check "$runtime_patch" 2>/dev/null; then
+    echo "The Quickshell runtime.patch conflicts with this checkout; review it before rebuilding." >&2
+    exit 1
+fi
 
 cmake -S "$source_dir" -B "$source_dir/build" -DSERVICE_NOTIFICATIONS=ON
 cmake --build "$source_dir/build" --parallel 4

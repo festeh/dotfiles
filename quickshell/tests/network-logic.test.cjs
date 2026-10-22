@@ -10,10 +10,10 @@ vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../NetworkLogic.js'), '
 
 const sample = overrides => ({
     available: true, ready: true, type: 'wifi', hasWifi: true,
-    deviceState: 100, networkState: 70, networkingEnabled: true,
+    state: 'connected',
     wifiEnabled: true, wifiHardwareEnabled: true,
-    signal: 0.76, frequency: 5180, name: 'Example Wi-Fi',
-    phone: false, metered: 2, connectivity: 4,
+    signal: 0.76, name: 'Example Wi-Fi',
+    phone: false, connectivity: 4,
     canCheckConnectivity: true, connectivityCheckEnabled: true,
     ...overrides,
 });
@@ -31,7 +31,7 @@ test('connected signal changes update strength levels and the compact tooltip', 
     for (const [signal, level] of [[0, 1], [0.33, 1], [1 / 3, 1], [0.34, 2], [0.66, 2], [2 / 3, 2], [0.67, 3], [1, 3]]) {
         const result = network.describe(sample({signal, name: ' Example\n  Wi-Fi '}));
         assert.equal(result.level, level);
-        assert.equal(result.tooltip, `Wi-Fi · Example Wi-Fi · ${Math.round(signal * 100)}% · 5 GHz · Internet access`);
+        assert.equal(result.tooltip, `Wi-Fi · Example Wi-Fi · ${Math.round(signal * 100)}% · Internet access`);
     }
     for (const signal of [-1, NaN, Infinity, undefined, 1.1]) {
         const result = network.describe(sample({signal}));
@@ -41,30 +41,30 @@ test('connected signal changes update strength levels and the compact tooltip', 
     }
 });
 
-test('metered Wi-Fi can use the accepted phone heuristic without changing connection type', () => {
-    const result = network.describe(sample({phone: true, metered: 1}));
+test('only explicitly tagged Wi-Fi profiles identify a mobile hotspot', () => {
+    for (const settings of [null, {}, {user: {}}, {user: {data: {}}},
+        {connection: {metered: 1}}, {user: {data: {'dotfiles.mobile-hotspot': 'false'}}}])
+        assert.equal(network.isHotspot(settings), false);
+    assert.equal(network.isHotspot({user: {data: {'dotfiles.mobile-hotspot': 'true'}}}), true);
+    const result = network.describe(sample({phone: true}));
     assert.equal(result.kind, 'phone');
-    assert.match(result.tooltip, /^Wi-Fi · .* · Metered · Internet access$/);
-    assert.equal(network.describe(sample({phone: true, metered: 0})).kind, 'phone');
+    assert.match(result.tooltip, /^Wi-Fi · .* · Mobile hotspot · Internet access$/);
     assert.equal(network.describe(sample({type: 'wired', phone: true})).kind, 'wired');
 });
 
-test('hardware/software blocks, transitions, failures, and disconnects have distinct states', () => {
+test('stock radio blocks and connection transitions have distinct descriptions', () => {
     for (const [overrides, state, tooltip] of [
-        [{networkingEnabled: false}, 'disabled', 'Networking disabled'],
         [{wifiEnabled: false}, 'disabled', 'Wi-Fi off'],
         [{wifiHardwareEnabled: false}, 'disabled', 'Wi-Fi blocked by hardware switch'],
-        [{deviceState: 120}, 'failed', 'Wi-Fi connection failed'],
-        [{deviceState: 30, networkState: 20}, 'disconnected', 'Wi-Fi disconnected'],
-        [{deviceState: 20, networkState: 30}, 'disconnected', 'Wi-Fi unavailable'],
-        [{deviceState: 110}, 'disconnecting', 'Wi-Fi · Disconnecting · Example Wi-Fi'],
+        [{state: 'disconnected'}, 'disconnected', 'Wi-Fi disconnected'],
+        [{state: 'disconnecting'}, 'disconnecting', 'Wi-Fi · Disconnecting · Example Wi-Fi'],
+        [{state: 'connecting'}, 'connecting', 'Wi-Fi · Connecting · Example Wi-Fi'],
     ]) {
         const result = network.describe(sample(overrides));
         assert.equal(result.state, state);
         assert.equal(result.tooltip, tooltip);
     }
-    for (const deviceState of [40, 50, 60, 70, 80, 90])
-        assert.equal(network.describe(sample({deviceState})).state, 'connecting');
+    assert.equal(network.describe(sample({state: 'unknown'})).state, 'unknown');
 });
 
 test('internet warnings require enabled connectivity checking, not just a stale result', () => {
@@ -82,7 +82,7 @@ test('internet warnings require enabled connectivity checking, not just a stale 
     assert.ok(network.describe(sample({connectivity: 0})).tooltip.endsWith('Internet status unknown'));
 });
 
-test('wired/other primary links remain usable with Wi-Fi disabled and omit wireless details', () => {
+test('wired/other connections remain usable with Wi-Fi disabled and omit wireless details', () => {
     for (const type of ['wired', 'other']) {
         const result = network.describe(sample({type, wifiEnabled: false, wifiHardwareEnabled: false}));
         assert.equal(result.state, 'connected');

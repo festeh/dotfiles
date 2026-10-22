@@ -1,13 +1,17 @@
 .pragma library
 
-// NetworkManager's stable D-Bus state values. Keep presentation independent
-// of the service so transitions can be checked without changing connections.
+// Presentation of the stock Quickshell networking service.
 function validNumber(value) {
     return typeof value === "number" && isFinite(value);
 }
 
 function clean(value) {
     return typeof value === "string" ? value.replace(/\s+/g, " ").trim() : "";
+}
+
+function isHotspot(settings) {
+    var data = settings && settings.user && settings.user.data;
+    return !!data && data["dotfiles.mobile-hotspot"] === "true";
 }
 
 function describe(snapshot) {
@@ -24,38 +28,26 @@ function describe(snapshot) {
         return result;
 
     var connectionType = result.kind === "wifi" ? "Wi-Fi" : result.kind === "wired" ? "Ethernet" : "Network";
-    if (s.networkingEnabled === false) {
-        result.state = "disabled";
-        result.marker = "off";
-        result.tooltip = "Networking disabled";
-        return result;
-    }
     if (result.kind === "wifi" && (s.wifiEnabled === false || s.wifiHardwareEnabled === false)) {
         result.state = "disabled";
         result.marker = "off";
         result.tooltip = s.wifiHardwareEnabled === false ? "Wi-Fi blocked by hardware switch" : "Wi-Fi off";
         return result;
     }
-    if (s.deviceState === 120) {
-        result.state = "failed";
-        result.marker = "warning";
-        result.severity = "critical";
-        result.tooltip = connectionType + " connection failed";
-        return result;
-    }
-    if ((s.deviceState >= 40 && s.deviceState <= 90) || s.networkState === 40 || s.deviceState === 110) {
-        result.state = s.deviceState === 110 ? "disconnecting" : "connecting";
+    if (s.state === "connecting" || s.state === "disconnecting") {
+        result.state = s.state;
         result.marker = "connecting";
         result.severity = "accent";
         result.tooltip = connectionType + " · " + (result.state === "disconnecting" ? "Disconnecting" : "Connecting");
         if (clean(s.name)) result.tooltip += " · " + clean(s.name);
         return result;
     }
-    if (s.deviceState !== 100 && !(s.type === "other" && s.networkState >= 50)) {
+    if (s.state === "unknown")
+        return result;
+    if (s.state !== "connected") {
         result.state = "disconnected";
         result.marker = "off";
-        result.tooltip = connectionType + (s.deviceState === 10 ? " unmanaged"
-            : s.deviceState === 20 ? " unavailable" : " disconnected");
+        result.tooltip = connectionType + " disconnected";
         return result;
     }
 
@@ -76,14 +68,9 @@ function describe(snapshot) {
             result.marker = "unknown";
             parts.push("Signal unavailable");
         }
-        if (validNumber(s.frequency) && s.frequency >= 2400) {
-            var band = s.frequency < 2500 ? "2.4 GHz" : s.frequency >= 5925 ? "6 GHz"
-                : s.frequency >= 4900 && s.frequency < 5925 ? "5 GHz" : "";
-            if (band) parts.push(band);
-        }
     }
-    if (s.metered === 1 || s.metered === 3)
-        parts.push("Metered");
+    if (result.kind === "phone")
+        parts.push("Mobile hotspot");
 
     // A link does not prove internet access. Never turn disabled/unknown
     // connectivity checks into a false "no internet" warning.

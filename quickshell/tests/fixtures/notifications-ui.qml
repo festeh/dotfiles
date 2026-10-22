@@ -9,11 +9,16 @@ import "NotificationLogic.js" as Logic
 ShellRoot {
     id: root
     property int created: 0
+    property int stateUpdates: 0
     property var events: null
     property int watchedId: 0
     property real previousElapsed: 0
     property real peakElapsed: 0
     property var regressions: []
+    Connections {
+        target: NotificationState
+        function onEntriesChanged(): void { ++root.stateUpdates; }
+    }
     function recordProgress(id, value): void {
         if (id !== watchedId) return;
         if (value + 0.000001 < previousElapsed)
@@ -67,7 +72,7 @@ ShellRoot {
     IpcHandler {
         target: "fixture"
         function status(): string {
-            return JSON.stringify({count: NotificationState.count, created: root.created,
+            return JSON.stringify({count: NotificationState.count, created: root.created, updates: root.stateUpdates,
                 rows: NotificationState.entries.map(entry => {
                     const card = root.card(entry.id);
                     return {id: entry.id, deadline: entry.deadline, arrived: entry.arrived,
@@ -76,6 +81,7 @@ ShellRoot {
                         elapsed: card ? card.timeoutProgress : 0,
                         timeoutVisible: card ? root.find(card, 'notification-timeout').visible : false,
                         body: card ? card.body : '', progress: card ? card.progress : -1,
+                        actions: entry.notification.actions.map(action => action.text),
                         imageReady: card ? root.find(card, 'notification-image').status === Image.Ready : false};
                 })});
         }

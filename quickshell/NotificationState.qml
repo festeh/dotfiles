@@ -149,11 +149,30 @@ Singleton {
 
     Instantiator {
         model: server.trackedNotifications
-        delegate: Connections {
+        delegate: QtObject {
+            id: watcher
             required property var modelData
-            target: modelData
-            function onUpdated(): void { root.replaced(modelData.id); }
-            function onClosed(): void { root.forget(modelData.id); }
+            property bool ready: false
+            // The stock service has no replacement signal. Observe its public
+            // content, including action-label changes, and coalesce each update.
+            readonly property string content: modelData ? JSON.stringify([
+                modelData.appName, modelData.appIcon, modelData.summary, modelData.body,
+                modelData.urgency, modelData.expireTimeout,
+                modelData.actions.map(action => [action.identifier, action.text]),
+                modelData.hasActionIcons, modelData.resident, modelData.transient,
+                modelData.desktopEntry, modelData.image, modelData.hasInlineReply,
+                modelData.inlineReplyPlaceholder, modelData.hints
+            ]) : ""
+            function applyChanges(): void {
+                if (modelData && modelData.tracked) root.replaced(modelData.id);
+            }
+            onContentChanged: { if (ready) Qt.callLater(applyChanges); }
+            // Initial tracking and QML reload must preserve the original deadline.
+            Component.onCompleted: ready = true
+            property Connections closeConnection: Connections {
+                target: watcher.modelData
+                function onClosed(): void { root.forget(watcher.modelData.id); }
+            }
         }
     }
 

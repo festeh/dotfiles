@@ -1,12 +1,10 @@
 //@ pragma UseQApplication
 //@ pragma IconTheme Papirus-Dark
-//@ pragma Env QS_FALLBACK_ICON_THEME = Adwaita
 //@ pragma Env QS_SYMBOLIC_ICON_COLOR = #cdd6f4
 //@ pragma Env QT_QPA_PLATFORMTHEME = gtk3
 //@ pragma Env GTK_THEME = Adwaita:dark
 //@ pragma Env QT_IM_MODULE = compose
 //@ pragma Env QT_NO_XDG_DESKTOP_PORTAL = 1
-//@ pragma Env QS_WIDGET_STYLE_SHEET = menu.qss
 //@ pragma Env QS_HIDE_MISSING_ICONS = 1
 
 import QtQuick

@@ -1,0 +1,36 @@
+{
+  "QtGtk3Palettes": {
+    "SystemPalette": {
+      "Window": [{"ColorGroup":"All","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#313244","Width":0,"Height":0}}}],
+      "Base": [{"ColorGroup":"All","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#1e1e2e","Width":0,"Height":0}}}],
+      "Button": [{"ColorGroup":"All","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#313244","Width":0,"Height":0}}}],
+      "Light": [{"ColorGroup":"All","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#585b70","Width":0,"Height":0}}}],
+      "Midlight": [{"ColorGroup":"All","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#45475a","Width":0,"Height":0}}}],
+      "Mid": [{"ColorGroup":"All","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#45475a","Width":0,"Height":0}}}],
+      "Dark": [{"ColorGroup":"All","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#585b70","Width":0,"Height":0}}}],
+      "Shadow": [{"ColorGroup":"All","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#1e1e2e","Width":0,"Height":0}}}],
+      "WindowText": [
+        {"ColorGroup":"Active","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#cdd6f4","Width":0,"Height":0}}},
+        {"ColorGroup":"Inactive","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#cdd6f4","Width":0,"Height":0}}},
+        {"ColorGroup":"Disabled","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#6c7086","Width":0,"Height":0}}}
+      ],
+      "Text": [
+        {"ColorGroup":"Active","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#cdd6f4","Width":0,"Height":0}}},
+        {"ColorGroup":"Inactive","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#cdd6f4","Width":0,"Height":0}}},
+        {"ColorGroup":"Disabled","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#6c7086","Width":0,"Height":0}}}
+      ],
+      "ButtonText": [
+        {"ColorGroup":"Active","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#cdd6f4","Width":0,"Height":0}}},
+        {"ColorGroup":"Inactive","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#cdd6f4","Width":0,"Height":0}}},
+        {"ColorGroup":"Disabled","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#6c7086","Width":0,"Height":0}}}
+      ],
+      "Highlight": [{"ColorGroup":"All","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#45475a","Width":0,"Height":0}}}],
+      "HighlightedText": [
+        {"ColorGroup":"Active","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#cba6f7","Width":0,"Height":0}}},
+        {"ColorGroup":"Inactive","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#cba6f7","Width":0,"Height":0}}},
+        {"ColorGroup":"Disabled","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#6c7086","Width":0,"Height":0}}}
+      ],
+      "Accent": [{"ColorGroup":"All","ColorScheme":"Unknown","SourceType":"Fixed","SourceData":{"FixedBrush":{"Color":"#cba6f7","Width":0,"Height":0}}}]
+    }
+  }
+}

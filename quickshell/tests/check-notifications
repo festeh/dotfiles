@@ -32,11 +32,12 @@ def call(method, parameters=None):
     pump()
     return result.unpack()
 
-def notify(summary='Test notification', urgency=1, replaces=0, actions=(), hints=None, timeout=-1):
+def notify(summary='Test notification', urgency=1, replaces=0, actions=(), hints=None, timeout=-1,
+        body='<b>Literal & body</b>'):
     values = {'urgency': GLib.Variant('y', urgency)}
     values.update(hints or {})
     return call('Notify', GLib.Variant('(susssasa{sv}i)',
-        ('Notification fixture', replaces, 'dialog-information', summary, '<b>Literal & body</b>',
+        ('Notification fixture', replaces, 'dialog-information', summary, body,
          list(actions), values, timeout)))[0]
 
 with tempfile.TemporaryDirectory(prefix='quickshell-notifications-') as temporary:
@@ -91,9 +92,14 @@ with tempfile.TemporaryDirectory(prefix='quickshell-notifications-') as temporar
             assert first['body'] == '<b>Literal & body</b>'
             assert first['height'] > 60
             assert first['timeoutVisible'] and 0 <= first['elapsed'] < 0.1
+            first_updates = state['updates']
             time.sleep(0.08)
             assert notify(replaces=normal, timeout=5000) == normal
-            state = wait(lambda state: row(state, normal)['deadline'] > first['deadline'])
+            time.sleep(0.1)
+            state = ipc('status')
+            assert row(state, normal)['deadline'] == first['deadline'], 'Identical resend changed the deadline'
+            assert row(state, normal)['arrived'] == first['arrived'], 'Identical resend changed the arrival time'
+            assert state['updates'] == first_updates, 'Identical resend refreshed notification state'
             assert row(state, normal)['serial'] == first['serial'], 'Replacement recreated the card'
 
             ipc('finishAndResync', normal)
@@ -102,8 +108,10 @@ with tempfile.TemporaryDirectory(prefix='quickshell-notifications-') as temporar
 
             notify('Updated title', replaces=normal, actions=('default', 'Open', 'specific', 'Specific action'),
                 hints={'value': GLib.Variant('i', 42)})
-            state = wait(lambda state: row(state, normal)['summary'] == 'Updated title' and row(state, normal)['progress'] == 42)
+            state = wait(lambda state: row(state, normal)['summary'] == 'Updated title'
+                and row(state, normal)['progress'] == 42 and row(state, normal)['deadline'] > first['deadline'])
             assert row(state, normal)['serial'] == first['serial']
+            assert state['updates'] == first_updates + 1, 'One replacement refreshed state more than once'
             assert row(state, normal)['elapsed'] < 0.1, 'Replacement did not reset the completed border'
             assert row(state, normal)['deadline'] - row(state, normal)['arrived'] == 30000
             ipc('ui', normal, 'action')
@@ -111,6 +119,48 @@ with tempfile.TemporaryDirectory(prefix='quickshell-notifications-') as temporar
             assert ('ActionInvoked', (normal, 'specific')) in signals
             assert ('ActionInvoked', (normal, 'default')) not in signals
             assert ('NotificationClosed', (normal, 2)) in signals
+
+            normal = notify('Content-only changes', actions=('specific', 'Original action'), timeout=5000)
+            state = wait(lambda state: state['count'] == 1)
+            previous = row(state, normal)
+            notify('Content-only changes', replaces=normal, actions=('specific', 'Original action'),
+                timeout=5000, body='Changed body')
+            state = wait(lambda state: row(state, normal)['body'] == 'Changed body'
+                and row(state, normal)['deadline'] > previous['deadline'])
+            previous = row(state, normal)
+            notify('Content-only changes', replaces=normal, actions=('specific', 'Changed action'),
+                timeout=5000, body='Changed body')
+            state = wait(lambda state: row(state, normal)['actions'] == ['Changed action']
+                and row(state, normal)['deadline'] > previous['deadline'])
+            assert row(state, normal)['serial'] == previous['serial'], 'Action-label change recreated the card'
+            call('CloseNotification', GLib.Variant('(u)', (normal,)))
+            wait(lambda state: state['count'] == 0)
+
+            normal = notify('Progress-only changes', hints={'value': GLib.Variant('i', 10)}, timeout=5000)
+            state = wait(lambda state: state['count'] == 1)
+            previous = row(state, normal)
+            notify('Progress-only changes', replaces=normal, hints={'value': GLib.Variant('i', 20)}, timeout=5000)
+            state = wait(lambda state: row(state, normal)['progress'] == 20
+                and row(state, normal)['deadline'] > previous['deadline'])
+            call('CloseNotification', GLib.Variant('(u)', (normal,)))
+            wait(lambda state: state['count'] == 0)
+
+            normal = notify('Policy changes', timeout=0)
+            state = wait(lambda state: state['count'] == 1)
+            previous = row(state, normal)
+            assert not previous['critical'] and previous['deadline'] == 0
+            notify('Policy changes', replaces=normal, urgency=2, timeout=0)
+            state = wait(lambda state: row(state, normal)['critical'])
+            assert row(state, normal)['deadline'] == 0
+            notify('Policy changes', replaces=normal, urgency=2, timeout=5000)
+            state = wait(lambda state: row(state, normal)['deadline'] > 0)
+            assert row(state, normal)['critical'] and row(state, normal)['timeoutVisible']
+            assert row(state, normal)['deadline'] - row(state, normal)['arrived'] == 5000
+            notify('Policy changes', replaces=normal, urgency=1, timeout=5000)
+            state = wait(lambda state: not row(state, normal)['critical'])
+            assert row(state, normal)['serial'] == previous['serial'], 'Policy change recreated the card'
+            call('CloseNotification', GLib.Variant('(u)', (normal,)))
+            wait(lambda state: state['count'] == 0)
 
             normal = notify('Hover dismissal')
             wait(lambda state: state['count'] == 1)
@@ -196,7 +246,7 @@ with tempfile.TemporaryDirectory(prefix='quickshell-notifications-') as temporar
                 print('Deadline animation:', trace, flush=True)
                 assert not trace['backwards'], trace
                 assert trace['peak'] > 0.99, trace
-            print('Notifications passed: native ownership/capabilities, sender/default deadlines, persistent notifications, identical replacements, stable cards, literal body, progress, actions, hover, critical alerts, expiration reasons, reload and sender withdrawal.')
+            print('Notifications passed: native ownership/capabilities, sender/default deadlines, persistent notifications, identical resends preserve deadlines, changed content/actions/progress/urgency/timeouts reset once, stable cards, literal body, hover, critical alerts, expiration reasons, reload and sender withdrawal.')
         except Exception:
             log.flush(); log.seek(0)
             print(log.read())

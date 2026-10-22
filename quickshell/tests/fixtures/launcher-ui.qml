@@ -1,5 +1,4 @@
 //@ pragma IconTheme Papirus-Dark
-//@ pragma Env QS_FALLBACK_ICON_THEME = Adwaita
 
 import QtQuick
 import QtTest

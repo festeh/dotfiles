@@ -14,6 +14,8 @@ QtObject {
     }
 
     function refresh(): void {
-        clock.refresh();
+        // Re-enabling the stock clock samples the time and realigns its timer.
+        clock.enabled = false;
+        clock.enabled = true;
     }
 }
