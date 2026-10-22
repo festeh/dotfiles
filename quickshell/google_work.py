@@ -482,10 +482,16 @@ class Daemon:
             url = calendar_link(row["url"], account) if row else "https://calendar.google.com/calendar/r?" + urlencode({"authuser": account})
         if url:
             try:
-                self.Gio.AppInfo.launch_default_for_uri(url, None)
+                browser = self.Gio.AppInfo.get_default_for_uri_scheme("https")
+                # Browser diagnostics must not enter the JSON stdout transport.
+                flags = (self.GLib.SpawnFlags.SEARCH_PATH | self.GLib.SpawnFlags.STDOUT_TO_DEV_NULL
+                         | self.GLib.SpawnFlags.STDERR_TO_DEV_NULL)
+                if browser and browser.launch_uris_as_manager([url], None, flags):
+                    return
             except self.GLib.Error:
-                self.client.snapshot[kind]["message"] = "Could not open the browser. Try again."
-                self.publish()
+                pass
+            self.client.snapshot[kind]["message"] = "Could not open the browser. Try again."
+            self.publish()
 
     def command(self, value):
         action = value.get("action")

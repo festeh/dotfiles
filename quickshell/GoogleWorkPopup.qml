@@ -13,6 +13,8 @@ PopupWindow {
     readonly property bool mail: kind === "gmail"
     readonly property var state: mail ? GoogleWorkState.gmail : GoogleWorkState.calendar
     readonly property var rows: mail ? state.rows || [] : GoogleWorkState.calendarView.rows
+    readonly property bool emptyInbox: mail && rows.length === 0 && state.unread === 0
+        && state.status === "ok" && !state.loading && !GoogleWorkState.transportError
     signal dismissed()
     objectName: "work-popup-" + kind
     anchor.item: anchorItem
@@ -24,7 +26,7 @@ PopupWindow {
     anchor.margins.top: 6
     grabFocus: true
     color: "transparent"
-    implicitWidth: 440
+    implicitWidth: emptyInbox ? 320 : 440
     implicitHeight: Math.min(610, column.implicitHeight + 28)
     onVisibleChanged: if (!visible) dismissed()
     onBackingWindowVisibleChanged: if (backingWindowVisible) content.forceActiveFocus(Qt.PopupFocusReason)
@@ -37,9 +39,15 @@ PopupWindow {
         const start = new Date(mail ? row.date : row.start);
         const today = new Date().toDateString() === start.toDateString();
         if (mail) return Qt.formatDateTime(start, today ? "HH:mm" : "d MMM");
-        const prefix = today ? "Today" : Qt.formatDate(start, "ddd, d MMM");
-        return prefix + " · " + (row.allDay ? "All day" : Qt.formatTime(start, "HH:mm")
-            + "–" + Qt.formatTime(new Date(row.end), "HH:mm"));
+        return meetingDay(row) + " · " + meetingTime(row);
+    }
+    function meetingDay(row: var): string {
+        const start = new Date(row.start);
+        return new Date().toDateString() === start.toDateString() ? "Today" : Qt.formatDate(start, "ddd, d MMM");
+    }
+    function meetingTime(row: var): string {
+        return row.allDay ? "All day" : Qt.formatTime(new Date(row.start), "HH:mm")
+            + "–" + Qt.formatTime(new Date(row.end), "HH:mm");
     }
     Rectangle {
         anchors.fill: parent
@@ -68,7 +76,7 @@ PopupWindow {
         Column {
             id: column
             anchors { left: parent.left; right: parent.right; top: parent.top; margins: 14 }
-            spacing: 12
+            spacing: root.emptyInbox ? 6 : 12
             RowLayout {
                 width: parent.width
                 Text {
@@ -118,12 +126,39 @@ PopupWindow {
             }
             Text {
                 width: parent.width
-                visible: root.rows.length === 0
+                visible: root.rows.length === 0 && !root.emptyInbox
                 text: root.state.status === "loading" || root.state.loading ? "Loading…"
-                    : root.state.status === "ok" ? root.mail ? "Inbox caught up" : "No upcoming meetings"
+                    : root.state.status === "ok" ? root.mail ? "Loading…" : "No upcoming meetings"
                     : "Refresh or connect your work account."
                 color: Theme.subtext
                 font { family: Theme.fontFamily; pixelSize: 12 }
+            }
+            Item {
+                objectName: "work-empty-inbox"
+                width: parent.width
+                height: emptyMessage.implicitHeight + 20
+                visible: root.emptyInbox
+                Column {
+                    id: emptyMessage
+                    anchors.centerIn: parent
+                    width: parent.width - 32
+                    spacing: 6
+                    Text {
+                        width: parent.width
+                        text: "No unread mail"
+                        color: Theme.text
+                        horizontalAlignment: Text.AlignHCenter
+                        font { family: Theme.fontFamily; pixelSize: 13; weight: Font.DemiBold }
+                    }
+                    Text {
+                        width: parent.width
+                        text: "New messages will appear here."
+                        color: Theme.subtext
+                        horizontalAlignment: Text.AlignHCenter
+                        wrapMode: Text.WordWrap
+                        font { family: Theme.fontFamily; pixelSize: 11 }
+                    }
+                }
             }
             ListView {
                 id: list
@@ -147,37 +182,58 @@ PopupWindow {
                     required property int index
                     readonly property bool busy: (GoogleWorkState.gmail.busyIds || []).includes(modelData.id)
                     width: list.width - 8
-                    height: root.mail ? 124 : 72
-                    radius: 10
+                    height: root.mail ? 124 : entry.height
+                    radius: root.mail ? 10 : 8
                     color: list.currentIndex === index ? Theme.surface : "transparent"
                     Button {
                         id: entry
                         objectName: "work-entry-" + row.index
                         anchors { left: parent.left; right: parent.right; top: parent.top }
-                        height: root.mail ? 92 : parent.height
+                        height: root.mail ? 92 : contentItem.implicitHeight + topPadding + bottomPadding
                         padding: 10
                         hoverEnabled: true
                         focusPolicy: Qt.NoFocus
                         Accessible.name: root.mail ? row.modelData.subject : row.modelData.title
+                        Accessible.description: root.mail ? row.modelData.preview : root.rowTime(row.modelData)
                         onClicked: root.openRow(row.modelData)
-                        background: Rectangle { radius: 10; color: entry.hovered ? Theme.hover : "transparent" }
+                        background: Rectangle { radius: row.radius; color: entry.hovered ? Theme.hover : "transparent" }
                         contentItem: Column {
-                            spacing: 5
+                            spacing: root.mail ? 5 : 6
                             Text {
                                 width: parent.width
                                 text: root.mail ? row.modelData.sender : row.modelData.title
                                 textFormat: Text.PlainText
                                 color: Theme.text
                                 elide: Text.ElideRight
-                                font { family: Theme.fontFamily; pixelSize: 12; bold: true }
+                                maximumLineCount: root.mail ? 1 : 2
+                                wrapMode: root.mail ? Text.NoWrap : Text.WordWrap
+                                font { family: Theme.fontFamily; pixelSize: 12; weight: root.mail ? Font.Bold : Font.DemiBold }
                             }
                             Text {
                                 width: parent.width
-                                text: root.mail ? row.modelData.subject : root.rowTime(row.modelData)
+                                visible: root.mail
+                                text: row.modelData.subject || ""
                                 textFormat: Text.PlainText
                                 color: Theme.subtext
                                 elide: Text.ElideRight
                                 font { family: Theme.fontFamily; pixelSize: 11 }
+                            }
+                            RowLayout {
+                                width: parent.width
+                                visible: !root.mail
+                                spacing: 12
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: root.mail ? "" : root.meetingDay(row.modelData)
+                                    color: Theme.muted
+                                    elide: Text.ElideRight
+                                    font { family: Theme.fontFamily; pixelSize: 10 }
+                                }
+                                Text {
+                                    text: root.mail ? "" : root.meetingTime(row.modelData)
+                                    color: Theme.subtext
+                                    font { family: Theme.fontFamily; pixelSize: 10 }
+                                }
                             }
                             Text {
                                 width: parent.width

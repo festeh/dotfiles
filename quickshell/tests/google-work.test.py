@@ -1,6 +1,9 @@
 import importlib.util
 import json
+import os
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import Mock
@@ -140,6 +143,50 @@ class WorkTests(unittest.TestCase):
         url = work.calendar_link('https://calendar.google.com/calendar/event?eid=fixture&authuser=0', 'work@example.invalid')
         self.assertIn('authuser=work%40example.invalid', url)
         self.assertNotIn('authuser=0', url)
+
+    def test_opening_browser_keeps_its_output_out_of_the_snapshot_transport(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            apps = root / 'data/applications'
+            apps.mkdir(parents=True)
+            config = root / 'config'
+            config.mkdir()
+            browser, opened = root / 'browser.py', root / 'opened'
+            browser.write_text('import sys\nfrom pathlib import Path\n'
+                'print("Browser opened existing session",flush=True)\n'
+                'print("Browser diagnostic",file=sys.stderr,flush=True)\n'
+                'Path(' + repr(str(opened)) + ').touch()\n')
+            (apps / 'fixture.desktop').write_text('[Desktop Entry]\nType=Application\nName=Fixture browser\n'
+                'Exec=' + sys.executable + ' ' + str(browser) + ' %u\nMimeType=x-scheme-handler/https;\n')
+            (config / 'mimeapps.list').write_text('[Default Applications]\nx-scheme-handler/https=fixture.desktop\n')
+            env = dict(os.environ, XDG_DATA_HOME=str(root / 'data'), XDG_CONFIG_HOME=str(config),
+                XDG_DATA_DIRS=str(root / 'empty'), XDG_CONFIG_DIRS=str(root / 'empty'))
+            program = '''import importlib.util,json,sys,time
+from pathlib import Path
+from types import SimpleNamespace
+import gi
+gi.require_version("Gio", "2.0")
+from gi.repository import Gio,GLib
+spec=importlib.util.spec_from_file_location("work",sys.argv[1])
+work=importlib.util.module_from_spec(spec)
+spec.loader.exec_module(work)
+daemon=work.Daemon.__new__(work.Daemon)
+daemon.Gio,daemon.GLib=Gio,GLib
+daemon.client=SimpleNamespace(account="work@example.invalid",metadata={"message":{"thread":"fixture"}},
+    snapshot={"gmail":{"status":"ok"}},events=[])
+daemon.publish=lambda: print(json.dumps(daemon.client.snapshot),flush=True)
+daemon.open_browser("gmail","message")
+for _ in range(100):
+    if Path(sys.argv[2]).exists(): break
+    time.sleep(.01)
+assert Path(sys.argv[2]).exists(),"Browser was not launched"
+print(json.dumps(dict(type="snapshot",**daemon.client.snapshot)),flush=True)
+'''
+            result = subprocess.run([sys.executable, '-c', program, work.__file__, str(opened)],
+                env=env, capture_output=True, text=True, timeout=5, check=True)
+            self.assertEqual([json.loads(line) for line in result.stdout.splitlines()],
+                [{'type':'snapshot','gmail':{'status':'ok'}}])
+            self.assertEqual(result.stderr, '')
 
     def test_private_state_atomic_replace_remains_private(self):
         with tempfile.TemporaryDirectory() as temporary:
