@@ -98,6 +98,7 @@ SCALING = "1"
 USER = "dima"
 GTK_THEME = "catppuccin-mocha-mauve-standard+default"
 BIND_WORKSPACES_TO_EDP1 = "true"
+BORDER_SIZE = "0"
 
 [symlinks.mise]
 target = "mise/config.toml"
