@@ -2,6 +2,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import signal
 import subprocess
 import tempfile
 import unittest
@@ -101,6 +102,38 @@ class ProviderTests(unittest.TestCase):
             self.assertEqual(copy.call_args.args[0], ['wl-copy'])
             with self.assertRaises(ValueError): launcher.copy_clipboard('43;shutdown')
 
+    def test_copy_finishes_while_forked_clipboard_owner_keeps_stderr_open(self):
+        # wl-copy's parent exits after acquiring the selection, while its child
+        # retains stderr for the lifetime of the clipboard. Waiting for pipe EOF
+        # reports a timeout even though the copy already succeeded.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            command = root / 'wl-copy'
+            owner, copied = root / 'owner', root / 'copied'
+            command.write_text('#!/usr/bin/python3\nimport os,signal,sys\nfrom pathlib import Path\n'
+                'data=sys.stdin.buffer.read()\n'
+                'if os.fork(): os._exit(0)\n'
+                'Path(' + repr(str(copied)) + ').write_bytes(data)\n'
+                'Path(' + repr(str(owner)) + ').write_text(str(os.getpid()))\n'
+                'signal.pause()\n')
+            command.chmod(0o755)
+            raw = b'\x89PNG\x00\xff\x80\n'
+            try:
+                with patch.dict(os.environ, PATH=str(root) + os.pathsep + os.environ['PATH']), \
+                        patch.object(launcher, 'run', return_value=subprocess.CompletedProcess([], 0, raw, b'')):
+                    launcher.copy_clipboard('43')
+                import time
+                for _ in range(100):
+                    if owner.exists(): break
+                    time.sleep(.01)
+                pid = int(owner.read_text())
+                os.kill(pid, 0)
+                self.assertEqual(copied.read_bytes(), raw)
+            finally:
+                if owner.exists():
+                    try: os.kill(int(owner.read_text()), signal.SIGTERM)
+                    except ProcessLookupError: pass
+
     def test_shortcuts_group_and_ignore_mouse(self):
         binds = [dict(has_description=True, mouse=False, description='Close "window"', modmask=64, key='C'),
                  dict(has_description=True, mouse=False, description='Close "window"', modmask=65, key='Q'),
@@ -170,16 +203,45 @@ class ProviderTests(unittest.TestCase):
     def test_paste_is_addressed_and_aborts_after_focus_changes(self):
         backend = self.backend('clipboard', [{'id':'clip:42'}])
         with patch.object(launcher, 'copy_clipboard') as copy, \
-             patch.object(launcher, 'focus_matches', return_value=True), \
+             patch.object(launcher, 'focused_window', return_value={'address':'0xabcd','class':'example'}), \
              patch.object(launcher, 'run', return_value=subprocess.CompletedProcess([],0)) as dispatch:
             backend.activate({'category':'clipboard','id':'clip:42','paste':True,'target':'0xabcd'})
             copy.assert_called_once_with('42')
             self.assertIn('window="address:0xabcd"', dispatch.call_args.args[0][2])
         with patch.object(launcher, 'copy_clipboard'), \
-             patch.object(launcher, 'focus_matches', return_value=False), patch.object(launcher, 'run') as dispatch:
+             patch.object(launcher, 'focused_window', return_value=None), patch.object(launcher, 'run') as dispatch:
             backend.activate({'category':'clipboard','id':'clip:42','paste':True,'target':'0xabcd'})
             dispatch.assert_not_called()
             self.assertIn('Previous window', backend.emit.call_args.args[0]['message'])
+
+    def test_text_paste_uses_kitty_binding_and_images_keep_application_binding(self):
+        for window, kind, modifiers in (
+                ({'class':'kitty'}, 'text', 'CTRL SHIFT'),
+                ({'class':'custom','initialClass':'kitty'}, 'text', 'CTRL SHIFT'),
+                ({'class':'net.kovidgoyal.kitty'}, 'text', 'CTRL SHIFT'),
+                ({'class':'kitty'}, 'image', 'CTRL'),
+                ({'class':'org.example.Editor'}, 'text', 'CTRL')):
+            with self.subTest(window=window, kind=kind):
+                backend = self.backend('clipboard', [{'id':'clip:42','clipboardKind':kind}])
+                with patch.object(launcher, 'copy_clipboard'), \
+                        patch.object(launcher, 'focused_window', return_value=window), \
+                        patch.object(launcher, 'run', return_value=subprocess.CompletedProcess([],0)) as dispatch:
+                    backend.activate({'category':'clipboard','id':'clip:42','paste':True,'target':'0xabcd'})
+                    code = dispatch.call_args.args[0][2]
+                    self.assertIn('mods="' + modifiers + '"', code)
+                    self.assertIn('window="address:0xabcd"', code)
+                    self.assertEqual(backend.emit.call_args.args[0]['type'], 'activated')
+
+    def test_focused_window_waits_for_exact_target_and_returns_its_metadata(self):
+        target = {'address':'0xabcd','class':'kitty','pid':123}
+        responses = [subprocess.CompletedProcess([],0,json.dumps({'address':'0x1234'}).encode()),
+            subprocess.CompletedProcess([],0,json.dumps(target).encode())]
+        with patch.object(launcher, 'run', side_effect=responses) as query, \
+                patch.object(launcher.time, 'sleep'):
+            self.assertEqual(launcher.focused_window('0xabcd'), target)
+            self.assertEqual(query.call_count, 2)
+            self.assertIsNone(launcher.focused_window('invalid-address'))
+            self.assertEqual(query.call_count, 2)
 
     def test_idle_lease_is_read_back_before_success(self):
         backend = self.backend('widgets', [{'id':'idle:auto','selected':True}, {'id':'idle:awake','selected':False}])

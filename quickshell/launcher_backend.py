@@ -83,16 +83,29 @@ def shortcut_rows(binds):
             for description, keys in grouped.items()]
 
 
-def focus_matches(address):
+def focused_window(address):
     if not re.fullmatch(r"0x[0-9a-fA-F]+", address or ""):
-        return False
+        return None
     # Bounded, action-only wait for the compositor to restore the previous focus.
     for _ in range(20):
         result = run(["hyprctl", "-j", "activewindow"])
-        if result.returncode == 0 and json.loads(result.stdout or b"{}").get("address") == address:
-            return True
+        if result.returncode == 0:
+            window = json.loads(result.stdout or b"{}")
+            if window.get("address") == address:
+                return window
         time.sleep(0.02)
-    return False
+    return None
+
+
+def kitty_window(window):
+    if any(window.get(field, "").lower() in {"kitty", "net.kovidgoyal.kitty"}
+            for field in ("class", "initialClass")):
+        return True
+    # Custom Kitty app IDs (for example, book terminals) still use Kitty paste.
+    try:
+        return Path(f"/proc/{window.get('pid', 0)}/comm").read_text().strip() == "kitty"
+    except OSError:
+        return False
 
 
 def copy_clipboard(number):
@@ -102,8 +115,10 @@ def copy_clipboard(number):
     data = run(["cliphist", "decode", number], timeout=10)
     if data.returncode:
         raise RuntimeError("Clipboard entry is no longer available")
+    # The forked clipboard owner inherits stderr. A captured pipe would keep
+    # communicate() waiting until the selection is replaced, despite success.
     copied = subprocess.run(["wl-copy"], input=data.stdout, stdout=subprocess.DEVNULL,
-                            stderr=subprocess.PIPE, timeout=5)
+                            stderr=subprocess.DEVNULL, timeout=5)
     if copied.returncode:
         raise RuntimeError("Could not copy the selected item")
 
@@ -524,15 +539,19 @@ class Backend:
                 copy_clipboard(identity.removeprefix("clip:"))
                 if command.get("paste"):
                     address = command.get("target", "")
-                    if not focus_matches(address):
+                    window = focused_window(address)
+                    if not window:
                         raise RuntimeError("Copied. Previous window is unavailable for paste.")
+                    # Ctrl+V reaches the TUI (Codex uses it for image paste).
+                    # Text must use Kitty's own clipboard paste binding instead.
+                    modifiers = "CTRL SHIFT" if row.get("clipboardKind") == "text" and kitty_window(window) else "CTRL"
                     selector = json.dumps("address:" + address)
-                    code = 'hl.dispatch(hl.dsp.send_shortcut({mods="CTRL",key="v",window=' + selector + '}))'
+                    code = 'hl.dispatch(hl.dsp.send_shortcut({mods="' + modifiers + '",key="v",window=' + selector + '}))'
                     if run(["hyprctl", "eval", code]).returncode:
                         raise RuntimeError("Copied, but could not paste into the previous window.")
             elif category == "shortcuts":
                 address = command.get("target", "")
-                if address and not focus_matches(address):
+                if address and not focused_window(address):
                     raise RuntimeError("Previous window is no longer focused. Try the shortcut again.")
                 description = identity.removeprefix("shortcut:")
                 code = "assert(shortcuts[" + json.dumps(description, ensure_ascii=False) + "], 'Shortcut changed'); hl.dispatch(shortcuts[" + json.dumps(description, ensure_ascii=False) + "])"

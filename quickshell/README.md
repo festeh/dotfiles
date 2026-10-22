@@ -56,6 +56,9 @@ Super+R command binding is retired. Clipboard uses Enter to copy and close, or
 Shift+Enter to copy and paste into the original window. The launcher hides before
 dispatching actions. Paste uses Hyprland's addressed `send_shortcut` and checks
 that the original window regained focus; it never types into an unrelated window.
+Text pasted into Kitty uses its Ctrl+Shift+V binding, so terminal apps receive
+text rather than Ctrl+V (which Codex treats as image paste). Other apps and image
+entries use Ctrl+V.
 
 Apps use GIO's desktop catalog, visibility rules, change monitor and launch API,
 preserving desktop field codes, working directories, terminal apps and D-Bus
