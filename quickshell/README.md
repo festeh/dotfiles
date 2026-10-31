@@ -551,9 +551,22 @@ private Unix datagram socket. Tab/pane switches, command start/stop, closes and
 meaningful title changes refresh inventory in-process after a short coalescing
 delay. Shell integration is enabled in the supplied Kitty config. Spinner and
 blinking permission frames do not rescan processes or publish repeated states.
-Healthy watched instances have no periodic timer or `/proc` polling. Only an
+Healthy watched instances have no periodic inventory or `/proc` polling. Only an
 instance that rejects watcher attachment after three attempts falls back to a
 five-second snapshot; a valid watcher snapshot ends that fallback.
+
+Claude panes also show compact agent, shell and monitor counts from Claude's
+native footer. One two-second timer runs inside each Kitty instance containing
+Claude panes and stops when none remain. It reads at most eight bottom screen
+rows, joins soft-wrapped lines and recognizes only the final footer. Screen text
+stays inside Kitty; only three counts or an unavailable value cross the existing
+socket, and unchanged samples produce no messages. No subprocess, transcript
+access, extra daemon, Claude setting or native patch is needed.
+The parser follows Claude Code 2.1.309's English footer; check it after Claude
+changes its UI. Hidden or unrecognized footers hide the badges rather than
+reporting zero. Recognized empty footers clear them. Nonzero counts use small
+icons beside the session label, with the full breakdown on hover; they remain
+separate from the main session's status color.
 
 Each agent pane has its own app icon and static 18×2px overline: green for idle,
 blue for running, and amber for needs action. Unknown states have no overline.

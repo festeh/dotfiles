@@ -25,6 +25,8 @@ def handle_result(args, data, target_window_id, boss):
     global_callbacks = global_watchers()
     previous = watcher_modules.get(path)
     if not isinstance(previous, dict) or previous.get("_quickshell_revision") != revision:
+        if isinstance(previous, dict) and callable(previous.get("shutdown")):
+            previous["shutdown"]()
         # Replace our callbacks after an update; keep every other Kitty watcher.
         watchers_to_clean = [global_callbacks, *(window.watchers for window in boss.window_id_map.values())]
         for current in watchers_to_clean:

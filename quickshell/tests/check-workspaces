@@ -201,7 +201,8 @@ with tempfile.TemporaryDirectory(prefix="quickshell-workspace-check-") as direct
         print('PASS: idle/running/needs-action colors, matched line lengths, and no non-agent marker', flush=True)
 
         panes = [dict(agent='codex', pane=1, tab=1, state='idle', active=False),
-            dict(agent='claude', pane=2, tab=2, state='waiting', active=True),
+            dict(agent='claude', pane=2, tab=2, state='waiting', active=True,
+                activity=dict(agents=1, shells=2, monitors=2)),
             dict(agent='codex', pane=3, tab=2, state='running', active=False)]
         for item, name in zip(panes, ['shell/tray', 'shell/auth', 'shell/auth·2']):
             item.update(label=name, fullLabel=name, project='shell')
@@ -215,6 +216,11 @@ with tempfile.TemporaryDirectory(prefix="quickshell-workspace-check-") as direct
         assert [b['label'] for b in buttons] == ['shell/tray', 'shell/auth', 'shell/auth·2']
         assert all(b['width'] > 28 for b in buttons)
         assert 'shell/auth' in buttons[1]['description']
+        snapshot = wait_for(lambda s: windows(s)['a1']['agents'][1]['badgeIconsReady'], 'activity badge icons')
+        assert windows(snapshot)['a1']['agents'][1]['badges'] == [
+            dict(kind='agents', count=1), dict(kind='shells', count=2), dict(kind='monitors', count=2)]
+        assert '1 agent' in windows(snapshot)['a1']['agents'][1]['description']
+        assert '2 shells' in windows(snapshot)['a1']['agents'][1]['description']
         assert all(button['source'].endswith('/assets/' + agent['agent'] + '.svg')
             for button, agent in zip(buttons, panes))
         panes[1]['state'] = 'idle'
@@ -222,6 +228,16 @@ with tempfile.TemporaryDirectory(prefix="quickshell-workspace-check-") as direct
         changed = wait_for(lambda s: windows(s)['a1']['agents'][1]['state'] == 'idle', 'individual status update')
         assert [b['delegate'] for b in windows(changed)['a1']['agents']] == [b['delegate'] for b in buttons]
         assert [b['width'] for b in windows(changed)['a1']['agents']] == [b['width'] for b in buttons]
+        panes[1]['activity'] = dict(agents=0, shells=0, monitors=0)
+        call('agentPanes', 'a1', base64.b64encode(json.dumps(panes).encode()).decode())
+        cleared = wait_for(lambda s: not windows(s)['a1']['agents'][1]['badges'], 'zero activity hides badges')
+        assert windows(cleared)['a1']['agents'][1]['width'] < buttons[1]['width']
+        assert windows(cleared)['a1']['agents'][1]['delegate'] == buttons[1]['delegate']
+        assert 'No background tasks' in windows(cleared)['a1']['agents'][1]['description']
+        panes[1]['activity'] = None
+        call('agentPanes', 'a1', base64.b64encode(json.dumps(panes).encode()).decode())
+        wait_for(lambda s: 'Background counts unavailable' in windows(s)['a1']['agents'][1]['description'],
+            'unavailable activity stays distinct from zero')
         assert call('click', 'workspace-agent-a1-2') == 'true'
         deadline = time.monotonic() + 3
         while not reader_requests()[-1].get('activate'):

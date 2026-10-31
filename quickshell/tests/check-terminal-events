@@ -23,11 +23,15 @@ async def main():
         program = ('#!/usr/bin/python3\nimport sys\n'
             'print("\\x1b]0;Test agent\\x07",end="",flush=True)\n'
             'while True:\n with open(sys.argv[1]) as control:\n'
-            '  for line in control: print("\\x1b]0;"+line.strip()+"\\x07",end="",flush=True)\n')
+            '  for line in control:\n'
+            '   value=line.rstrip("\\n")\n'
+            '   if value.startswith("FOOTER:"):\n'
+            '    print("\\x1b7\\x1b[999;1H\\x1b[2K"+value[7:]+"\\x1b8",end="",flush=True)\n'
+            '   else: print("\\x1b]0;"+value+"\\x07",end="",flush=True)\n')
         for name in ("codex", "claude", "agy"):
             (root / name).write_text(program)
             (root / name).chmod(0o700)
-        for name in ("one", "two", "three", "four"):
+        for name in ("one", "two", "three", "four", "five"):
             os.mkfifo(root / name)
         log = (root / "kitty.log").open("w+")
         kitty = await asyncio.create_subprocess_exec("kitty", "--config", "NONE", "--class", "quickshell-terminal-check",
@@ -63,6 +67,9 @@ async def main():
                 os.write(descriptor, (value + "\n").encode())
             finally:
                 os.close(descriptor)
+
+        def activity(value, pane):
+            return next(agent.get('activity') for agent in value['windows']['a1']['agents'] if agent['pane'] == pane)
 
         async def hook(pane, event):
             process = await asyncio.create_subprocess_exec("/usr/bin/python3", str(source / "agent-hook"), "claude",
@@ -111,6 +118,30 @@ async def main():
             await wait(lambda value: state(value) == "running" and value["windows"]["a1"]["agents"][-1]["state"] == "idle")
             title("two", "Test agent")
             await wait(lambda value: state(value) == "idle")
+            first = latest['windows']['a1']['agents'][0]['pane']
+            await kitty_request(kitty.pid, "focus-window", {"match": f"id:{first}"})
+            # No hook or title changes: the inactive pane's footer is the source.
+            title('three', 'FOOTER:⏵⏵ bypass permissions on · 2 shells, 2 monitors')
+            counts = dict(agents=0, shells=2, monitors=2)
+            await wait(lambda value: activity(value, third) == counts and state(value) == 'idle')
+            assert 'bypass permissions' not in json.dumps(latest)
+            title('three', 'FOOTER:⏵⏵ bypass permissions on · 1 shell')
+            await wait(lambda value: activity(value, third) == dict(agents=0, shells=1, monitors=0))
+            title('three', 'FOOTER:Choose an option')
+            await wait(lambda value: activity(value, third) is None)
+            title('three', 'FOOTER:⏵⏵ bypass permissions on')
+            await wait(lambda value: activity(value, third) == dict(agents=0, shells=0, monitors=0))
+            second_claude = int(await kitty_request(kitty.pid, "launch",
+                dict(args=[str(root / "claude"), str(root / "five")], type="tab", keep_focus=True)))
+            await wait(lambda value: value['health']['agents'] == 4)
+            title('five', '✳ Secondary session')
+            title('five', 'FOOTER:⏵⏵ bypass permissions on · 3 agents')
+            await wait(lambda value: activity(value, second_claude) == dict(agents=3, shells=0, monitors=0)
+                and activity(value, third) == dict(agents=0, shells=0, monitors=0))
+            await kitty_request(kitty.pid, "close-window", {"match": f"id:{second_claude}"})
+            await wait(lambda value: value['health']['agents'] == 3 and state(value) == 'idle')
+            title('three', 'FOOTER:⏵⏵ bypass permissions on · 2 monitors')
+            await wait(lambda value: activity(value, third) == dict(agents=0, shells=0, monitors=2))
             fourth = int(await kitty_request(kitty.pid, "launch", dict(args=[str(root / "agy"), str(root / "four")], type="window", keep_focus=True)))
             await wait(lambda value: value["health"]["agents"] == 4)
             def fourth_state(value, expected):
@@ -131,18 +162,22 @@ async def main():
             await start()
             await wait(lambda value: value["health"]["watched"] == 1 and value["health"]["agents"] == 3
                 and value['windows']['a1']['agents'][0]['fullLabel'] == 'Refactor upload cache'
+                and activity(value, third) == dict(agents=0, shells=0, monitors=2)
                 and any(agent['pane'] == third and agent['label'] == 'shell/auth'
                     for agent in value['windows']['a1']['agents']))
             title("two", "⠋ Test agent")
             await wait(lambda value: state(value) == "running")
             title("two", "\n".join(frame + " Test agent" for frame in ["⠙", "⠹", "⠸", "⠼"] * 25))
             try:
-                line = await asyncio.wait_for(worker.stdout.readline(), 1.2)
+                line = await asyncio.wait_for(worker.stdout.readline(), 2.3)
                 raise AssertionError("Spinner-only frames or idle polling published: " + line.decode())
             except asyncio.TimeoutError:
                 pass
             assert latest["health"]["requests"] == 1, latest["health"]
-            print("PASS: existing-pane attachment, inactive tabs, split panes, exact-pane activation, project labels, per-pane rename, label persistence, hook events, Antigravity title states, status precedence, pane removal, restart recovery and zero spinner/idle queries.")
+            await kitty_request(kitty.pid, "close-window", {"match": f"id:{third}"})
+            await wait(lambda value: value['health']['agents'] == 2
+                and value['health']['claudeActivity']['known'] == value['health']['claudeActivity']['unknown'] == 0)
+            print("PASS: existing-pane attachment, inactive tabs, split panes, exact-pane activation, labels, hooks, Antigravity states, Claude footer-only starts/stops, hidden/empty footers, independent Claude panes, count recovery after restart and zero spinner/unchanged-footer queries.")
         except Exception:
             print("Last synthetic state:", latest)
             log.seek(0)

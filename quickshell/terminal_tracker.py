@@ -13,7 +13,7 @@ import struct
 import sys
 import time
 
-from terminal_protocol import aggregate, process_identity, runtime_directory, snapshot, socket_path, STATES
+from terminal_protocol import activity_counts, aggregate, process_identity, runtime_directory, snapshot, socket_path, STATES
 from terminal_labels import LABEL_VARIABLE, clean_label, context as label_context, display_label, make_context, project_name
 
 FRAME, END = b"\x1bP@kitty-cmd", b"\x1b\\"
@@ -121,6 +121,20 @@ class Tracker:
             for pane_id in present - record["hooks"].keys():
                 record["hooks"][pane_id] = self.read_hook(pid, pane_id, record)
             self.prepare_labels()
+        elif kind == "activity":
+            value = activity_counts(message.get("activity"))
+            if message.get("activity") is not None and value is None:
+                return
+            changed = False
+            for window in record["windows"]:
+                for pane in window["panes"]:
+                    if (pane["id"] == message.get("pane") and pane["agent"] == "claude"
+                            and pane.get("agentPid") == message.get("agentPid")
+                            and pane.get("activity") != value):
+                        pane["activity"] = value
+                        changed = True
+            if not changed:
+                return
         elif kind in {"state", "close"}:
             pane_id = message.get("pane")
             for window in record["windows"]:
@@ -275,7 +289,8 @@ class Tracker:
                     agents.append({"agent": pane["agent"], "pane": pane["id"], "tab": pane["tab"],
                         "active": pane["active"], "state": self.hook_state(pid, pane, record),
                         "label": display_label(label) if label else "", "fullLabel": label["label"] if label else "",
-                        "project": label["project"] if label else ""})
+                        "project": label["project"] if label else "",
+                        "activity": activity_counts(pane.get("activity")) if pane["agent"] == "claude" else None})
                 result[client["address"]] = {"kitty": True, "programs": active["programs"] if active else [],
                     "agents": agents, "agentState": aggregate(agents)}
         return result
@@ -285,11 +300,16 @@ class Tracker:
         windows = self.windows()
         states = {state or "unknown": sum(agent["state"] == state for window in windows.values() for agent in window["agents"])
             for state in ("idle", "running", "waiting", "")}
+        claude = [agent for window in windows.values() for agent in window["agents"] if agent["agent"] == "claude"]
+        activity = {"known": sum(agent["activity"] is not None for agent in claude),
+            "unknown": sum(agent["activity"] is None for agent in claude),
+            **{kind: sum((agent["activity"] or {}).get(kind, 0) for agent in claude)
+                for kind in ("agents", "shells", "monitors")}}
         value = {"windows": windows, "health": {"instances": len(self.instances),
             "watched": sum(record["watched"] for record in self.instances.values()),
             "panes": sum(len(window["panes"]) for record in self.instances.values() for window in record["windows"]),
             "agents": sum(len(window["agents"]) for window in windows.values()), "requests": self.requests,
-            "states": states}}
+            "states": states, "claudeActivity": activity}}
         if value != self.previous:
             print(json.dumps(value, separators=(",", ":")), flush=True)
             self.previous = value

@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from types import ModuleType, SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
@@ -35,6 +36,34 @@ def layout():
 
 
 class ProtocolTests(unittest.TestCase):
+    def test_claude_footer_counts_require_the_final_footer_and_handle_zero(self):
+        zero = dict(agents=0, shells=0, monitors=0)
+        for mode in ('⏵⏵ bypass permissions on', '⏵⏵ accept edits on',
+                '⏸ plan mode on', 'auto mode', '? for shortcuts'):
+            self.assertEqual(protocol.claude_footer_counts(['Private output: 9 shells', mode, '']), zero)
+            self.assertEqual(protocol.claude_footer_counts([mode + ' · 1 agent, 2 shells, 3 monitors']),
+                dict(agents=1, shells=2, monitors=3))
+        self.assertEqual(protocol.claude_footer_counts(
+            ['⏵⏵ bypass permissions on (shift+tab to cycle) · PR #123 · 1 shell']),
+            dict(agents=0, shells=1, monitors=0))
+        self.assertEqual(protocol.claude_footer_counts(['2 shells, 2 monitors']),
+            dict(agents=0, shells=2, monitors=2))
+        for lines in ([], [''], ['Private output mentions 2 shells and 2 monitors'],
+                ['⏵⏵ bypass permissions on · 2 shells', 'Choose an option'],
+                ['⏵⏵ bypass permissions on · -1 shell'],
+                ['⏵⏵ bypass permissions on · 10000 shells'],
+                ['⏵⏵ bypass permissions on · 1 shell, 2 shells']):
+            self.assertIsNone(protocol.claude_footer_counts(lines))
+
+    def test_activity_records_accept_only_bounded_counts(self):
+        for value in (None, {}, {'shells': 2}, dict(agents=True, shells=0, monitors=0),
+                dict(agents=-1, shells=0, monitors=0), dict(agents=0, shells='2', monitors=0),
+                dict(agents=0, shells=10000, monitors=0),
+                dict(agents=0, shells=1, monitors=0, text='private')):
+            self.assertIsNone(protocol.activity_counts(value))
+        value = dict(agents=2, shells=3, monitors=1)
+        self.assertEqual(protocol.activity_counts(value), value)
+
     def test_claude_session_names_strip_activity_and_skip_startup_titles(self):
         for marker in ('✳', '✳️', '✻', '⠋', '⠙', '◐', '◓', ''):
             self.assertEqual(protocol.session_name('claude', marker + ' Refactor upload cache'), 'Refactor upload cache')
@@ -202,6 +231,50 @@ class LabelTests(unittest.TestCase):
         self.assertIsNone(protocol.snapshot(native)[0]['panes'][0]['context'])
 
 
+class FooterWatcherTests(unittest.TestCase):
+    def setUp(self):
+        spec = importlib.util.spec_from_file_location('footer_watcher', config.parent / 'kitty/terminal-watcher.py')
+        self.watcher = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.watcher)
+
+    def screen(self, lines, continued=()):
+        return SimpleNamespace(lines=len(lines), line=lambda index: lines[index],
+            linebuf=SimpleNamespace(is_continued=lambda index: index in continued))
+
+    def test_wrapped_footer_lines_are_joined_without_exposing_screen_text(self):
+        native = SimpleNamespace(screen=self.screen(
+            ['private message', '⏵⏵ bypass permissions on · 2 shells, 3 moni', 'tors'], (2,)))
+        self.assertEqual(self.watcher.footer_counts(native), dict(agents=0, shells=2, monitors=3))
+        native.screen = self.screen(['discarded'] + ['continuation'] * 8, tuple(range(1, 9)))
+        self.assertIsNone(self.watcher.footer_counts(native))
+        self.assertIsNone(self.watcher.footer_counts(SimpleNamespace()))
+
+    def test_one_timer_while_claude_exists_and_change_only_updates(self):
+        watcher = self.watcher
+        watcher._panes = {2: dict(id=2, agent='claude', agentPid=22)}
+        native = SimpleNamespace(screen=self.screen(['⏵⏵ bypass permissions on · 2 monitors']))
+        boss = SimpleNamespace(window_id_map={2: native})
+        timers = SimpleNamespace(add_timer=Mock(return_value=7), remove_timer=Mock())
+        with patch.dict(sys.modules, {'kitty': ModuleType('kitty'), 'kitty.fast_data_types': timers}), \
+                patch.object(watcher, 'send') as send:
+            watcher.sync_activity_timer(boss)
+            watcher.sync_activity_timer(boss)
+            self.assertEqual(timers.add_timer.call_count, 1)
+            self.assertEqual(timers.add_timer.call_args.args[1:], (2.0, True))
+            watcher.sample_activity(boss)
+            watcher.sample_activity(boss)
+            self.assertEqual(send.call_count, 1)
+            self.assertEqual(send.call_args.args[0],
+                dict(event='activity', pane=2, agentPid=22, activity=dict(agents=0, shells=0, monitors=2)))
+            native.screen = self.screen(['Choose an option'])
+            watcher.sample_activity(boss)
+            self.assertIsNone(send.call_args.args[0]['activity'])
+            watcher._panes = {3: dict(agent='codex')}
+            watcher.sync_activity_timer(boss)
+            watcher.shutdown()
+            timers.remove_timer.assert_called_once_with(7)
+
+
 class HookTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
@@ -268,6 +341,25 @@ class TrackerTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(model.windows()["a1"]["agentState"], "running")
         model.event({"pid": 123, "start": "42", "event": "close", "pane": 3})
         self.assertEqual(model.windows()["a1"]["agentState"], "idle")
+
+    async def test_activity_updates_check_process_ownership_and_preserve_session_state(self):
+        model = await self.model()
+        model.schedule_publish = Mock()
+        value = dict(agents=1, shells=2, monitors=3)
+        event = dict(pid=123, start='42', event='activity', pane=2, agentPid=22, activity=value)
+        model.event(event)
+        agent = model.windows()['a1']['agents'][1]
+        self.assertEqual(agent['activity'], value)
+        self.assertEqual(agent['state'], 'idle')
+        model.schedule_publish.reset_mock()
+        for changed in (event, dict(event, agentPid=99),
+                dict(event, activity=dict(agents=0, shells=-1, monitors=0))):
+            model.event(changed)
+        model.schedule_publish.assert_not_called()
+        self.assertEqual(model.windows()['a1']['agents'][1]['activity'], value)
+        model.event(dict(event, activity=None))
+        self.assertIsNone(model.windows()['a1']['agents'][1]['activity'])
+        self.assertEqual(model.requests, 0)
 
     async def test_labels_discover_once_and_survive_metadata_and_state_changes(self):
         model = await self.model()

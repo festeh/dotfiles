@@ -22,6 +22,9 @@ Button {
     readonly property string agentState: agent ? agent.state : ""
     readonly property string agentDescription: agent ? TerminalState.describeAgent(agent) : ""
     readonly property string agentLabel: agent ? agent.label || "" : ""
+    readonly property var activityBadges: agent && agent.agent === "claude" && agent.activity
+        ? ["agents", "shells", "monitors"].filter(kind => agent.activity[kind] > 0)
+            .map(kind => ({kind: kind, count: agent.activity[kind]})) : []
     readonly property bool labelEditorOpen: TerminalState.labelEditorOwner === root
     readonly property var labelEditor: labelLoader.item
     readonly property string caption: Logic.label(workspace)
@@ -38,6 +41,7 @@ Button {
     objectName: windowButton ? "workspace-window-" + (toplevel ? toplevel.address : "")
         : "workspace-number-" + (workspace ? workspace.address : "")
     implicitWidth: windowButton ? 28 + (agentLabel ? Math.min(121, labelMetrics.advanceWidth) + 4 : 0)
+        + (activityBadges.length ? activityRow.implicitWidth + 6 : 0)
         : Math.max(12, Math.min(90, captionMetrics.advanceWidth + 4))
     implicitHeight: 32
     padding: 0
@@ -106,7 +110,7 @@ Button {
             objectName: "agent-label"
             x: 28
             anchors.verticalCenter: parent.verticalCenter
-            width: Math.max(0, parent.width - x - 4)
+            width: Math.max(0, parent.width - x - 4 - (root.activityBadges.length ? activityRow.implicitWidth + 6 : 0))
             visible: root.agentLabel.length > 0
             text: root.agentLabel
             textFormat: Text.PlainText
@@ -114,6 +118,33 @@ Button {
             maximumLineCount: 1
             color: Theme.subtext
             font: labelMetrics.font
+        }
+        Row {
+            id: activityRow
+            objectName: "agent-activity-badges"
+            anchors { right: parent.right; rightMargin: 4; verticalCenter: parent.verticalCenter }
+            spacing: 6
+            visible: root.activityBadges.length > 0
+            Repeater {
+                model: root.activityBadges
+                delegate: Row {
+                    id: badge
+                    required property var modelData
+                    objectName: "agent-activity-" + modelData.kind
+                    spacing: 2
+                    IconImage {
+                        objectName: "agent-activity-icon-" + badge.modelData.kind
+                        anchors.verticalCenter: parent.verticalCenter
+                        implicitSize: 12
+                        source: Qt.resolvedUrl("assets/activity-" + badge.modelData.kind + ".svg")
+                    }
+                    Text {
+                        text: badge.modelData.count > 99 ? "99+" : String(badge.modelData.count)
+                        color: Theme.subtext
+                        font { family: Theme.fontFamily; pixelSize: 10 }
+                    }
+                }
+            }
         }
         Item {
             width: root.windowButton ? 28 : parent.width

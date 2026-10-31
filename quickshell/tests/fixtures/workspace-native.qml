@@ -53,6 +53,10 @@ ShellRoot {
                             selected: root.agentButton(w, index, agent.pane).selected,
                             state: root.agentButton(w, index, agent.pane).agentState,
                             label: root.agentButton(w, index, agent.pane).agentLabel,
+                            badges: root.agentButton(w, index, agent.pane).activityBadges,
+                            badgeIconsReady: root.agentButton(w, index, agent.pane).activityBadges.every(badge =>
+                                (root.find(root.agentButton(w, index, agent.pane),
+                                    'agent-activity-icon-' + badge.kind) || {}).status === Image.Ready),
                             width: root.agentButton(w, index, agent.pane).width,
                             description: root.agentButton(w, index, agent.pane).agentDescription,
                             delegate: String(root.agentButton(w, index, agent.pane)),

@@ -47,8 +47,17 @@ QtObject {
         const states = {idle: "Idle", running: "Running", waiting: "Needs action"};
         const name = agent.fullLabel ? agent.fullLabel
             + (agent.project && agent.project !== agent.fullLabel ? " · " + agent.project : "") + " · " : "";
-        return name + "Tab " + agent.tab + " · pane " + agent.pane + " · "
+        let description = name + "Tab " + agent.tab + " · pane " + agent.pane + " · "
             + (states[agent.state] || "Status unavailable");
+        if (agent.agent === "claude") {
+            if (!agent.activity) description += " · Background counts unavailable";
+            else {
+                const counts = ["agents", "shells", "monitors"].filter(kind => agent.activity[kind] > 0)
+                    .map(kind => agent.activity[kind] + " " + (agent.activity[kind] === 1 ? kind.slice(0, -1) : kind));
+                description += " · " + (counts.join(" · ") || "No background tasks");
+            }
+        }
+        return description;
     }
 
     function renameAgent(window, pane, label): bool {

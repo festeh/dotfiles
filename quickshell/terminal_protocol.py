@@ -8,6 +8,44 @@ from terminal_labels import LABEL_VARIABLE, clean_label, context as label_contex
 
 SHELLS = {"sh", "bash", "zsh", "fish", "dash", "nu", "xonsh"}
 STATES = {"idle", "running", "waiting"}
+ACTIVITY_KINDS = ("agents", "shells", "monitors")
+_FOOTER_MODE = re.compile(
+    r"^(?:(?:bypass permissions|accept edits|plan mode)(?: on)?|auto(?: mode)?|default mode)"
+    r"(?=\s|$|[·•(])|^\? for shortcuts\b", re.I)
+_FOOTER_COUNT = re.compile(r"\b(\d+)\s+(agents?|shells?|monitors?)\b", re.I)
+_COUNTS_ONLY = re.compile(
+    r"\d{1,4}\s+(?:agents?|shells?|monitors?)"
+    r"(?:\s*[,·•]\s*\d{1,4}\s+(?:agents?|shells?|monitors?))*"
+    r"(?:\s*\((?:ctrl|alt)\+[a-z] to (?:view|manage|expand)(?: tasks| agents)?\))?", re.I)
+
+
+def activity_counts(value):
+    """Accept only the small, complete count record sent by the Kitty watcher."""
+    if (not isinstance(value, dict) or set(value) != set(ACTIVITY_KINDS)
+            or any(type(value[key]) is not int or not 0 <= value[key] <= 9999 for key in ACTIVITY_KINDS)):
+        return None
+    return {key: value[key] for key in ACTIVITY_KINDS}
+
+
+def claude_footer_counts(lines):
+    """Read only a recognizable final footer line; ordinary output is not data."""
+    nonempty = [line.strip() for line in lines if line.strip()]
+    if not nonempty:
+        return None
+    footer = re.sub(r"^[\s⏵▶⏸⏩❯»›\ufe0e\ufe0f]+", "", nonempty[-1])
+    if len(footer) > 4096 or not (_FOOTER_MODE.match(footer) or _COUNTS_ONLY.fullmatch(footer)):
+        return None
+    result = dict.fromkeys(ACTIVITY_KINDS, 0)
+    seen = set()
+    for match in _FOOTER_COUNT.finditer(footer):
+        if len(match[1]) > 4 or match.start() > 0 and footer[match.start() - 1] in "+-.":
+            return None
+        kind = match[2].lower().rstrip("s") + "s"
+        if kind in seen:
+            return None
+        seen.add(kind)
+        result[kind] = int(match[1])
+    return result
 
 
 def process_identity(pid):
