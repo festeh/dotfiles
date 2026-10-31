@@ -51,6 +51,13 @@ ShellRoot {
                 anchors.rightMargin: 4
                 spacing: 8
 
+                SbTodayWidget {
+                    monitor: panel.modelData
+                    keyboardNavigation: statusRow.keyboardNavigation
+                    onPointerInteraction: statusRow.keyboardNavigation = false
+                    onKeyboardInteraction: statusRow.keyboardNavigation = true
+                }
+
                 GoogleWorkWidget {
                     kind: "gmail"
                     monitor: panel.modelData

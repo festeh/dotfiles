@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+"""Production sb today widget and popup against a fake sb with made-up tasks, offscreen."""
+import json
+import os
+from pathlib import Path
+import socket
+import subprocess
+import tempfile
+import threading
+
+config = Path(__file__).resolve().parents[1]
+fixtures = config/'tests/fixtures'
+TODAY = '2026-10-31'
+TASKS = [
+    {'path':'tasks/admin/Renew passport photos.md','title':'Renew passport photos','project':'admin','overdue':True,
+     'due':'2026-10-28','doing':False,'reminder':None,'nag':False},
+    {'path':'tasks/home/Reply to the landlord.md','title':'Reply to the landlord','project':'home','overdue':True,
+     'due':'2026-10-30','doing':False,'reminder':'09:00','nag':True},
+    {'path':'tasks/Call the bank.md','title':'Call the bank','project':'','overdue':False,
+     'due':TODAY,'doing':True,'reminder':'14:00','nag':False},
+]
+# The fake sb refuses to complete this one, as sb would report a failed write.
+REFUSED = 'tasks/home/Reply to the landlord.md'
+
+
+def fake_sb(path, log):
+    server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    server.bind(str(path))
+    server.listen(4)
+
+    def client(conn):
+        tasks = [dict(task) for task in TASKS]
+        send = lambda message: conn.sendall((json.dumps(message) + '\n').encode())
+        snapshot = lambda: send({'type':'snapshot','today':TODAY,'tasks':tasks})
+        snapshot()
+        pending = b''
+        while data := conn.recv(4096):
+            pending += data
+            while b'\n' in pending:
+                line, pending = pending.split(b'\n', 1)
+                request = json.loads(line)
+                with log.open('a') as out:
+                    out.write(json.dumps(request) + '\n')
+                if request['action'] == 'done' and request['path'] == REFUSED:
+                    send({'type':'error','message':'could not complete the task'})
+                elif request['action'] == 'done':
+                    tasks[:] = [task for task in tasks if task['path'] != request['path']]
+                    snapshot()
+                elif request['action'] == 'add':
+                    tasks.append({'path':f"tasks/{request['title']}.md",'title':request['title'],'project':'',
+                                  'overdue':False,'due':TODAY,'doing':False,'reminder':None,'nag':False})
+                    snapshot()
+
+    while True:
+        conn, _ = server.accept()
+        threading.Thread(target=client, args=(conn,), daemon=True).start()
+
+
+with tempfile.TemporaryDirectory(prefix='quickshell-sb-today-ui-') as temporary:
+    root = Path(temporary)
+    runtime = root/'runtime'; runtime.mkdir(mode=0o700)
+    (runtime/'sb').mkdir(mode=0o700)
+    log = root/'commands.jsonl'; log.touch()
+    threading.Thread(target=fake_sb, args=(runtime/'sb'/'today.sock', log), daemon=True).start()
+    (root/'assets').symlink_to(config/'assets')
+    for name in ('SbTodayWidget.qml', 'SbTodayLogic.js', 'Theme.qml'):
+        (root/name).symlink_to(config/name)
+    source = (config/'SbTodayState.qml').read_text()
+    running = 'readonly property bool sbRunning: SystemTray.items.values.some(item => item.id === trayId)'
+    assert running in source, 'SbTodayState no longer finds sb by its tray item'
+    (root/'SbTodayState.qml').write_text(source.replace(running, 'readonly property bool sbRunning: true'))
+    source = (config/'SbTodayPopup.qml').read_text().replace('PopupWindow {', 'FloatingWindow {', 1)
+    source = '\n'.join(line for line in source.splitlines() if not line.strip().startswith(('anchor.', 'grabFocus:')))
+    (root/'SbTodayPopup.qml').write_text(source)
+    (root/'qmldir').write_text('singleton Theme 1.0 Theme.qml\nsingleton SbTodayState 1.0 SbTodayState.qml\n'
+                               'SbTodayWidget 1.0 SbTodayWidget.qml\nSbTodayPopup 1.0 SbTodayPopup.qml\n')
+    (root/'shell.qml').write_text((fixtures/'sb-today-ui.qml').read_text())
+    env = dict(os.environ, QT_QPA_PLATFORM='offscreen', QT_QUICK_BACKEND='software', XDG_RUNTIME_DIR=str(runtime),
+               HYPRLAND_INSTANCE_SIGNATURE='sb-today-fixture', QT_IM_MODULE='compose', QT_NO_XDG_DESKTOP_PORTAL='1')
+    try:
+        result = subprocess.run(['quickshell', '--path', str(root)], env=env, capture_output=True, text=True, timeout=12)
+    except subprocess.TimeoutExpired as error:
+        print(error.stdout, error.stderr)
+        raise SystemExit('sb today UI check timed out')
+    output = result.stdout + result.stderr
+    if result.returncode or 'SB_TODAY_UI_PASSED' not in output:
+        print(output)
+        raise SystemExit('sb today UI check failed')
+    requests = [json.loads(line) for line in log.read_text().splitlines()]
+    assert requests == [
+        {'action':'tasks'},
+        {'action':'done','path':'tasks/admin/Renew passport photos.md'},
+        {'action':'add','title':'Buy beans'},
+        {'action':'done','path':REFUSED},
+        {'action':'open','path':'tasks/Call the bank.md'},
+    ], requests
+    print('sb today UI passed: count and overdue colour, right click, done, quick add, failed done, open, hidden when clear.')

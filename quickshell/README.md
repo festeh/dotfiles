@@ -211,6 +211,45 @@ The UI check uses fake mail/meetings in an offscreen window. It verifies both
 mouse buttons, event links, individual read actions, failed writes, zero counts,
 out-of-office icons and Escape without modifying actual mail.
 
+## sb today
+
+A compact widget at the start of the status row lists today's open tasks from
+sb, the vault app (`~/projects/sb`). It shows a checklist and the number of
+tasks that are due or scheduled today or earlier; the number is red while any
+of them is overdue. It is hidden when nothing is left and while sb is not
+running.
+
+Left click opens the tasks: overdue first, then today, each with its project,
+its own reminder time (with `!` for a reminder that repeats until done), an
+in-progress marker, and the due date of an overdue task. The checkbox completes
+a task in sb exactly as sb's task board does, so a recurring task moves to its
+next date and the change syncs to the phone; the popup stays open, and a failed
+completion is shown and leaves the task in place. Clicking a title opens that
+task in sb. The field at the bottom adds a task due today. Up/Down select a
+task, Space completes it, Enter opens it, Tab reaches the field, and Escape
+closes. Right click opens sb's task view.
+
+sb decides everything: which tasks count, their order, and which are overdue,
+by the same rule as the Today section of its board. It serves them while it
+runs on a private socket, `$XDG_RUNTIME_DIR/sb/today.sock`, one JSON line each
+way (`app/src-tauri/src/widget.rs` in sb). `SbTodayState` connects when sb's
+tray item (`id` `sb`) appears and drops the widget when the socket closes, so
+nothing polls; sb sends a new snapshot whenever a vault change or midnight
+changes today. A development build of sb serves `today-dev.sock` instead and
+leaves this widget alone.
+
+Counts-only status and checks:
+
+```sh
+quickshell ipc --path ~/dotfiles/quickshell call sb status
+node --test quickshell/tests/sb-today-logic.test.cjs
+python3 quickshell/tests/check-sb-today-ui
+```
+
+The UI check runs the production widget and popup offscreen against a fake sb
+serving made-up tasks. It covers both mouse buttons, completing, quick add, a
+refused completion, opening a task, and hiding when the day is clear.
+
 ## Tray
 
 - Left click activates an application, or opens its menu for menu-only items.
