@@ -108,8 +108,11 @@ The Stay awake choice owns an idle-only logind inhibitor through the optional
 symlink; run `systemctl --user daemon-reload` after installation. It is not enabled
 for automatic startup. The lease survives closing/reloading the shell and normal
 suspend/resume, but stops with `graphical-session.target` at logout. The existing
-25-minute swayidle suspend timer stays running. Releasing the final idle inhibitor
-starts a fresh 25-minute interval on the installed swayidle/Hyprland versions.
+25-minute swayidle suspend timer stays running. Its startup command includes
+`idlehint 1500`, which makes swayidle connect to logind and follow idle inhibitors;
+a timeout-only command does not establish that connection. Releasing the final
+idle inhibitor starts a fresh 25-minute interval on the installed swayidle/Hyprland
+versions.
 Manual suspend and lid behavior remain available. The card reads acquired
 inhibitors instead of maintaining an optimistic Boolean; other apps' inhibition
 is also reported.
