@@ -13,6 +13,16 @@ ShellRoot {
         testMode: true
         helperCommand: ["python3", Quickshell.shellPath("mock.py")]
     }
+    FloatingWindow {
+        visible: true
+        implicitWidth: 80
+        implicitHeight: 60
+        KeepAwakeWidget {
+            id: awakeIndicator
+            keepAwake: launcher.keepAwake
+            onActivated: launcher.open("widgets")
+        }
+    }
     function require(value, message): void { if (!value) throw new Error(message); }
     function find(item, name) {
         if (item.objectName === name) return item;
@@ -26,6 +36,7 @@ ShellRoot {
                 if(!launcher.transportReady) return;
                 const field=root.find(launcher.windowItem.contentItem,"launcher-search");
                 if(root.phase===0) {
+                    root.require(!awakeIndicator.visible,"Stay awake indicator shown in normal sleep mode");
                     root.events=Qt.createQmlObject('import QtTest; TestEvent {}',field,'launcher-events');
                     launcher.open("apps"); root.phase=1;
                 } else if(root.phase===1) {
@@ -65,12 +76,18 @@ ShellRoot {
                     events.keyClick(Qt.Key_Return,Qt.NoModifier,0);
                     root.require(launcher.opened,"Widget action closed launcher"); root.phase=8;
                 } else if(root.phase===8 && launcher.results.find(row=>row.id==="idle:awake")?.selected) {
+                    root.require(awakeIndicator.visible,"Stay awake indicator missing");
+                    launcher.close();
+                    root.require(awakeIndicator.visible,"Closing launcher hid Stay awake indicator");
+                    events.mouseClick(awakeIndicator,awakeIndicator.width/2,awakeIndicator.height/2,Qt.LeftButton,Qt.NoModifier,0);
+                    root.require(launcher.opened && launcher.category==="widgets","Stay awake indicator did not open sleep settings");
                     const awake=root.find(launcher.windowItem.contentItem,"launcher-sleep-awake");
                     events.mouseClick(awake,awake.width/2,awake.height/2,Qt.LeftButton,Qt.NoModifier,0);
                     const automatic=root.find(launcher.windowItem.contentItem,"launcher-sleep-auto");
                     events.mouseClick(automatic,automatic.width/2,automatic.height/2,Qt.LeftButton,Qt.NoModifier,0);
                     root.phase=9;
                 } else if(root.phase===9 && launcher.results.find(row=>row.id==="idle:auto")?.selected) {
+                    root.require(!awakeIndicator.visible,"Stay awake indicator remained after normal sleep selected");
                     root.require(!launcher.results.find(row=>row.id==="idle:awake")?.selected,"Both sleep choices selected");
                     root.require(root.find(launcher.windowItem.contentItem,"launcher-sleep-external").visible,"Other app status hidden");
                     root.find(launcher.windowItem.contentItem,"launcher-sleep-auto").forceActiveFocus();

@@ -13,7 +13,7 @@ with tempfile.TemporaryDirectory(prefix='quickshell-launcher-ui-') as directory:
     runtime=root/'runtime'
     runtime.mkdir(mode=0o700)
     (root/'assets').symlink_to(config/'assets')
-    for name in ('LauncherLogic.js','Theme.qml','CalendarAction.qml'):
+    for name in ('LauncherLogic.js','Theme.qml','CalendarAction.qml','KeepAwakeWidget.qml','TrayTooltip.qml'):
         (root/name).symlink_to(config/name)
     # Offscreen Qt has no layer-shell backend. Host the unchanged controller,
     # content and key handlers in an ordinary private QQuickWindow instead.
@@ -31,7 +31,7 @@ QtObject {
  function applicationInfo(ids,entry) { return {source:""}; }
 }
 ''')
-    (root/'qmldir').write_text('singleton Theme 1.0 Theme.qml\nsingleton WorkspaceState 1.0 WorkspaceState.qml\nLauncher 1.0 Launcher.qml\nCalendarAction 1.0 CalendarAction.qml\n')
+    (root/'qmldir').write_text('singleton Theme 1.0 Theme.qml\nsingleton WorkspaceState 1.0 WorkspaceState.qml\nLauncher 1.0 Launcher.qml\nCalendarAction 1.0 CalendarAction.qml\nKeepAwakeWidget 1.0 KeepAwakeWidget.qml\nTrayTooltip 1.0 TrayTooltip.qml\n')
     (root/'shell.qml').write_text((fixtures/'launcher-ui.qml').read_text())
     (root/'mock.py').write_text((fixtures/'launcher-mock.py').read_text())
     env=os.environ.copy()
@@ -50,4 +50,4 @@ QtObject {
     for index,command in enumerate(commands):
         if command['action']=='activate' and command['category']!='widgets':
             assert commands[index-1]['action']=='hide','Action dispatched before hide'
-    print('Launcher UI passed: keyboard focus, Vim keys, retained search, covers preserve selection, mouse sidebar, dismissal, paste intent, embedded controls.')
+    print('Launcher UI passed: keyboard focus, Vim keys, retained search, covers preserve selection, mouse sidebar, dismissal, paste intent, embedded controls, conditional Stay awake indicator.')

@@ -26,6 +26,8 @@ Scope {
     property bool transportReady: false
     property bool testMode: false
     property bool reopenOnActionError: false
+    readonly property bool keepAwake: transportReady
+        && !!(catalogs.widgets || []).find(row => row.id === "idle:awake" && row.known && row.selected)
     readonly property var windowItem: window
     property alias currentIndex: resultsView.currentIndex
     readonly property var categories: [
@@ -209,7 +211,7 @@ Scope {
                 count: root.results.length, queryLength: root.query.length,
                 ready: root.transportReady, error: !!root.message, grabbed: grab.active,
                 activeProfile: (root.catalogs.widgets || []).find(row => row.id.startsWith("profile:") && row.selected)?.id || "",
-                keepAwake: !!(root.catalogs.widgets || []).find(row => row.id === "idle:awake")?.selected});
+                keepAwake: root.keepAwake});
         }
     }
 

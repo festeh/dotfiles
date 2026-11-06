@@ -4,6 +4,7 @@ NotificationCard 1.0 NotificationCard.qml
 NotificationPopups 1.0 NotificationPopups.qml
 Notifications 1.0 Notifications.qml
 Launcher 1.0 Launcher.qml
+KeepAwakeWidget 1.0 KeepAwakeWidget.qml
 singleton SbTodayState 1.0 SbTodayState.qml
 SbTodayWidget 1.0 SbTodayWidget.qml
 SbTodayPopup 1.0 SbTodayPopup.qml

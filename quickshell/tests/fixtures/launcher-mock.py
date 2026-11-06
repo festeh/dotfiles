@@ -16,6 +16,7 @@ rows = {
 def emit(value): print(json.dumps(value),flush=True)
 def publish(category): emit({'type':'catalog','category':category,'rows':rows[category],'loading':False,'message':''})
 publish('apps')
+publish('widgets')
 for line in sys.stdin:
     command=json.loads(line)
     with Path(__file__).with_name('commands.jsonl').open('a') as stream: stream.write(json.dumps(command)+'\n')

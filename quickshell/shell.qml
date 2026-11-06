@@ -12,7 +12,7 @@ import Quickshell
 import Quickshell.Wayland
 
 ShellRoot {
-    Launcher {}
+    Launcher { id: launcher }
     Notifications {}
     Variants {
         model: Quickshell.screens
@@ -50,6 +50,14 @@ ShellRoot {
                 anchors { right: parent.right; verticalCenter: parent.verticalCenter }
                 anchors.rightMargin: 4
                 spacing: 8
+
+                KeepAwakeWidget {
+                    keepAwake: launcher.keepAwake
+                    keyboardNavigation: statusRow.keyboardNavigation
+                    onActivated: launcher.open("widgets")
+                    onPointerInteraction: statusRow.keyboardNavigation = false
+                    onKeyboardInteraction: statusRow.keyboardNavigation = true
+                }
 
                 SbTodayWidget {
                     monitor: panel.modelData

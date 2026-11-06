@@ -169,6 +169,8 @@ class Backend:
         self.app_timer = 0
         self.app_monitor.connect("changed", self.apps_changed)
         self.load_apps()
+        # The bar needs sleep state before the Widgets page has been opened.
+        self.load_widgets()
 
     def background(self, work, done, error=None):
         def thread():

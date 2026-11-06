@@ -116,6 +116,10 @@ versions.
 Manual suspend and lid behavior remain available. The card reads acquired
 inhibitors instead of maintaining an optimistic Boolean; other apps' inhibition
 is also reported.
+A coffee-cup indicator appears in the bar only while **Stay awake** is on.
+Click it to open the Sleep behavior settings. It reads the acquired inhibitor
+at startup and follows changes even while the launcher is closed; normal sleep
+mode and other apps' inhibitors leave the indicator hidden.
 
 History is private local data under `$XDG_STATE_HOME/quickshell/launcher.json`
 (default `~/.local/state`); covers live under `$XDG_CACHE_HOME/quickshell/launcher`
@@ -169,6 +173,9 @@ paginated eight-day agenda every three minutes. Meeting boundaries and midnight
 update locally using the shared clock and one boundary timer. Resume and network
 reconnection trigger a coalesced refresh; failed requests use bounded backoff.
 Gmail and Calendar have separate error states, preserving cached data as stale.
+When reconnection is needed, the affected widget shows a red `!` badge, border
+and tinted background. Other sync errors use amber. Icons stay fully visible,
+including when there is no unread count or meeting time to display.
 
 Install the small Google authentication environment using the system interpreter
 so it also sees the installed PyGObject D-Bus bindings:
