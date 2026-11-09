@@ -88,19 +88,23 @@ class ProviderTests(unittest.TestCase):
             self.assertFalse(target.exists())
             self.assertEqual(launcher.book_record(source, root, root)['row']['cover'], '')
 
-    def test_clipboard_ids_and_binary_copy(self):
+    def test_clipboard_ids_and_copy_formats(self):
         rows = launcher.clipboard_rows('42\tSome text\n43\t[[ binary data 40 KiB png ]]\nbad\tno\n')
         self.assertEqual([row['id'] for row in rows], ['clip:42', 'clip:43'])
         self.assertEqual([row['clipboardKind'] for row in rows], ['text', 'image'])
         self.assertTrue(all(row['detail'] == '' for row in rows))
-        raw = b'\x89PNG\x00\xff\x80\n'
-        with patch.object(launcher, 'run', return_value=subprocess.CompletedProcess([], 0, raw, b'')) as decode, \
-             patch.object(launcher.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0)) as copy:
-            launcher.copy_clipboard('43')
-            self.assertEqual(decode.call_args.args[0], ['cliphist', 'decode', '43'])
-            self.assertEqual(copy.call_args.kwargs['input'], raw)
-            self.assertEqual(copy.call_args.args[0], ['wl-copy'])
-            with self.assertRaises(ValueError): launcher.copy_clipboard('43;shutdown')
+        for kind, raw, argv in (
+                ('text', b'a', ['wl-copy', '--type', 'text/plain;charset=utf-8']),
+                ('text', 'Text with Unicode: ✓\n'.encode(), ['wl-copy', '--type', 'text/plain;charset=utf-8']),
+                ('image', b'\x89PNG\x00\xff\x80\n', ['wl-copy'])):
+            with self.subTest(kind=kind, raw=raw), \
+                 patch.object(launcher, 'run', return_value=subprocess.CompletedProcess([], 0, raw, b'')) as decode, \
+                 patch.object(launcher.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0)) as copy:
+                launcher.copy_clipboard('43', kind)
+                self.assertEqual(decode.call_args.args[0], ['cliphist', 'decode', '43'])
+                self.assertEqual(copy.call_args.kwargs['input'], raw)
+                self.assertEqual(copy.call_args.args[0], argv)
+                with self.assertRaises(ValueError): launcher.copy_clipboard('43;shutdown', kind)
 
     def test_copy_finishes_while_forked_clipboard_owner_keeps_stderr_open(self):
         # wl-copy's parent exits after acquiring the selection, while its child
@@ -121,7 +125,7 @@ class ProviderTests(unittest.TestCase):
             try:
                 with patch.dict(os.environ, PATH=str(root) + os.pathsep + os.environ['PATH']), \
                         patch.object(launcher, 'run', return_value=subprocess.CompletedProcess([], 0, raw, b'')):
-                    launcher.copy_clipboard('43')
+                    launcher.copy_clipboard('43', 'image')
                 import time
                 for _ in range(100):
                     if owner.exists(): break
@@ -206,7 +210,7 @@ class ProviderTests(unittest.TestCase):
              patch.object(launcher, 'focused_window', return_value={'address':'0xabcd','class':'example'}), \
              patch.object(launcher, 'run', return_value=subprocess.CompletedProcess([],0)) as dispatch:
             backend.activate({'category':'clipboard','id':'clip:42','paste':True,'target':'0xabcd'})
-            copy.assert_called_once_with('42')
+            copy.assert_called_once_with('42', 'text')
             self.assertIn('window="address:0xabcd"', dispatch.call_args.args[0][2])
         with patch.object(launcher, 'copy_clipboard'), \
              patch.object(launcher, 'focused_window', return_value=None), patch.object(launcher, 'run') as dispatch:
@@ -223,10 +227,11 @@ class ProviderTests(unittest.TestCase):
                 ({'class':'org.example.Editor'}, 'text', 'CTRL')):
             with self.subTest(window=window, kind=kind):
                 backend = self.backend('clipboard', [{'id':'clip:42','clipboardKind':kind}])
-                with patch.object(launcher, 'copy_clipboard'), \
+                with patch.object(launcher, 'copy_clipboard') as copy, \
                         patch.object(launcher, 'focused_window', return_value=window), \
                         patch.object(launcher, 'run', return_value=subprocess.CompletedProcess([],0)) as dispatch:
                     backend.activate({'category':'clipboard','id':'clip:42','paste':True,'target':'0xabcd'})
+                    copy.assert_called_once_with('42', kind)
                     code = dispatch.call_args.args[0][2]
                     self.assertIn('mods="' + modifiers + '"', code)
                     self.assertIn('window="address:0xabcd"', code)

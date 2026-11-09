@@ -108,16 +108,19 @@ def kitty_window(window):
         return False
 
 
-def copy_clipboard(number):
+def copy_clipboard(number, kind):
     if not re.fullmatch(r"[0-9]+", number):
         raise ValueError("Invalid clipboard entry")
-    # Preserve binary bytes and MIME inference; never decode through Unicode/QML.
+    # Never decode stored bytes through Unicode/QML.
     data = run(["cliphist", "decode", number], timeout=10)
     if data.returncode:
         raise RuntimeError("Clipboard entry is no longer available")
+    # MIME inference classifies single ASCII characters as application/octet-stream,
+    # which Kitty cannot paste as text. Image entries still need MIME inference.
+    argv = ["wl-copy", "--type", "text/plain;charset=utf-8"] if kind == "text" else ["wl-copy"]
     # The forked clipboard owner inherits stderr. A captured pipe would keep
     # communicate() waiting until the selection is replaced, despite success.
-    copied = subprocess.run(["wl-copy"], input=data.stdout, stdout=subprocess.DEVNULL,
+    copied = subprocess.run(argv, input=data.stdout, stdout=subprocess.DEVNULL,
                             stderr=subprocess.DEVNULL, timeout=5)
     if copied.returncode:
         raise RuntimeError("Could not copy the selected item")
@@ -538,7 +541,7 @@ class Backend:
                 subprocess.Popen([shutil.which(reader) or "xdg-open", str(book["path"])],
                     stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
             elif category == "clipboard":
-                copy_clipboard(identity.removeprefix("clip:"))
+                copy_clipboard(identity.removeprefix("clip:"), row.get("clipboardKind", "text"))
                 if command.get("paste"):
                     address = command.get("target", "")
                     window = focused_window(address)

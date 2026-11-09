@@ -84,9 +84,11 @@ Clipboard retains `cliphist` storage and the existing text/image capture watcher
 Text entries use a T icon and images a picture icon, without redundant type labels.
 It reads on opening, then follows database changes only while visible. Search
 covers cliphist's previews (currently truncated to 100 characters), not full
-stored text. Selected contents remain binary bytes through decode/copy, so images
-are preserved. Shortcuts are discovered from described live Hyprland bindings,
-and their actions run after focus returns. Power actions execute immediately;
+stored text. Selected contents remain raw bytes through decode/copy, so images
+are preserved. Text entries explicitly offer UTF-8 plain text, including single
+characters that MIME inference can mistake for binary data. Shortcuts are
+discovered from described live Hyprland bindings, and their actions run after
+focus returns. Power actions execute immediately;
 unavailable system capabilities are disabled. Lock is unavailable until a screen
 locker is configured, rather than issuing a lock request that does nothing.
 
