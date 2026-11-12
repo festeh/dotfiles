@@ -7,15 +7,16 @@ import Quickshell.Services.SystemTray
 import "SbTodayLogic.js" as Logic
 
 // Today's tasks from sb, over the socket sb serves while it runs
-// (app/src-tauri/src/widget.rs in the sb repository). Nothing here polls:
+// (client/src/widget.rs in the sb repository). Nothing here polls:
 // sb's tray item appearing is the cue to connect, the socket closing is the
 // cue to hide, and sb sends a new snapshot whenever today changes.
 QtObject {
     id: root
     property string socketPath: Quickshell.env("XDG_RUNTIME_DIR") + "/sb/today.sock"
-    // sb's StatusNotifierItem id.
+    // The old Rust tray used "sb"; Electron generates "sb_status_icon_<n>".
     property string trayId: "sb"
-    readonly property bool sbRunning: SystemTray.items.values.some(item => item.id === trayId)
+    readonly property bool sbRunning: SystemTray.items.values.some(item =>
+        item.id === trayId || item.id.startsWith(trayId + "_status_icon_"))
     property var snapshot: null
     readonly property var tasks: snapshot ? snapshot.tasks : []
     readonly property string today: snapshot ? snapshot.today : ""

@@ -65,10 +65,9 @@ with tempfile.TemporaryDirectory(prefix='quickshell-sb-today-ui-') as temporary:
     (root/'assets').symlink_to(config/'assets')
     for name in ('SbTodayWidget.qml', 'SbTodayLogic.js', 'Theme.qml'):
         (root/name).symlink_to(config/name)
-    source = (config/'SbTodayState.qml').read_text()
-    running = 'readonly property bool sbRunning: SystemTray.items.values.some(item => item.id === trayId)'
-    assert running in source, 'SbTodayState no longer finds sb by its tray item'
-    (root/'SbTodayState.qml').write_text(source.replace(running, 'readonly property bool sbRunning: true'))
+    state_source = (config/'SbTodayState.qml').read_text()
+    tray_items = 'SystemTray.items.values'
+    assert tray_items in state_source, 'SbTodayState no longer finds sb by its tray item'
     source = (config/'SbTodayPopup.qml').read_text().replace('PopupWindow {', 'FloatingWindow {', 1)
     source = '\n'.join(line for line in source.splitlines() if not line.strip().startswith(('anchor.', 'grabFocus:')))
     (root/'SbTodayPopup.qml').write_text(source)
@@ -77,21 +76,27 @@ with tempfile.TemporaryDirectory(prefix='quickshell-sb-today-ui-') as temporary:
     (root/'shell.qml').write_text((fixtures/'sb-today-ui.qml').read_text())
     env = dict(os.environ, QT_QPA_PLATFORM='offscreen', QT_QUICK_BACKEND='software', XDG_RUNTIME_DIR=str(runtime),
                HYPRLAND_INSTANCE_SIGNATURE='sb-today-fixture', QT_IM_MODULE='compose', QT_NO_XDG_DESKTOP_PORTAL='1')
-    try:
-        result = subprocess.run(['quickshell', '--path', str(root)], env=env, capture_output=True, text=True, timeout=12)
-    except subprocess.TimeoutExpired as error:
-        print(error.stdout, error.stderr)
-        raise SystemExit('sb today UI check timed out')
-    output = result.stdout + result.stderr
-    if result.returncode or 'SB_TODAY_UI_PASSED' not in output:
-        print(output)
-        raise SystemExit('sb today UI check failed')
-    requests = [json.loads(line) for line in log.read_text().splitlines()]
-    assert requests == [
-        {'action':'tasks'},
-        {'action':'done','path':'tasks/admin/Renew passport photos.md'},
-        {'action':'add','title':'Buy beans'},
-        {'action':'done','path':REFUSED},
-        {'action':'open','path':'tasks/Call the bank.md'},
-    ], requests
+    # Exercise the real detection predicate with both tray implementations.
+    # Forcing sbRunning=true here used to hide tray-ID compatibility failures.
+    for tray_id in ('sb', 'sb_status_icon_1'):
+        log.write_text('')
+        items = json.dumps([{'id':'another-app'}, {'id':tray_id}])
+        (root/'SbTodayState.qml').write_text(state_source.replace(tray_items, items))
+        try:
+            result = subprocess.run(['quickshell', '--path', str(root)], env=env, capture_output=True, text=True, timeout=12)
+        except subprocess.TimeoutExpired as error:
+            print(error.stdout, error.stderr)
+            raise SystemExit(f'sb today UI check timed out ({tray_id})')
+        output = result.stdout + result.stderr
+        if result.returncode or 'SB_TODAY_UI_PASSED' not in output:
+            print(output)
+            raise SystemExit(f'sb today UI check failed ({tray_id})')
+        requests = [json.loads(line) for line in log.read_text().splitlines()]
+        assert requests == [
+            {'action':'tasks'},
+            {'action':'done','path':'tasks/admin/Renew passport photos.md'},
+            {'action':'add','title':'Buy beans'},
+            {'action':'done','path':REFUSED},
+            {'action':'open','path':'tasks/Call the bank.md'},
+        ], (tray_id, requests)
     print('sb today UI passed: count and overdue colour, right click, done, quick add, failed done, open, hidden when clear.')

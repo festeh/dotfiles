@@ -244,11 +244,11 @@ closes. Right click opens sb's task view.
 sb decides everything: which tasks count, their order, and which are overdue,
 by the same rule as the Today section of its board. It serves them while it
 runs on a private socket, `$XDG_RUNTIME_DIR/sb/today.sock`, one JSON line each
-way (`app/src-tauri/src/widget.rs` in sb). `SbTodayState` connects when sb's
-tray item (`id` `sb`) appears and drops the widget when the socket closes, so
-nothing polls; sb sends a new snapshot whenever a vault change or midnight
-changes today. A development build of sb serves `today-dev.sock` instead and
-leaves this widget alone.
+way (`client/src/widget.rs` in sb). `SbTodayState` connects when sb's
+tray item (`id` `sb_status_icon_<n>` from Electron, or the old `sb`) appears
+and drops the widget when the socket closes, so nothing polls; sb sends a new
+snapshot whenever a vault change or midnight changes today. A development
+build of sb serves `today-dev.sock` instead and leaves this widget alone.
 
 Counts-only status and checks:
 
