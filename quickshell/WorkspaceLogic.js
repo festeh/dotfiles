@@ -93,11 +93,16 @@ function resolveProgram(candidates, catalog) {
     return null;
 }
 
+function trayKey(value) {
+    return key(value).replace(/_status_icon_\d+$/, "");
+}
+
 function trayItem(candidates, items) {
     const ids = new Set(candidates.map(key).filter(value => value));
     let match = null;
     for (const item of items) {
-        if (!ids.has(key(item.id))) continue;
+        const id = key(item.id);
+        if (!ids.has(id) && !ids.has(trayKey(id))) continue;
         // Multiple matching registrations do not identify one app icon safely.
         if (match) return null;
         match = item;

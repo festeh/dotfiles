@@ -47,6 +47,15 @@ hl.config({
     },
 })
 
+-- Keep the panel in SDR when a fullscreen window presents HDR content (e.g. Chrome
+-- playing an HDR stream). With the default (1) Hyprland modesets eDP-1 into HDR while
+-- it still runs 8-bit: the screen blanks, then the picture comes back red-tinted.
+hl.config({
+    render = {
+        cm_auto_hdr = 0,
+    },
+})
+
 -------------------
 ---- AUTOSTART ----
 -------------------

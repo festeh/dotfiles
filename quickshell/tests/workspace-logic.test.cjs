@@ -58,9 +58,12 @@ test('window dispatch targets an exact validated address in Lua or legacy mode',
 
 test('tray matching uses unique exact app identifiers and rejects ambiguous registrations', () => {
     const tray = {id: 'org.example.Editor', icon: 'image://tray/live'};
+    const electronTray = {id: 'sb_status_icon_1', icon: 'image://tray/sb'};
     const other = {id: 'OtherEditor', title: 'org.example.Editor', icon: 'other'};
     assert.equal(logic.trayItem(['ORG.EXAMPLE.EDITOR.desktop'], [other, tray]), tray);
     assert.equal(logic.trayItem(['missing', 'org.example.Editor'], [tray]), tray);
+    assert.equal(logic.trayItem(['sb'], [other, electronTray]), electronTray);
+    assert.equal(logic.trayItem(['sb'], [electronTray, {id: 'sb_status_icon_2', icon: 'image://tray/sb2'}]), null);
     assert.equal(logic.trayItem(['org.example.Editor'], [other]), null);
     assert.equal(logic.trayItem([], [tray]), null);
     assert.equal(logic.trayItem(['org.example.Editor'], [tray, {...tray}]), null);

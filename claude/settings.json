@@ -20,9 +20,61 @@
       "Bash(gcloud projects list:*)",
       "Bash(gcloud auth list:*)"
     ],
+    "deny": [
+      "SendFeedback"
+    ],
     "defaultMode": "auto"
   },
-  "model": "opus[1m]",
+  "model": "fable",
+  "skillOverrides": {
+    "docs": "off",
+    "docx": "off",
+    "pptx": "off",
+    "xlsx": "off",
+    "pdf": "off",
+    "google-workspace": "off",
+    "morning": "off",
+    "import-memory": "off",
+    "anthropic-skills:skill-creator": "off"
+  },
+  "deniedMcpServers": [
+    {
+      "serverName": "claude.ai Asana"
+    },
+    {
+      "serverName": "claude.ai Box"
+    },
+    {
+      "serverName": "claude.ai Calendly"
+    },
+    {
+      "serverName": "claude.ai Canva"
+    },
+    {
+      "serverName": "claude.ai Google Docs"
+    },
+    {
+      "serverName": "claude.ai Google Sheets"
+    },
+    {
+      "serverName": "claude.ai HubSpot"
+    },
+    {
+      "serverName": "claude.ai Intercom"
+    },
+    {
+      "serverName": "claude.ai Linear"
+    },
+    {
+      "serverName": "claude.ai Perplexity Computer"
+    },
+    {
+      "serverName": "claude.ai Zoom for Claude"
+    },
+    {
+      "serverName": "claude.ai monday.com"
+    }
+  ],
   "hooks": {
     "SessionStart": [
       {
@@ -185,7 +237,9 @@
   },
   "enabledPlugins": {
     "clangd-lsp@claude-plugins-official": true,
-    "rust-analyzer-lsp@claude-plugins-official": true
+    "rust-analyzer-lsp@claude-plugins-official": true,
+    "cowork-plugin-management@inline": false,
+    "cc-plugin-privacy@builtin": false
   },
   "extraKnownMarketplaces": {
     "openai-codex": {
@@ -209,5 +263,10 @@
   "voiceEnabled": true,
   "feedbackSurveyState": {
     "lastShownTime": 1754070055493
+  },
+  "modelSettings": {
+    "claude-fable-5-2": {
+      "effortLevel": "xhigh"
+    }
   }
 }

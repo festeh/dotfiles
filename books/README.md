@@ -30,6 +30,9 @@ Book titles, source paths, notes, and optional session IDs belong only in the lo
 repository. The Installer links only the generic Hyprland integration and launcher
 entries; it never installs or overwrites populated book settings.
 
+For PDFs, use `reader = ["alpha"]` and `reader_class = "alpha"`, as in the
+example. `reader_title` can match the filename without `.pdf`, or stay empty.
+
 On a new machine, after applying the host's Installer config:
 
 ```sh
