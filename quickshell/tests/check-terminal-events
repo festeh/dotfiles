@@ -154,6 +154,12 @@ async def main():
                 and activity(value, third) == dict(agents=0, tasks=1))
             await kitty_request(kitty.pid, "close-window", {"match": f"id:{second_claude}"})
             await wait(lambda value: value['health']['agents'] == 3 and state(value) == 'idle')
+            # Codex reports the same way; its title is only the fallback.
+            title('one', 'STATUS:app=codex:state=blocked:kind=permission')
+            await wait(lambda value: agent(value, first)['state'] == 'waiting' and state(value) == 'waiting')
+            assert activity(latest, first) is None
+            title('one', 'STATUS:app=codex:state=idle')
+            await wait(lambda value: state(value) == 'idle')
             fourth = int(await kitty_request(kitty.pid, "launch", dict(args=[str(root / "agy"), str(root / "four")], type="window", keep_focus=True)))
             await wait(lambda value: value["health"]["agents"] == 4)
             def fourth_state(value, expected):
@@ -165,6 +171,13 @@ async def main():
             await wait(lambda value: state(value) == "running" and fourth_state(value, 'running'))
             title("four", "[agy:waiting] fixture-project")
             await wait(lambda value: state(value) == "waiting" and fourth_state(value, 'waiting'))
+            # Antigravity's own report then outranks that title.
+            title('four', 'STATUS:app=antigravity:state=working')
+            await wait(lambda value: state(value) == 'running' and fourth_state(value, 'running'))
+            title('four', 'STATUS:app=antigravity:state=done')
+            await wait(lambda value: state(value) == 'idle' and fourth_state(value, 'idle'))
+            title('four', 'STATUS:app=antigravity:state=blocked:kind=question')
+            await wait(lambda value: state(value) == 'waiting' and fourth_state(value, 'waiting'))
             await kitty_request(kitty.pid, "close-window", {"match": f"id:{fourth}"})
             await wait(lambda value: state(value) == "idle" and value["health"]["agents"] == 3)
 
@@ -189,7 +202,7 @@ async def main():
             await kitty_request(kitty.pid, "close-window", {"match": f"id:{third}"})
             await wait(lambda value: value['health']['agents'] == 2
                 and value['health']['claudeActivity']['known'] == value['health']['claudeActivity']['unknown'] == 0)
-            print("PASS: existing-pane attachment, inactive tabs, split panes, exact-pane activation, labels, hooks, Antigravity states, Claude program status over a stale hook, background counts, independent Claude panes, status recovery after restart and zero spinner queries.")
+            print("PASS: existing-pane attachment, inactive tabs, split panes, exact-pane activation, labels, hooks, Antigravity title states, program status over titles and a stale hook, background counts, independent Claude panes, status recovery after restart and zero spinner queries.")
         except Exception:
             print("Last synthetic state:", latest)
             log.seek(0)

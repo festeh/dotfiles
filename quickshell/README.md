@@ -656,22 +656,25 @@ finds the project root without running Git. After saving its label, snapshots
 carry only the project name and alias. Label creation/renaming uses one targeted
 Kitty request; ongoing state updates do not discover projects or rewrite labels.
 
-Codex state comes from its terminal activity title. Shared app-server/exec-server
-processes are excluded.
-
-Claude Code reports its own state through the Program Status Protocol (OSC 7501;
-Kitty 0.50+, Claude Code 2.1.295+). Kitty keeps the records per pane, and the
+Claude Code, Codex and Antigravity report their own state through the Program
+Status Protocol (OSC 7501; Kitty 0.50+, Claude Code 2.1.295+, checked with Codex
+0.170 and Antigravity 1.5). Kitty keeps the records per pane, and the
 watcher's `on_program_status_change` callback pushes each change. The record
 without an id is the session: working is running, blocked is needs action, and
 idle, done, error or no record is idle. A blocked background record also needs
-action. Claude reports the session as working while it waits on background work
+action. Once an agent process has reported, its reports outrank hooks and
+titles; Kitty drops a finished turn's record when it is seen, so no record then
+means idle. The watcher keeps that memory through its own updates. An approval
+prompt, an Esc interrupt and a finished turn were checked for each agent.
+
+Claude reports the session as working while it waits on background work
 that will wake it, so the overline stays blue until then; long-running servers do
 not count. This covers what hooks cannot see: Esc interrupts, `/compact` and idle
-compaction have no Stop event. Once a Claude process has reported, its reports
-outrank hooks and titles; Kitty drops a finished turn's record when it is seen,
-so no record then means idle. The watcher keeps that memory through its own
-updates. Kitty answers the protocol query, so Claude leaves
+compaction have no Stop event. Kitty answers the protocol query, so Claude leaves
 the state glyph out of its title there and the title can no longer settle a hook.
+
+Until a Codex pane reports, its state comes from its terminal activity title.
+Shared app-server/exec-server processes are excluded.
 
 Kimi uses `agent-hook` and `agent_events.py`:
 small state-only hooks write atomic, private runtime files only on state changes.
@@ -688,10 +691,12 @@ adopting another instance's hook state. Ambiguous OS-window mappings keep the
 Kitty icon and no agent marker instead of borrowing another window's agents.
 
 Antigravity CLI (`agy` or `antigravity`) uses its installed app icon and the same
-project labels, rename controls and status colors. Its custom title command maps
+project labels, rename controls and status colors. Print mode and
+remote-control/microphone helpers do not create agent icons. Its own report also
+shows the folder trust prompt as needs action. A custom title command remains
+the fallback for a pane that has not reported: it maps
 `idle` to green, `initializing`/`thinking`/`working`/`tool_use` to blue, and
-`tool_confirmation_pending` to amber. Print mode and remote-control/microphone
-helpers do not create agent icons. Merge this into
+`tool_confirmation_pending` to amber. Merge this into
 `~/.gemini/antigravity-cli/settings.json`, preserving other settings:
 
 ```json

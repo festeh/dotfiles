@@ -5,7 +5,10 @@ including inactive tabs and splits. Internal app-server/exec-server processes do
 not create status indicators. Kitty pane IDs identify terminals; the shared Codex
 daemon PID does not identify individual windows.
 
-Kitty pushes title changes directly to the tracker: a spinner means running,
+In Kitty 0.50+ Codex reports its state to the terminal itself (Program Status
+Protocol, OSC 7501), and the tracker reads that from Kitty; see
+`../quickshell/README.md`. The terminal title is the fallback for a pane that has
+not reported. Kitty pushes title changes directly to the tracker: a spinner means running,
 `[ ! ] Action Required` (blinking with `[ . ]`) means needs action, and an unmarked
 title means idle. Keep `activity` in `[tui].terminal_title`. Each agent pane has
 its own overline: amber needs action, blue running, green idle.

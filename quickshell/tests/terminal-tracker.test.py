@@ -54,7 +54,11 @@ class ProtocolTests(unittest.TestCase):
         self.assertIsNone(status())
         self.assertIsNone(status(record(app='rsync'), 'malformed', dict(app='claude-code')))
         self.assertIsNone(protocol.program_status('claude', None))
-        self.assertIsNone(protocol.program_status('codex', [record()], reported=True))
+        self.assertIsNone(protocol.program_status('codex', [record()]))
+        self.assertIsNone(protocol.program_status('kimi', [record(app='kimi')], reported=True))
+        # Codex and Antigravity report under their own app names.
+        for agent in ('codex', 'antigravity'):
+            self.assertEqual(protocol.program_status(agent, [record(state='blocked', app=agent)])['state'], 'waiting')
         # Kitty drops a finished turn's record once seen: a known reporter is then idle.
         self.assertEqual(status(reported=True), dict(state='idle', agents=0, tasks=0))
 
@@ -273,6 +277,7 @@ class StatusWatcherTests(unittest.TestCase):
     def test_resync_reads_existing_records_of_agent_panes(self):
         current = layout()
         current[0]['tabs'][0]['windows'][0]['program_status'] = [dict(id='', state='working', app='claude-code')]
+        current[0]['tabs'][1]['windows'][0]['program_status'] = [dict(id='', state='working', app='codex')]
         current[0]['tabs'][0]['windows'][1]['program_status'] = [
             dict(id='', state='blocked', kind='permission', app='claude-code', title='', msg='private message'),
             dict(id='a1', state='working', app='claude-code', title='private title', msg='')]
@@ -280,7 +285,8 @@ class StatusWatcherTests(unittest.TestCase):
         with patch.object(self.watcher, 'send') as send:
             self.watcher.resync(boss, force=True)
         panes = send.call_args.args[0]['windows'][0]['panes']
-        self.assertEqual([pane['status'] for pane in panes], [None, dict(state='waiting', agents=1, tasks=0), None])
+        self.assertEqual([pane['status'] for pane in panes], [None, dict(state='waiting', agents=1, tasks=0),
+            dict(state='running', agents=0, tasks=0)])
         self.assertNotIn('private', json.dumps(panes))
 
 
@@ -395,6 +401,12 @@ class TrackerTests(unittest.IsolatedAsyncioTestCase):
         model.event(dict(event, status=None))
         self.assertEqual(agent()['state'], 'running')
         self.assertIsNone(agent()['activity'])
+        # Codex's report outranks its title; background badges stay Claude's.
+        codex = lambda: model.windows()['a1']['agents'][2]
+        self.assertEqual(codex()['state'], 'waiting')
+        model.event(dict(event, pane=3, agentPid=23, status=dict(state='idle', agents=0, tasks=1)))
+        self.assertEqual(codex()['state'], 'idle')
+        self.assertIsNone(codex()['activity'])
         self.assertEqual(model.requests, 0)
 
     async def test_labels_discover_once_and_survive_metadata_and_state_changes(self):

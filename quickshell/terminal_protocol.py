@@ -10,7 +10,7 @@ SHELLS = {"sh", "bash", "zsh", "fish", "dash", "nu", "xonsh"}
 STATES = {"idle", "running", "waiting"}
 ACTIVITY_KINDS = ("agents", "tasks")
 # Apps whose OSC 7501 program status reports Kitty keeps for the pane.
-STATUS_APPS = {"claude": "claude-code"}
+STATUS_APPS = {"claude": "claude-code", "codex": "codex", "antigravity": "antigravity"}
 # Claude Code task ids start with their type: agent, remote agent, teammate,
 # workflow. Any other background record is a shell, monitor or MCP task.
 _AGENT_TASKS = "artw"

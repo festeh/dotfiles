@@ -296,7 +296,8 @@ class Tracker:
                         "active": pane["active"], "state": self.agent_state(pid, pane, record),
                         "label": display_label(label) if label else "", "fullLabel": label["label"] if label else "",
                         "project": label["project"] if label else "",
-                        "activity": {kind: status[kind] for kind in ACTIVITY_KINDS} if status else None})
+                        "activity": {kind: status[kind] for kind in ACTIVITY_KINDS}
+                            if status and pane["agent"] == "claude" else None})
                 result[client["address"]] = {"kitty": True, "programs": active["programs"] if active else [],
                     "agents": agents, "agentState": aggregate(agents)}
         return result
