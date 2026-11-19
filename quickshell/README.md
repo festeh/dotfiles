@@ -673,14 +673,17 @@ so no record then means idle. The watcher keeps that memory through its own
 updates. Kitty answers the protocol query, so Claude leaves
 the state glyph out of its title there and the title can no longer settle a hook.
 
-Kimi, and Claude in a pane that has not reported (an older release, tmux, or
-`CLAUDE_CODE_DISABLE_TERMINAL_TITLE`), use `agent-hook` and `agent_events.py`:
+Kimi uses `agent-hook` and `agent_events.py`:
 small state-only hooks write atomic, private runtime files only on state changes.
 One inotify watch reads changed files; publishing never rereads every agent file.
 Compaction counts as running and then returns to the state it interrupted,
 explicit user questions/permissions need action, and stop/interruption is idle.
-Where Claude's title still has its glyph, a later idle title can settle a stale
-running hook after an Esc interrupt. A Kitty process start token prevents PID reuse from
+Claude's tracked settings no longer register these hooks, so a Claude pane that
+cannot report (an older release, tmux, or `CLAUDE_CODE_DISABLE_TERMINAL_TITLE`)
+shows no state. `git revert claude-hooks-removed` restores them as that
+fallback; the tracker still reads Claude's hook files, and where its title keeps
+the glyph a later idle title settles a stale running hook after an Esc
+interrupt. A Kitty process start token prevents PID reuse from
 adopting another instance's hook state. Ambiguous OS-window mappings keep the
 Kitty icon and no agent marker instead of borrowing another window's agents.
 
@@ -714,8 +717,8 @@ labels and supported session names reach QML; arguments, environment, full paths
 not. Runtime hook files
 contain only identity/state metadata, live under `$XDG_RUNTIME_DIR/quickshell-agents`
 with mode 0600, and are removed on session end. No AGS cache is read.
-`codex/hooks.json` is empty; Claude's tracked settings and Kimi's local config use
-only the Quickshell state hook. Former AGS/Herdr hook scripts are removed, with no
+`codex/hooks.json` is empty and Claude's tracked settings have no hooks; Kimi's
+local config uses only the Quickshell state hook. Former AGS/Herdr hook scripts are removed, with no
 compatibility forwarding. Existing clients may need restarting to forget cached
 hook commands.
 

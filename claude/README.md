@@ -5,12 +5,11 @@ itself (Program Status Protocol, OSC 7501), and the Quickshell tracker reads tha
 from Kitty. It needs no setting here and also covers Esc interrupts and idle
 compaction. See `../quickshell/README.md`.
 
-The hooks in `settings.json` call `../quickshell/agent-hook claude` and remain the
-fallback for a pane that has not reported. They publish
-only idle/running/needs-action state for the current Kitty pane, with no prompts,
-Git commands, transcript scanning or Herdr integration. Repeated tool events in
-the same state cause no file writes. The Quickshell tracker watches those files
-and follows the state of every agent pane across tabs/splits.
+`settings.json` therefore registers no status hooks. The former entries called
+`../quickshell/agent-hook claude` on fourteen events and only mattered for a
+pane that cannot report (tmux, `CLAUDE_CODE_DISABLE_TERMINAL_TITLE`); such a
+pane now shows no state. `git revert claude-hooks-removed` restores them, and
+the tracker still reads their state files.
 
 Automatic labels use Claude Code's session name from its terminal title, with
 activity markers removed. Generic startup titles keep the project fallback.
@@ -20,6 +19,5 @@ the session name. Full names appear on hover in the workspace strip.
 
 ## Notes
 
-- Former AGS and Herdr hook entries/scripts are removed. Existing sessions may need a restart to forget cached commands.
+- Sessions started before the hooks were removed keep running them until restarted.
 - `~/.claude/settings.json` is tracked in this repo at `claude/settings.json` and symlinked back (installer entry `symlinks.claude_settings` in `hosts/common/config.toml`). Note: Claude Code mutates this file at runtime (survey state, theme/effort toggles, etc.), so expect occasional diffs.
-- Hooks cannot see an Esc interrupt. The program status report covers it; without one, a later idle terminal title settles the running state.
