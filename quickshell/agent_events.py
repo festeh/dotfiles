@@ -66,10 +66,19 @@ def _record(agent, data):
             if same_instance and previous.get("session") == session:
                 path.unlink(missing_ok=True)
             return
-        if same_instance and previous.get("session") == session and previous.get("state") == state:
+        current = previous if same_instance and previous.get("session") == session else {}
+        value = {"agent": agent, "state": state, "start": identity[0], "session": session}
+        # /compact and idle compaction run outside a turn, so no Stop follows:
+        # the end of compaction returns to the state it interrupted.
+        if event == "PreCompact" and current.get("state", "idle") != "running":
+            value["resume"] = current.get("state", "idle")
+        elif event == "PostCompact":
+            if current.get("resume") not in {"idle", "waiting"}:
+                return
+            value["state"] = current["resume"]
+        if current.get("state") == value["state"] and current.get("resume") == value.get("resume"):
             return
-        value = {"agent": agent, "state": state, "start": identity[0], "session": session,
-            "at": time.monotonic_ns()}
+        value["at"] = time.monotonic_ns()
         temporary = path.with_suffix(f".{os.getpid()}.tmp")
         descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
         with os.fdopen(descriptor, "w") as output:

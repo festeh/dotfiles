@@ -13,7 +13,7 @@ import struct
 import sys
 import time
 
-from terminal_protocol import activity_counts, aggregate, process_identity, runtime_directory, snapshot, socket_path, STATES
+from terminal_protocol import ACTIVITY_KINDS, aggregate, process_identity, runtime_directory, snapshot, socket_path, status_record, STATES
 from terminal_labels import LABEL_VARIABLE, clean_label, context as label_context, display_label, make_context, project_name
 
 FRAME, END = b"\x1bP@kitty-cmd", b"\x1b\\"
@@ -121,17 +121,17 @@ class Tracker:
             for pane_id in present - record["hooks"].keys():
                 record["hooks"][pane_id] = self.read_hook(pid, pane_id, record)
             self.prepare_labels()
-        elif kind == "activity":
-            value = activity_counts(message.get("activity"))
-            if message.get("activity") is not None and value is None:
+        elif kind == "status":
+            value = status_record(message.get("status"))
+            if message.get("status") is not None and value is None:
                 return
             changed = False
             for window in record["windows"]:
                 for pane in window["panes"]:
-                    if (pane["id"] == message.get("pane") and pane["agent"] == "claude"
+                    if (pane["id"] == message.get("pane") and pane["agent"]
                             and pane.get("agentPid") == message.get("agentPid")
-                            and pane.get("activity") != value):
-                        pane["activity"] = value
+                            and pane.get("status") != value):
+                        pane["status"] = value
                         changed = True
             if not changed:
                 return
@@ -252,7 +252,12 @@ class Tracker:
             return {}
         return value
 
-    def hook_state(self, pid, pane, record):
+    def agent_state(self, pid, pane, record):
+        # The agent's own program status, held by Kitty, outranks hooks and
+        # titles: it also covers interrupts and compaction outside a turn.
+        status = status_record(pane.get("status"))
+        if status:
+            return status["state"]
         if pane["agent"] == "codex":
             return pane["titleState"]
         value = record["hooks"].get(pane["id"], {})
@@ -286,11 +291,12 @@ class Tracker:
                     if not pane["agent"]:
                         continue
                     label = record.get("labels", {}).get(pane["id"])
+                    status = status_record(pane.get("status"))
                     agents.append({"agent": pane["agent"], "pane": pane["id"], "tab": pane["tab"],
-                        "active": pane["active"], "state": self.hook_state(pid, pane, record),
+                        "active": pane["active"], "state": self.agent_state(pid, pane, record),
                         "label": display_label(label) if label else "", "fullLabel": label["label"] if label else "",
                         "project": label["project"] if label else "",
-                        "activity": activity_counts(pane.get("activity")) if pane["agent"] == "claude" else None})
+                        "activity": {kind: status[kind] for kind in ACTIVITY_KINDS} if status else None})
                 result[client["address"]] = {"kitty": True, "programs": active["programs"] if active else [],
                     "agents": agents, "agentState": aggregate(agents)}
         return result
@@ -304,7 +310,7 @@ class Tracker:
         activity = {"known": sum(agent["activity"] is not None for agent in claude),
             "unknown": sum(agent["activity"] is None for agent in claude),
             **{kind: sum((agent["activity"] or {}).get(kind, 0) for agent in claude)
-                for kind in ("agents", "shells", "monitors")}}
+                for kind in ACTIVITY_KINDS}}
         value = {"windows": windows, "health": {"instances": len(self.instances),
             "watched": sum(record["watched"] for record in self.instances.values()),
             "panes": sum(len(window["panes"]) for record in self.instances.values() for window in record["windows"]),

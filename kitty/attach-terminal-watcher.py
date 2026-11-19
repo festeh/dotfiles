@@ -24,6 +24,8 @@ def handle_result(args, data, target_window_id, boss):
         source / "terminal_protocol.py", source / "terminal_labels.py"))
     global_callbacks = global_watchers()
     previous = watcher_modules.get(path)
+    # Which agents have reported their status must survive a watcher update.
+    reported = previous.get("_reported") if isinstance(previous, dict) else None
     if not isinstance(previous, dict) or previous.get("_quickshell_revision") != revision:
         if isinstance(previous, dict) and callable(previous.get("shutdown")):
             previous["shutdown"]()
@@ -43,6 +45,8 @@ def handle_result(args, data, target_window_id, boss):
     if watchers is None:
         return False
     watcher_modules[path]["_quickshell_revision"] = revision
+    if isinstance(reported, dict) and reported is not watcher_modules[path].get("_reported"):
+        watcher_modules[path]["_reported"].update(reported)
     global_watchers().add(watchers)
     for window in boss.window_id_map.values():
         window.watchers.add(watchers)

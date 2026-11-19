@@ -52,7 +52,7 @@ QtObject {
         if (agent.agent === "claude") {
             if (!agent.activity) description += " · Background counts unavailable";
             else {
-                const counts = ["agents", "shells", "monitors"].filter(kind => agent.activity[kind] > 0)
+                const counts = ["agents", "tasks"].filter(kind => agent.activity[kind] > 0)
                     .map(kind => agent.activity[kind] + " " + (agent.activity[kind] === 1 ? kind.slice(0, -1) : kind));
                 description += " · " + (counts.join(" · ") || "No background tasks");
             }

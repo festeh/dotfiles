@@ -606,18 +606,17 @@ Healthy watched instances have no periodic inventory or `/proc` polling. Only an
 instance that rejects watcher attachment after three attempts falls back to a
 five-second snapshot; a valid watcher snapshot ends that fallback.
 
-Claude panes also show compact agent, shell and monitor counts from Claude's
-native footer. One two-second timer runs inside each Kitty instance containing
-Claude panes and stops when none remain. It reads at most eight bottom screen
-rows, joins soft-wrapped lines and recognizes only the final footer. Screen text
-stays inside Kitty; only three counts or an unavailable value cross the existing
-socket, and unchanged samples produce no messages. No subprocess, transcript
-access, extra daemon, Claude setting or native patch is needed.
-The parser follows Claude Code 2.1.309's English footer; check it after Claude
-changes its UI. Hidden or unrecognized footers hide the badges rather than
-reporting zero. Recognized empty footers clear them. Nonzero counts use small
-icons beside the session label, with the full breakdown on hover; they remain
-separate from the main session's status color.
+Claude panes also show compact counts of background agents and of other
+background tasks (shells, monitors, MCP tasks). They come from the same program
+status records as the session state, described below, so there is no timer,
+screen reading, subprocess or transcript access. Record titles and messages stay
+inside Kitty; only a state and two counts cross the existing socket, and
+unchanged reports produce no messages. Agents are told apart by the type letter
+that starts Claude Code's task ids (agent, remote agent, teammate, workflow);
+any other id counts as a task. Claude lists a subagent only while it runs in the
+background. A pane that has not reported hides the badges rather than reporting
+zero. Nonzero counts use small icons beside the session label, with the
+breakdown on hover.
 
 Each agent pane has its own app icon and static 18×2px overline: green for idle,
 blue for running, and amber for needs action. Unknown states have no overline.
@@ -658,12 +657,30 @@ carry only the project name and alias. Label creation/renaming uses one targeted
 Kitty request; ongoing state updates do not discover projects or rewrite labels.
 
 Codex state comes from its terminal activity title. Shared app-server/exec-server
-processes are excluded. Claude and Kimi use `agent-hook` and `agent_events.py`:
+processes are excluded.
+
+Claude Code reports its own state through the Program Status Protocol (OSC 7501;
+Kitty 0.50+, Claude Code 2.1.295+). Kitty keeps the records per pane, and the
+watcher's `on_program_status_change` callback pushes each change. The record
+without an id is the session: working is running, blocked is needs action, and
+idle, done, error or no record is idle. A blocked background record also needs
+action. Claude reports the session as working while it waits on background work
+that will wake it, so the overline stays blue until then; long-running servers do
+not count. This covers what hooks cannot see: Esc interrupts, `/compact` and idle
+compaction have no Stop event. Once a Claude process has reported, its reports
+outrank hooks and titles; Kitty drops a finished turn's record when it is seen,
+so no record then means idle. The watcher keeps that memory through its own
+updates. Kitty answers the protocol query, so Claude leaves
+the state glyph out of its title there and the title can no longer settle a hook.
+
+Kimi, and Claude in a pane that has not reported (an older release, tmux, or
+`CLAUDE_CODE_DISABLE_TERMINAL_TITLE`), use `agent-hook` and `agent_events.py`:
 small state-only hooks write atomic, private runtime files only on state changes.
 One inotify watch reads changed files; publishing never rereads every agent file.
-Compaction counts as running, explicit user questions/permissions need action,
-and stop/interruption is idle. Claude's later idle title can settle a stale running
-hook after an Esc interrupt. A Kitty process start token prevents PID reuse from
+Compaction counts as running and then returns to the state it interrupted,
+explicit user questions/permissions need action, and stop/interruption is idle.
+Where Claude's title still has its glyph, a later idle title can settle a stale
+running hook after an Esc interrupt. A Kitty process start token prevents PID reuse from
 adopting another instance's hook state. Ambiguous OS-window mappings keep the
 Kitty icon and no agent marker instead of borrowing another window's agents.
 
@@ -703,7 +720,9 @@ compatibility forwarding. Existing clients may need restarting to forget cached
 hook commands.
 
 References: [Kitty watcher callbacks](https://sw.kovidgoyal.net/kitty/launch/#watching-launched-windows),
-[custom kittens](https://sw.kovidgoyal.net/kitty/kittens/custom/), and
+[custom kittens](https://sw.kovidgoyal.net/kitty/kittens/custom/),
+[Kitty program status](https://sw.kovidgoyal.net/kitty/misc-protocol/#reporting-the-status-of-a-program),
+[Claude session status](https://code.claude.com/docs/en/terminal-config#see-session-status-in-your-terminal), and
 [Claude hook events](https://code.claude.com/docs/en/hooks).
 
 The open-window event supplies class metadata before the first full IPC snapshot.

@@ -36,33 +36,35 @@ def layout():
 
 
 class ProtocolTests(unittest.TestCase):
-    def test_claude_footer_counts_require_the_final_footer_and_handle_zero(self):
-        zero = dict(agents=0, shells=0, monitors=0)
-        for mode in ('⏵⏵ bypass permissions on', '⏵⏵ accept edits on',
-                '⏸ plan mode on', 'auto mode', '? for shortcuts'):
-            self.assertEqual(protocol.claude_footer_counts(['Private output: 9 shells', mode, '']), zero)
-            self.assertEqual(protocol.claude_footer_counts([mode + ' · 1 agent, 2 shells, 3 monitors']),
-                dict(agents=1, shells=2, monitors=3))
-        self.assertEqual(protocol.claude_footer_counts(
-            ['⏵⏵ bypass permissions on (shift+tab to cycle) · PR #123 · 1 shell']),
-            dict(agents=0, shells=1, monitors=0))
-        self.assertEqual(protocol.claude_footer_counts(['2 shells, 2 monitors']),
-            dict(agents=0, shells=2, monitors=2))
-        for lines in ([], [''], ['Private output mentions 2 shells and 2 monitors'],
-                ['⏵⏵ bypass permissions on · 2 shells', 'Choose an option'],
-                ['⏵⏵ bypass permissions on · -1 shell'],
-                ['⏵⏵ bypass permissions on · 10000 shells'],
-                ['⏵⏵ bypass permissions on · 1 shell, 2 shells']):
-            self.assertIsNone(protocol.claude_footer_counts(lines))
+    def test_program_status_reduces_records_to_state_and_background_counts(self):
+        def record(identifier='', state='working', **values):
+            return {**dict(id=identifier, state=state, kind=None, app='claude-code', title='private title',
+                msg='private message'), **values}
+        status = lambda *records, **options: protocol.program_status('claude', list(records), **options)
+        self.assertEqual(status(record()), dict(state='running', agents=0, tasks=0))
+        for finished in ('idle', 'done', 'error'):
+            self.assertEqual(status(record(state=finished))['state'], 'idle')
+        self.assertEqual(status(record(state='blocked', kind='permission'))['state'], 'waiting')
+        # Background work outlives a turn without making the session itself busy.
+        value = status(record('b1'), record('b2'), record('a1'), record('w1'), record('b3', 'done'))
+        self.assertEqual(value, dict(state='idle', agents=2, tasks=2))
+        self.assertEqual(status(record(), record('a1', 'blocked'))['state'], 'waiting')
+        self.assertNotIn('private', json.dumps(value))
+        # Other programs' records and a pane that never reported say nothing about Claude.
+        self.assertIsNone(status())
+        self.assertIsNone(status(record(app='rsync'), 'malformed', dict(app='claude-code')))
+        self.assertIsNone(protocol.program_status('claude', None))
+        self.assertIsNone(protocol.program_status('codex', [record()], reported=True))
+        # Kitty drops a finished turn's record once seen: a known reporter is then idle.
+        self.assertEqual(status(reported=True), dict(state='idle', agents=0, tasks=0))
 
-    def test_activity_records_accept_only_bounded_counts(self):
-        for value in (None, {}, {'shells': 2}, dict(agents=True, shells=0, monitors=0),
-                dict(agents=-1, shells=0, monitors=0), dict(agents=0, shells='2', monitors=0),
-                dict(agents=0, shells=10000, monitors=0),
-                dict(agents=0, shells=1, monitors=0, text='private')):
-            self.assertIsNone(protocol.activity_counts(value))
-        value = dict(agents=2, shells=3, monitors=1)
-        self.assertEqual(protocol.activity_counts(value), value)
+    def test_status_records_accept_only_states_and_bounded_counts(self):
+        value = dict(state='running', agents=2, tasks=3)
+        self.assertEqual(protocol.status_record(value), value)
+        for invalid in (None, {}, dict(state='running'), dict(value, state='done'), dict(value, agents=True),
+                dict(value, tasks=-1), dict(value, tasks='2'), dict(value, agents=10000),
+                dict(value, title='private')):
+            self.assertIsNone(protocol.status_record(invalid))
 
     def test_claude_session_names_strip_activity_and_skip_startup_titles(self):
         for marker in ('✳', '✳️', '✻', '⠋', '⠙', '◐', '◓', ''):
@@ -231,48 +233,55 @@ class LabelTests(unittest.TestCase):
         self.assertIsNone(protocol.snapshot(native)[0]['panes'][0]['context'])
 
 
-class FooterWatcherTests(unittest.TestCase):
+class StatusWatcherTests(unittest.TestCase):
     def setUp(self):
-        spec = importlib.util.spec_from_file_location('footer_watcher', config.parent / 'kitty/terminal-watcher.py')
+        spec = importlib.util.spec_from_file_location('status_watcher', config.parent / 'kitty/terminal-watcher.py')
         self.watcher = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(self.watcher)
 
-    def screen(self, lines, continued=()):
-        return SimpleNamespace(lines=len(lines), line=lambda index: lines[index],
-            linebuf=SimpleNamespace(is_continued=lambda index: index in continued))
-
-    def test_wrapped_footer_lines_are_joined_without_exposing_screen_text(self):
-        native = SimpleNamespace(screen=self.screen(
-            ['private message', '⏵⏵ bypass permissions on · 2 shells, 3 moni', 'tors'], (2,)))
-        self.assertEqual(self.watcher.footer_counts(native), dict(agents=0, shells=2, monitors=3))
-        native.screen = self.screen(['discarded'] + ['continuation'] * 8, tuple(range(1, 9)))
-        self.assertIsNone(self.watcher.footer_counts(native))
-        self.assertIsNone(self.watcher.footer_counts(SimpleNamespace()))
-
-    def test_one_timer_while_claude_exists_and_change_only_updates(self):
+    def test_reports_push_only_changes_and_a_seen_finished_turn_stays_idle(self):
         watcher = self.watcher
-        watcher._panes = {2: dict(id=2, agent='claude', agentPid=22)}
-        native = SimpleNamespace(screen=self.screen(['⏵⏵ bypass permissions on · 2 monitors']))
-        boss = SimpleNamespace(window_id_map={2: native})
-        timers = SimpleNamespace(add_timer=Mock(return_value=7), remove_timer=Mock())
-        with patch.dict(sys.modules, {'kitty': ModuleType('kitty'), 'kitty.fast_data_types': timers}), \
-                patch.object(watcher, 'send') as send:
-            watcher.sync_activity_timer(boss)
-            watcher.sync_activity_timer(boss)
-            self.assertEqual(timers.add_timer.call_count, 1)
-            self.assertEqual(timers.add_timer.call_args.args[1:], (2.0, True))
-            watcher.sample_activity(boss)
-            watcher.sample_activity(boss)
-            self.assertEqual(send.call_count, 1)
-            self.assertEqual(send.call_args.args[0],
-                dict(event='activity', pane=2, agentPid=22, activity=dict(agents=0, shells=0, monitors=2)))
-            native.screen = self.screen(['Choose an option'])
-            watcher.sample_activity(boss)
-            self.assertIsNone(send.call_args.args[0]['activity'])
-            watcher._panes = {3: dict(agent='codex')}
-            watcher.sync_activity_timer(boss)
-            watcher.shutdown()
-            timers.remove_timer.assert_called_once_with(7)
+        watcher._panes = {2: dict(id=2, agent='claude', agentPid=22, status=None), 3: dict(id=3, agent='')}
+        window = SimpleNamespace(id=2)
+        report = lambda *records: watcher.on_program_status_change(None, window, dict(program_status=list(records)))
+        main = dict(id='', state='working', app='claude-code', title='', msg='private message')
+        shell = dict(id='b1', state='working', app='claude-code', title='private title', msg='')
+        with patch.object(watcher, 'send') as send:
+            report()
+            watcher.on_program_status_change(None, SimpleNamespace(id=3), dict(program_status=[main]))
+            watcher.on_program_status_change(None, SimpleNamespace(id=9), dict(program_status=[main]))
+            send.assert_not_called()
+            report(main)
+            report(dict(main, msg='another private message'))
+            send.assert_called_once_with(dict(event='status', pane=2, agentPid=22,
+                status=dict(state='running', agents=0, tasks=0)))
+            report(dict(main, state='done'), shell)
+            report(shell)
+            self.assertEqual(send.call_count, 2)
+            self.assertEqual(send.call_args.args[0]['status'], dict(state='idle', agents=0, tasks=1))
+            report()
+            self.assertEqual(send.call_args.args[0]['status'], dict(state='idle', agents=0, tasks=0))
+            self.assertNotIn('private', json.dumps([call.args[0] for call in send.call_args_list]))
+            # A new agent process in the pane has not reported yet.
+            watcher._panes[2] = dict(id=2, agent='claude', agentPid=23, status=None)
+            report()
+            self.assertEqual(send.call_count, 3)
+            with patch.object(watcher, 'schedule'):
+                watcher.on_close(None, window, {})
+            self.assertNotIn(2, watcher._reported)
+
+    def test_resync_reads_existing_records_of_agent_panes(self):
+        current = layout()
+        current[0]['tabs'][0]['windows'][0]['program_status'] = [dict(id='', state='working', app='claude-code')]
+        current[0]['tabs'][0]['windows'][1]['program_status'] = [
+            dict(id='', state='blocked', kind='permission', app='claude-code', title='', msg='private message'),
+            dict(id='a1', state='working', app='claude-code', title='private title', msg='')]
+        boss = SimpleNamespace(list_os_windows=lambda: current, window_id_map={}, os_window_map={})
+        with patch.object(self.watcher, 'send') as send:
+            self.watcher.resync(boss, force=True)
+        panes = send.call_args.args[0]['windows'][0]['panes']
+        self.assertEqual([pane['status'] for pane in panes], [None, dict(state='waiting', agents=1, tasks=0), None])
+        self.assertNotIn('private', json.dumps(panes))
 
 
 class HookTests(unittest.TestCase):
@@ -319,6 +328,26 @@ class HookTests(unittest.TestCase):
         self.event("Notification", notification_type="auth_success")
         self.assertEqual(json.loads(self.path.read_text())["state"], "idle")
 
+    def test_compaction_outside_a_turn_returns_to_the_interrupted_state(self):
+        state = lambda: json.loads(self.path.read_text())["state"]
+        self.event("PostCompact")
+        self.assertFalse(self.path.exists())
+        self.event("SessionStart")
+        self.event("PreCompact", trigger="auto")  # idle compaction: no prompt before, no Stop after
+        self.assertEqual(state(), "running")
+        self.event("PostCompact", trigger="auto")
+        self.assertEqual(set(json.loads(self.path.read_text())), {"agent", "state", "start", "session", "at"})
+        self.assertEqual(state(), "idle")
+        self.event("UserPromptSubmit")
+        self.event("PreCompact")
+        self.event("PostCompact")
+        self.assertEqual(state(), "running")
+        self.event("Stop")
+        self.event("PreCompact")
+        self.event("UserPromptSubmit")  # a prompt typed while compacting starts a turn
+        self.event("PostCompact")
+        self.assertEqual(state(), "running")
+
 
 class TrackerTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
@@ -342,23 +371,30 @@ class TrackerTests(unittest.IsolatedAsyncioTestCase):
         model.event({"pid": 123, "start": "42", "event": "close", "pane": 3})
         self.assertEqual(model.windows()["a1"]["agentState"], "idle")
 
-    async def test_activity_updates_check_process_ownership_and_preserve_session_state(self):
+    async def test_program_status_outranks_hooks_and_checks_process_ownership(self):
         model = await self.model()
         model.schedule_publish = Mock()
-        value = dict(agents=1, shells=2, monitors=3)
-        event = dict(pid=123, start='42', event='activity', pane=2, agentPid=22, activity=value)
+        agent = lambda: model.windows()['a1']['agents'][1]
+        # Kitty shows the status itself, so Claude's title carries no state; the
+        # hook is still "running" after a compaction that no Stop followed.
+        model.instances[123]['windows'][0]['panes'][1]['titleState'] = ''
+        model.instances[123]['hooks'][2] = dict(agent='claude', state='running', at=0)
+        self.assertEqual(agent()['state'], 'running')
+        self.assertIsNone(agent()['activity'])
+        value = dict(state='idle', agents=1, tasks=2)
+        event = dict(pid=123, start='42', event='status', pane=2, agentPid=22, status=value)
         model.event(event)
-        agent = model.windows()['a1']['agents'][1]
-        self.assertEqual(agent['activity'], value)
-        self.assertEqual(agent['state'], 'idle')
+        self.assertEqual(agent()['state'], 'idle')
+        self.assertEqual(agent()['activity'], dict(agents=1, tasks=2))
         model.schedule_publish.reset_mock()
-        for changed in (event, dict(event, agentPid=99),
-                dict(event, activity=dict(agents=0, shells=-1, monitors=0))):
-            model.event(changed)
+        for ignored in (event, dict(event, agentPid=99), dict(event, status=dict(value, tasks=-1)),
+                dict(event, status=dict(value, state='done'))):
+            model.event(ignored)
         model.schedule_publish.assert_not_called()
-        self.assertEqual(model.windows()['a1']['agents'][1]['activity'], value)
-        model.event(dict(event, activity=None))
-        self.assertIsNone(model.windows()['a1']['agents'][1]['activity'])
+        self.assertEqual(agent()['activity'], dict(agents=1, tasks=2))
+        model.event(dict(event, status=None))
+        self.assertEqual(agent()['state'], 'running')
+        self.assertIsNone(agent()['activity'])
         self.assertEqual(model.requests, 0)
 
     async def test_labels_discover_once_and_survive_metadata_and_state_changes(self):

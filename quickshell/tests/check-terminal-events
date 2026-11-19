@@ -25,8 +25,8 @@ async def main():
             'while True:\n with open(sys.argv[1]) as control:\n'
             '  for line in control:\n'
             '   value=line.rstrip("\\n")\n'
-            '   if value.startswith("FOOTER:"):\n'
-            '    print("\\x1b7\\x1b[999;1H\\x1b[2K"+value[7:]+"\\x1b8",end="",flush=True)\n'
+            '   if value.startswith("STATUS:"):\n'
+            '    print("\\x1b]7501;"+value[7:]+"\\x1b\\\\",end="",flush=True)\n'
             '   else: print("\\x1b]0;"+value+"\\x07",end="",flush=True)\n')
         for name in ("codex", "claude", "agy"):
             (root / name).write_text(program)
@@ -68,8 +68,11 @@ async def main():
             finally:
                 os.close(descriptor)
 
+        def agent(value, pane):
+            return next(agent for agent in value['windows']['a1']['agents'] if agent['pane'] == pane)
+
         def activity(value, pane):
-            return next(agent.get('activity') for agent in value['windows']['a1']['agents'] if agent['pane'] == pane)
+            return agent(value, pane).get('activity')
 
         async def hook(pane, event):
             process = await asyncio.create_subprocess_exec("/usr/bin/python3", str(source / "agent-hook"), "claude",
@@ -120,28 +123,37 @@ async def main():
             await wait(lambda value: state(value) == "idle")
             first = latest['windows']['a1']['agents'][0]['pane']
             await kitty_request(kitty.pid, "focus-window", {"match": f"id:{first}"})
-            # No hook or title changes: the inactive pane's footer is the source.
-            title('three', 'FOOTER:⏵⏵ bypass permissions on · 2 shells, 2 monitors')
-            counts = dict(agents=0, shells=2, monitors=2)
-            await wait(lambda value: activity(value, third) == counts and state(value) == 'idle')
-            assert 'bypass permissions' not in json.dumps(latest)
-            title('three', 'FOOTER:⏵⏵ bypass permissions on · 1 shell')
-            await wait(lambda value: activity(value, third) == dict(agents=0, shells=1, monitors=0))
-            title('three', 'FOOTER:Choose an option')
-            await wait(lambda value: activity(value, third) is None)
-            title('three', 'FOOTER:⏵⏵ bypass permissions on')
-            await wait(lambda value: activity(value, third) == dict(agents=0, shells=0, monitors=0))
+            # Program status reports are the source once a pane sends them; no
+            # hook, title or screen text is involved.
+            assert activity(latest, third) is None
+            report = 'STATUS:app=claude-code:state='
+            title('three', report + 'working')
+            await wait(lambda value: agent(value, third)['state'] == 'running'
+                and activity(value, third) == dict(agents=0, tasks=0))
+            title('three', report + 'working:id=b1:title=cHJpdmF0ZSB0aXRsZQ')
+            title('three', report + 'working:id=a1:msg=cHJpdmF0ZSBtZXNzYWdl')
+            await wait(lambda value: activity(value, third) == dict(agents=1, tasks=1))
+            title('three', report + 'blocked:kind=permission')
+            await wait(lambda value: state(value) == 'waiting')
+            title('three', report + 'done')
+            await wait(lambda value: state(value) == 'idle' and activity(value, third) == dict(agents=1, tasks=1))
+            assert 'private' not in json.dumps(latest)
+            # Idle compaction: its hook says running and no Stop follows, but the
+            # session's own report still says the turn is over.
+            await hook(third, "PreCompact")
+            title('three', 'STATUS:state=clear:id=a1')
+            await wait(lambda value: activity(value, third) == dict(agents=0, tasks=1))
+            assert agent(latest, third)['state'] == 'idle'
             second_claude = int(await kitty_request(kitty.pid, "launch",
                 dict(args=[str(root / "claude"), str(root / "five")], type="tab", keep_focus=True)))
             await wait(lambda value: value['health']['agents'] == 4)
             title('five', '✳ Secondary session')
-            title('five', 'FOOTER:⏵⏵ bypass permissions on · 3 agents')
-            await wait(lambda value: activity(value, second_claude) == dict(agents=3, shells=0, monitors=0)
-                and activity(value, third) == dict(agents=0, shells=0, monitors=0))
+            for identifier in ('a1', 'r2', 'w3'):
+                title('five', report + 'working:id=' + identifier)
+            await wait(lambda value: activity(value, second_claude) == dict(agents=3, tasks=0)
+                and activity(value, third) == dict(agents=0, tasks=1))
             await kitty_request(kitty.pid, "close-window", {"match": f"id:{second_claude}"})
             await wait(lambda value: value['health']['agents'] == 3 and state(value) == 'idle')
-            title('three', 'FOOTER:⏵⏵ bypass permissions on · 2 monitors')
-            await wait(lambda value: activity(value, third) == dict(agents=0, shells=0, monitors=2))
             fourth = int(await kitty_request(kitty.pid, "launch", dict(args=[str(root / "agy"), str(root / "four")], type="window", keep_focus=True)))
             await wait(lambda value: value["health"]["agents"] == 4)
             def fourth_state(value, expected):
@@ -162,7 +174,7 @@ async def main():
             await start()
             await wait(lambda value: value["health"]["watched"] == 1 and value["health"]["agents"] == 3
                 and value['windows']['a1']['agents'][0]['fullLabel'] == 'Refactor upload cache'
-                and activity(value, third) == dict(agents=0, shells=0, monitors=2)
+                and activity(value, third) == dict(agents=0, tasks=1) and agent(value, third)['state'] == 'idle'
                 and any(agent['pane'] == third and agent['label'] == 'shell/auth'
                     for agent in value['windows']['a1']['agents']))
             title("two", "⠋ Test agent")
@@ -177,7 +189,7 @@ async def main():
             await kitty_request(kitty.pid, "close-window", {"match": f"id:{third}"})
             await wait(lambda value: value['health']['agents'] == 2
                 and value['health']['claudeActivity']['known'] == value['health']['claudeActivity']['unknown'] == 0)
-            print("PASS: existing-pane attachment, inactive tabs, split panes, exact-pane activation, labels, hooks, Antigravity states, Claude footer-only starts/stops, hidden/empty footers, independent Claude panes, count recovery after restart and zero spinner/unchanged-footer queries.")
+            print("PASS: existing-pane attachment, inactive tabs, split panes, exact-pane activation, labels, hooks, Antigravity states, Claude program status over a stale hook, background counts, independent Claude panes, status recovery after restart and zero spinner queries.")
         except Exception:
             print("Last synthetic state:", latest)
             log.seek(0)

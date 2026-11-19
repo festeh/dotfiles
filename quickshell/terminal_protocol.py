@@ -8,44 +8,42 @@ from terminal_labels import LABEL_VARIABLE, clean_label, context as label_contex
 
 SHELLS = {"sh", "bash", "zsh", "fish", "dash", "nu", "xonsh"}
 STATES = {"idle", "running", "waiting"}
-ACTIVITY_KINDS = ("agents", "shells", "monitors")
-_FOOTER_MODE = re.compile(
-    r"^(?:(?:bypass permissions|accept edits|plan mode)(?: on)?|auto(?: mode)?|default mode)"
-    r"(?=\s|$|[·•(])|^\? for shortcuts\b", re.I)
-_FOOTER_COUNT = re.compile(r"\b(\d+)\s+(agents?|shells?|monitors?)\b", re.I)
-_COUNTS_ONLY = re.compile(
-    r"\d{1,4}\s+(?:agents?|shells?|monitors?)"
-    r"(?:\s*[,·•]\s*\d{1,4}\s+(?:agents?|shells?|monitors?))*"
-    r"(?:\s*\((?:ctrl|alt)\+[a-z] to (?:view|manage|expand)(?: tasks| agents)?\))?", re.I)
+ACTIVITY_KINDS = ("agents", "tasks")
+# Apps whose OSC 7501 program status reports Kitty keeps for the pane.
+STATUS_APPS = {"claude": "claude-code"}
+# Claude Code task ids start with their type: agent, remote agent, teammate,
+# workflow. Any other background record is a shell, monitor or MCP task.
+_AGENT_TASKS = "artw"
 
 
-def activity_counts(value):
-    """Accept only the small, complete count record sent by the Kitty watcher."""
-    if (not isinstance(value, dict) or set(value) != set(ACTIVITY_KINDS)
+def status_record(value):
+    """Accept only the small, complete status record sent by the Kitty watcher."""
+    if (not isinstance(value, dict) or set(value) != {"state", *ACTIVITY_KINDS}
+            or value["state"] not in STATES
             or any(type(value[key]) is not int or not 0 <= value[key] <= 9999 for key in ACTIVITY_KINDS)):
         return None
-    return {key: value[key] for key in ACTIVITY_KINDS}
+    return dict(value)
 
 
-def claude_footer_counts(lines):
-    """Read only a recognizable final footer line; ordinary output is not data."""
-    nonempty = [line.strip() for line in lines if line.strip()]
-    if not nonempty:
+def program_status(agent, records, reported=False):
+    """Reduce Kitty's program status records to a state and background counts.
+
+    The record without an id is the session; the others are its background
+    work. Titles and messages stay inside Kitty. Kitty drops a finished
+    session's record once seen, so an agent that has reported is idle when no
+    record is left. None means it has not reported.
+    """
+    app = STATUS_APPS.get(agent)
+    own = [record for record in records if isinstance(record, dict) and record.get("app") == app
+        and isinstance(record.get("id"), str)] if app and isinstance(records, list) else []
+    if not app or not own and not reported:
         return None
-    footer = re.sub(r"^[\s⏵▶⏸⏩❯»›\ufe0e\ufe0f]+", "", nonempty[-1])
-    if len(footer) > 4096 or not (_FOOTER_MODE.match(footer) or _COUNTS_ONLY.fullmatch(footer)):
-        return None
-    result = dict.fromkeys(ACTIVITY_KINDS, 0)
-    seen = set()
-    for match in _FOOTER_COUNT.finditer(footer):
-        if len(match[1]) > 4 or match.start() > 0 and footer[match.start() - 1] in "+-.":
-            return None
-        kind = match[2].lower().rstrip("s") + "s"
-        if kind in seen:
-            return None
-        seen.add(kind)
-        result[kind] = int(match[1])
-    return result
+    main = next((record.get("state") for record in own if not record["id"]), "")
+    work = [record for record in own if record["id"] and record.get("state") in {"working", "blocked"}]
+    agents = sum(record["id"][0] in _AGENT_TASKS for record in work)
+    blocked = main == "blocked" or any(record["state"] == "blocked" for record in work)
+    return {"state": "waiting" if blocked else "running" if main == "working" else "idle",
+        "agents": min(agents, 9999), "tasks": min(len(work) - agents, 9999)}
 
 
 def process_identity(pid):

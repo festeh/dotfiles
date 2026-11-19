@@ -1,4 +1,4 @@
-"""Push terminal events and cheaply sample Claude footer counters in-process."""
+"""Push terminal inventory, title states and program status changes in-process."""
 
 import json
 import os
@@ -7,7 +7,7 @@ import socket
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "quickshell"))
-from terminal_protocol import claude_footer_counts, process_identity, semantic_title_key, snapshot, socket_path, title_state
+from terminal_protocol import process_identity, program_status, semantic_title_key, snapshot, socket_path, title_state
 
 _socket = None
 _inventory = {}
@@ -15,7 +15,7 @@ _panes = {}
 _title_keys = {}
 _pending = False
 _last = None
-_activity_timer = None
+_reported = {}
 _start = process_identity(os.getpid())[0]
 
 
@@ -36,74 +36,33 @@ def signature(manager):
         tuple((window.id, window is tab.active_window) for window in tab.windows)) for tab in manager.tabs)
 
 
-def footer_counts(window):
-    # Keep screen text inside Kitty. Soft-wrapped rows belong to one logical
-    # line; skip a first row whose beginning falls outside the bounded sample.
-    lines = []
-    try:
-        screen = window.screen
-        for index in range(max(0, screen.lines - 8), screen.lines):
-            text = str(screen.line(index))
-            if screen.linebuf.is_continued(index):
-                if lines:
-                    lines[-1] += text
-            else:
-                lines.append(text)
-    except (AttributeError, IndexError):
-        return None
-    return claude_footer_counts(lines)
-
-
-def shutdown():
-    global _activity_timer
-    if _activity_timer is not None:
-        from kitty.fast_data_types import remove_timer
-        remove_timer(_activity_timer)
-        _activity_timer = None
-
-
-def sync_activity_timer(boss):
-    global _activity_timer
-    if any(pane["agent"] == "claude" for pane in _panes.values()):
-        if _activity_timer is None:
-            from kitty.fast_data_types import add_timer
-            _activity_timer = add_timer(lambda _timer: sample_activity(boss), 2.0, True)
-    else:
-        shutdown()
-
-
-def sample_activity(boss):
-    for pane in list(_panes.values()):
-        if pane["agent"] != "claude":
-            continue
-        window = boss.window_id_map.get(pane["id"])
-        if window is None:
-            continue
-        activity = footer_counts(window)
-        if activity != pane.get("activity"):
-            pane["activity"] = activity
-            send({"event": "activity", "pane": pane["id"],
-                "agentPid": pane["agentPid"], "activity": activity})
+def pane_status(pane, records):
+    # Remember which agent process has reported: its later empty record list
+    # means idle, while a process that never reports keeps its hook state.
+    value = program_status(pane["agent"], records, _reported.get(pane["id"]) == pane["agentPid"])
+    if value is not None:
+        _reported[pane["id"]] = pane["agentPid"]
+    return value
 
 
 def resync(boss, force=False):
     global _pending, _last, _inventory, _panes, _title_keys
     _pending = False
     layout = list(boss.list_os_windows())
+    records = {}
     # A fixed/overridden window title must not hide the TUI's activity title.
     for window in layout:
         for tab in window["tabs"]:
             for pane in tab["windows"]:
+                records[pane["id"]] = pane.get("program_status")
                 native = boss.window_id_map.get(pane["id"])
                 if native is not None:
                     pane["title"] = native.child_title
     value = snapshot(layout)
     _panes = {pane["id"]: pane for window in value for pane in window["panes"]}
     for pane in _panes.values():
-        if pane["agent"] == "claude":
-            native = boss.window_id_map.get(pane["id"])
-            pane["activity"] = footer_counts(native) if native is not None else None
-    sync_activity_timer(boss)
+        if pane["agent"]:
+            pane["status"] = pane_status(pane, records.get(pane["id"]))
     _title_keys = {pane["id"]: semantic_title_key(_panes[pane["id"]]["agent"], pane.get("title", ""))
         for window in layout for tab in window["tabs"] for pane in tab["windows"]}
     _inventory = {key: signature(manager) for key, manager in boss.os_window_map.items()}
@@ -128,8 +87,6 @@ def on_load(boss, data):
 def on_resize(boss, window, data):
     if window.id not in _panes:
         schedule(boss)
-    elif _panes[window.id]["agent"] == "claude":
-        sample_activity(boss)
 
 
 def on_tab_bar_dirty(boss, window, data):
@@ -169,9 +126,20 @@ def on_title_change(boss, window, data):
         send({"event": "state", "pane": window.id, "state": state})
 
 
+def on_program_status_change(boss, window, data):
+    # Kitty 0.50+ calls this for OSC 7501 reports and when it expires a record.
+    pane = _panes.get(window.id)
+    if pane is None or not pane["agent"]:
+        return
+    value = pane_status(pane, data.get("program_status"))
+    if value != pane.get("status"):
+        pane["status"] = value
+        send({"event": "status", "pane": window.id, "agentPid": pane["agentPid"], "status": value})
+
+
 def on_close(boss, window, data):
     _panes.pop(window.id, None)
     _title_keys.pop(window.id, None)
-    sync_activity_timer(boss)
+    _reported.pop(window.id, None)
     send({"event": "close", "pane": window.id})
     schedule(boss)

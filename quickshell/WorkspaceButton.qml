@@ -23,7 +23,7 @@ Button {
     readonly property string agentDescription: agent ? TerminalState.describeAgent(agent) : ""
     readonly property string agentLabel: agent ? agent.label || "" : ""
     readonly property var activityBadges: agent && agent.agent === "claude" && agent.activity
-        ? ["agents", "shells", "monitors"].filter(kind => agent.activity[kind] > 0)
+        ? ["agents", "tasks"].filter(kind => agent.activity[kind] > 0)
             .map(kind => ({kind: kind, count: agent.activity[kind]})) : []
     readonly property bool labelEditorOpen: TerminalState.labelEditorOwner === root
     readonly property var labelEditor: labelLoader.item
