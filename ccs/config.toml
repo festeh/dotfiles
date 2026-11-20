@@ -1,4 +1,4 @@
-# ccs — Claude Code & Codex session browser (~/projects/ccs)
+# ccs — Claude Code, Codex & Antigravity session browser (~/projects/ccs)
 # Per-agent flags applied when resuming a session with Enter/r.
 
 [resume.claude]
@@ -9,4 +9,8 @@ yolo = true
 
 [resume.codex]
 # Skip all approval prompts & sandbox (codex --dangerously-bypass-approvals-and-sandbox)
+yolo = true
+
+[resume.antigravity]
+# Skip all permission prompts (agy --dangerously-skip-permissions)
 yolo = true
