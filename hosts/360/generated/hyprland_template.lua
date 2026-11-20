@@ -4,15 +4,6 @@
 -- Docs: https://wiki.hypr.land/configuring/
 -- NOTE: Go templates treat two consecutive opening braces as an action; keep a space between nested table braces.
 
--- Timestamped logs for diagnosing compositor/AGS IPC failures.
-hl.config({
-    debug = {
-        disable_logs = false,
-        disable_time = false,
-        enable_stdout_logs = true,
-    },
-})
-
 ------------------
 ---- MONITORS ----
 ------------------
