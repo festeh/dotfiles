@@ -24,6 +24,8 @@ Scope {
     property var coverSources: ({})
     property var pendingAction: null
     property bool transportReady: false
+    property int catalogRequestId: 0
+    property bool recoveryAttempted: false
     property bool testMode: false
     property bool reopenOnActionError: false
     readonly property bool keepAwake: transportReady
@@ -46,6 +48,19 @@ Scope {
         if (helper.running) helper.write(JSON.stringify(command) + "\n");
     }
 
+    function sendCatalogRequest(action: string): void {
+        catalogRequestId++;
+        replyTimeout.restart();
+        send({action: action, category: category, requestId: catalogRequestId});
+    }
+
+    function requestCatalog(action: string): void {
+        recoveryAttempted = false;
+        message = "";
+        if (helper.running) sendCatalogRequest(action);
+        else helper.running = true; // onStarted opens the current category.
+    }
+
     function focusInput(): void {
         if (category === "widgets") page.forceActiveFocus();
         else search.forceActiveFocus();
@@ -53,7 +68,6 @@ Scope {
 
     function open(requested: string): void {
         if (!categories.some(item => item.id === requested)) requested = "apps";
-        if (!helper.running) helper.running = true;
         if (opened && category === requested) { close(); return; }
         if (!opened) {
             previousWindow = Hyprland.activeToplevel ? "0x" + Hyprland.activeToplevel.address.replace(/^0x/, "") : "";
@@ -66,10 +80,9 @@ Scope {
         pendingAction = null;
         reopenOnActionError = false;
         category = requested;
-        message = "";
         opened = true;
         window.visible = true;
-        send({action: "show", category: category});
+        requestCatalog("show");
         resultsView.currentIndex = results.length ? 0 : -1;
         Qt.callLater(() => { focusInput(); grab.active = !testMode; });
     }
@@ -84,10 +97,14 @@ Scope {
 
     function switchCategory(delta: int): void {
         const index = categories.findIndex(item => item.id === category);
-        category = categories[(index + delta + categories.length) % categories.length].id;
-        message = "";
-        resultsView.currentIndex = results.length ? 0 : -1;
-        send({action: "show", category: category});
+        selectCategory(categories[(index + delta + categories.length) % categories.length].id);
+    }
+
+    function selectCategory(id: string): void {
+        if (category !== id) {
+            category = id;
+            requestCatalog("show");
+        }
         focusInput();
     }
 
@@ -122,7 +139,7 @@ Scope {
         else if (control && event.key === Qt.Key_L) switchCategory(1);
         else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
             activate(results[resultsView.currentIndex], (event.modifiers & Qt.ShiftModifier) !== 0);
-        else if (event.key === Qt.Key_F5) send({action: "refresh"});
+        else if (event.key === Qt.Key_F5) requestCatalog("refresh");
         else { event.accepted = false; return; }
         event.accepted = true;
     }
@@ -130,7 +147,9 @@ Scope {
     function receive(line: string): void {
         try {
             const value = JSON.parse(line);
-            if (value.type === "catalog") {
+            if (value.type === "ack") {
+                if (value.requestId === catalogRequestId) replyTimeout.stop();
+            } else if (value.type === "catalog") {
                 transportReady = true;
                 const selected = resultsView.currentIndex >= 0 ? results[resultsView.currentIndex]?.id : "";
                 const next = Object.assign({}, catalogs);
@@ -187,12 +206,27 @@ Scope {
         command: root.helperCommand
         stdinEnabled: true
         running: true
-        onStarted: if (root.opened) root.send({action: "show", category: root.category})
+        onStarted: if (root.opened) root.sendCatalogRequest("show")
         onExited: {
+            replyTimeout.stop();
             root.transportReady = false;
-            root.message = "Launcher service stopped. Reopen to retry.";
+            if (!root.recoveryAttempted) {
+                root.recoveryAttempted = true;
+                Qt.callLater(() => { helper.running = true; });
+            } else {
+                root.message = "Launcher service stopped. Refresh to retry.";
+            }
         }
         stdout: SplitParser { onRead: data => root.receive(data) }
+    }
+
+    Timer {
+        id: replyTimeout
+        interval: 5000
+        onTriggered: {
+            console.warn("Launcher helper did not acknowledge catalog request", root.catalogRequestId);
+            helper.signal(9);
+        }
     }
 
     Shortcut {
@@ -209,7 +243,8 @@ Scope {
         function status(): string {
             return JSON.stringify({visible: root.opened, category: root.category,
                 count: root.results.length, queryLength: root.query.length,
-                ready: root.transportReady, error: !!root.message, grabbed: grab.active,
+                ready: root.transportReady && !replyTimeout.running, waitingForReply: replyTimeout.running,
+                error: !!root.message, grabbed: grab.active,
                 activeProfile: (root.catalogs.widgets || []).find(row => row.id.startsWith("profile:") && row.selected)?.id || "",
                 keepAwake: root.keepAwake});
         }
@@ -313,14 +348,7 @@ Scope {
                                     font { family: Theme.fontFamily; pixelSize: 13; bold: root.category === categoryButton.modelData.id }
                                 }
                             }
-                            onClicked: {
-                                if (root.category !== modelData.id) {
-                                    root.category = modelData.id;
-                                    root.message = "";
-                                    root.send({action: "show", category: root.category});
-                                }
-                                root.focusInput();
-                            }
+                            onClicked: root.selectCategory(categoryButton.modelData.id)
                         }
                     }
                 }
@@ -361,7 +389,7 @@ Scope {
                                 source: Qt.resolvedUrl("assets/refresh.svg")
                             }
                         }
-                        onClicked: { root.send({action: "refresh"}); root.focusInput(); }
+                        onClicked: { root.requestCatalog("refresh"); root.focusInput(); }
                     }
                 }
 
@@ -491,8 +519,8 @@ Scope {
                     Text {
                         anchors.centerIn: parent
                         width: parent.width - 50
-                        visible: resultsView.count === 0
-                        text: root.currentMeta.loading ? "Loading…" : root.currentMeta.message
+                        visible: resultsView.count === 0 && !root.message
+                        text: replyTimeout.running || root.currentMeta.loading ? "Loading…" : root.currentMeta.message
                             || (root.query.length ? "No matches" : "Nothing here yet")
                         textFormat: Text.PlainText
                         horizontalAlignment: Text.AlignHCenter

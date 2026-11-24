@@ -37,17 +37,19 @@ QtObject {
     env=os.environ.copy()
     env.update(QT_QPA_PLATFORM='offscreen',QT_QUICK_BACKEND='software',XDG_RUNTIME_DIR=str(runtime),
                HYPRLAND_INSTANCE_SIGNATURE='launcher-fixture',QT_IM_MODULE='compose',QT_NO_XDG_DESKTOP_PORTAL='1')
-    result=subprocess.run(['quickshell','--path',str(root)],env=env,capture_output=True,text=True,timeout=12)
+    result=subprocess.run(['quickshell','--path',str(root)],env=env,capture_output=True,text=True,timeout=30)
     output=result.stdout+result.stderr
     if result.returncode or 'LAUNCHER_UI_PASSED' not in output:
         print(output)
         raise SystemExit('Launcher UI check failed')
     commands=[json.loads(line) for line in (root/'commands.jsonl').read_text().splitlines()]
-    assert not any(command['action']=='refresh' for command in commands),'Escape triggered refresh'
+    assert (root/'shortcuts.attempts').read_text() == '3', 'Expected one automatic retry, then an explicit refresh'
+    assert not any(command['action']=='refresh' and command.get('category')!='shortcuts'
+                   for command in commands),'Escape triggered refresh'
     activations=[command for command in commands if command['action']=='activate']
     assert [(item['category'],item.get('paste')) for item in activations]==[('apps',False),('clipboard',True),('widgets',False),('widgets',False)],activations
     assert [item['id'] for item in activations if item['category']=='widgets']==['idle:awake','idle:auto'],'Sleep choice toggled instead of applying the requested mode'
     for index,command in enumerate(commands):
         if command['action']=='activate' and command['category']!='widgets':
             assert commands[index-1]['action']=='hide','Action dispatched before hide'
-    print('Launcher UI passed: keyboard focus, Vim keys, retained search, covers preserve selection, mouse sidebar, dismissal, paste intent, embedded controls, conditional Stay awake indicator.')
+    print('Launcher UI passed, including recovery from a stalled helper, retry limits and manual refresh.')

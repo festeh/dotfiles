@@ -127,15 +127,15 @@ def copy_clipboard(number, kind):
 
 
 class Backend:
-    def __init__(self, emit, loop):
-        self.emit, self.loop = emit, loop
+    def __init__(self, emit):
+        self.emit = emit
         self.visible = False
         self.category = "apps"
         self.rows, self.messages, self.loading = {}, {}, set()
         self.apps, self.books = {}, {}
         self.book_dirs, self.book_monitors = set(), {}
-        self.book_pending, self.book_busy, self.book_timer = set(), False, 0
-        self.book_loaded = False
+        self.book_pending, self.book_timer = set(), 0
+        self.full_book_refresh = False
         self.library = Path(os.environ.get("QS_BOOK_LIBRARY", str(Path.home() / "pCloudDrive/Library/Books")))
         self.cache = Path(os.environ.get("XDG_CACHE_HOME", str(Path.home() / ".cache"))) / "quickshell/launcher"
         self.covers = self.cache / "covers"
@@ -250,56 +250,70 @@ class Backend:
         self.publish("apps")
         return GLib.SOURCE_REMOVE
 
-    def refresh_books(self):
+    def scan_books(self, pending, full_scan):
+        records = {} if full_scan else self.books.copy()
+        directories = set() if full_scan else self.book_dirs.copy()
+        if not self.library.is_dir():
+            return {}, set(), "Book library is unavailable. Mount it, then refresh."
+        for root in pending:
+            # Only new subtrees recurse; ordinary file changes rescan one directory.
+            roots = []
+            missing = []
+            if not root.is_dir():
+                missing.append(root)
+            elif root not in directories:
+                roots = [Path(directory) for directory, _, _ in os.walk(root)]
+            else:
+                roots = [root]
+                for entry in root.iterdir():
+                    if entry.is_dir() and entry not in directories:
+                        roots.extend(Path(directory) for directory, _, _ in os.walk(entry))
+                missing = [path for path in directories if path.parent == root and not path.is_dir()]
+            for removed in missing:
+                records = {key: item for key, item in records.items() if not item["path"].is_relative_to(removed)}
+                directories = {path for path in directories if not path.is_relative_to(removed)}
+            for directory in roots:
+                records = {key: item for key, item in records.items() if item["path"].parent != directory}
+                directories.add(directory)
+                for path in directory.iterdir():
+                    if book_extension(path) and path.is_file():
+                        try:
+                            item = book_record(path, self.library, self.covers)
+                            records[item["row"]["id"]] = item
+                        except OSError:
+                            continue
+        return records, directories, ""
+
+    def schedule_books(self, *, full=False):
+        if full:
+            self.full_book_refresh = True
+        if self.book_timer or "books" in self.loading:
+            return
+        if self.book_pending and not self.full_book_refresh:
+            self.book_timer = GLib.timeout_add(250, self.start_book_scan)
+        else:
+            self.start_book_scan()
+
+    def start_book_scan(self):
         self.book_timer = 0
-        if self.book_busy:
-            return GLib.SOURCE_REMOVE
-        initial = not self.book_loaded
-        pending = self.book_pending or {self.library}
+        full_scan = self.full_book_refresh or not self.book_dirs
+        pending = {self.library} if full_scan else self.book_pending
         self.book_pending = set()
-        known_dirs = set(self.book_dirs)
-        old_records = dict(self.books)
-        self.book_busy = True
+        self.full_book_refresh = False
         self.loading.add("books")
         self.publish("books")
-        def scan():
-            records = {} if initial else old_records
-            directories = set() if initial else known_dirs
-            if not self.library.is_dir():
-                return {}, set(), "Book library is unavailable. Mount it, then refresh."
-            for root in pending:
-                if not root.is_dir():
-                    records = {key: item for key, item in records.items() if not item["path"].is_relative_to(root)}
-                    directories = {path for path in directories if not path.is_relative_to(root)}
-                    continue
-                # Only new subtrees recurse; ordinary file changes rescan one directory.
-                roots = []
-                if initial or root not in known_dirs:
-                    roots = [Path(directory) for directory, _, _ in os.walk(root)]
-                else:
-                    roots = [root]
-                    for entry in root.iterdir():
-                        if entry.is_dir() and entry not in known_dirs:
-                            roots.extend(Path(directory) for directory, _, _ in os.walk(entry))
-                    missing = [path for path in directories if path.parent == root and not path.is_dir()]
-                    for removed in missing:
-                        records = {key: item for key, item in records.items() if not item["path"].is_relative_to(removed)}
-                        directories = {path for path in directories if not path.is_relative_to(removed)}
-                for directory in roots:
-                    records = {key: item for key, item in records.items() if item["path"].parent != directory}
-                    directories.add(directory)
-                    for path in directory.iterdir():
-                        if book_extension(path) and path.is_file():
-                            try:
-                                item = book_record(path, self.library, self.covers)
-                                records[item["row"]["id"]] = item
-                            except OSError:
-                                continue
-            return records, directories, ""
+
+        def finish(message):
+            self.loading.discard("books")
+            self.messages["books"] = message
+            self.publish("books")
+            if self.full_book_refresh or self.book_pending:
+                self.schedule_books()
+
         def done(result):
             records, directories, message = result
             self.books, self.book_dirs = records, directories
-            if initial:
+            if full_scan:
                 # Import existing book recency locally, without importing Rofi
                 # implementation or exposing filenames through the transport.
                 legacy = Path(os.environ.get("XDG_CACHE_HOME", str(Path.home() / ".cache"))) / "rofi-books/recent"
@@ -311,26 +325,16 @@ class Backend:
                             self.usage[identity] = {"count": 1, "last": time.time() - index - 1}
                 except OSError:
                     pass
-            self.book_busy = False
-            self.book_loaded = True
-            self.loading.discard("books")
-            self.messages["books"] = message
             self.rows["books"] = [item["row"] for item in sorted(records.values(), key=lambda item: item["order"])]
             self.watch_books(directories)
-            self.publish("books")
-            if self.book_pending:
-                self.schedule_books()
-        def error(_message=None):
-            self.book_busy = False
-            self.loading.discard("books")
-            self.messages["books"] = "Could not read the book library. Refresh to retry."
-            self.publish("books")
-        self.background(scan, done, error)
-        return GLib.SOURCE_REMOVE
+            finish(message)
 
-    def schedule_books(self):
-        if not self.book_timer:
-            self.book_timer = GLib.timeout_add(250, self.refresh_books)
+        def error(_message=None):
+            self.book_dirs = set()
+            finish("Could not read the book library. Refresh to retry.")
+
+        self.background(lambda: self.scan_books(pending, full_scan), done, error)
+        return GLib.SOURCE_REMOVE
 
     def watch_books(self, directories):
         # Watch the library's parent as well, so unmount/rename is noticed.
@@ -620,6 +624,8 @@ class Backend:
 
     def command(self, command):
         action = command.get("action")
+        if action in ("show", "refresh") and "requestId" in command:
+            self.emit({"type": "ack", "requestId": command["requestId"]})
         if action == "show":
             category = command.get("category", "apps")
             if category not in ("apps", "books", "widgets", "shortcuts", "clipboard", "power"): return
@@ -630,7 +636,7 @@ class Backend:
             # and recreate delegates/icons for an unchanged catalog.
             if category != "apps":
                 self.publish(category)
-            if category == "books" and not self.book_loaded: self.refresh_books()
+            if category == "books" and not self.book_dirs: self.schedule_books()
             elif category == "clipboard": self.load_clipboard()
             elif category == "shortcuts": self.load_shortcuts()
             elif category == "power": self.load_power()
@@ -646,9 +652,7 @@ class Backend:
             if self.category == "apps":
                 self.load_apps()
             elif self.category == "books":
-                self.book_loaded = False
-                self.book_pending = {self.library}
-                self.refresh_books()
+                self.schedule_books(full=True)
             else:
                 self.command({"action": "show", "category": self.category})
 
@@ -696,6 +700,31 @@ def render_cover(source, target):
         os.replace(temporary, target)
 
 
+def serve_commands(stream, backend, loop):
+    def dispatch(line):
+        try:
+            message = json.loads(line)
+            if isinstance(message, dict):
+                backend.command(message)
+        except (ValueError, TypeError, GLib.Error):
+            backend.fail("Invalid launcher request.")
+        except Exception:
+            backend.fail("Launcher request failed. Try again.")
+        return GLib.SOURCE_REMOVE
+
+    # Each request runs on the main loop independently of the stdin reader.
+    # A provider failure must not detach input for the lifetime of the launcher.
+    def read_commands():
+        try:
+            for line in stream:
+                GLib.idle_add(dispatch, line)
+        finally:
+            GLib.idle_add(loop.quit)
+
+    threading.Thread(target=read_commands, daemon=True).start()
+    loop.run()
+
+
 def main():
     if len(sys.argv) == 4 and sys.argv[1] == "--cover":
         try: render_cover(sys.argv[2], sys.argv[3])
@@ -705,26 +734,7 @@ def main():
     def emit(value):
         try: print(json.dumps(value, ensure_ascii=True), flush=True)
         except BrokenPipeError: loop.quit()
-    backend = Backend(emit, loop)
-    os.set_blocking(sys.stdin.fileno(), False)
-    buffer = bytearray()
-    def receive(fd, condition):
-        nonlocal buffer
-        chunk = os.read(fd, 65536)
-        if not chunk:
-            loop.quit()
-            return GLib.SOURCE_REMOVE
-        buffer.extend(chunk)
-        while b"\n" in buffer:
-            line, _, buffer = buffer.partition(b"\n")
-            try:
-                message = json.loads(line)
-                if isinstance(message, dict): backend.command(message)
-            except (ValueError, TypeError, GLib.Error):
-                backend.fail("Invalid launcher request.")
-        return GLib.SOURCE_CONTINUE
-    GLib.io_add_watch(sys.stdin.fileno(), GLib.IO_IN | GLib.IO_HUP, receive)
-    loop.run()
+    serve_commands(sys.stdin.buffer, Backend(emit), loop)
 
 
 if __name__ == "__main__":

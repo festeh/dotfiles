@@ -71,7 +71,11 @@ The backend has no arbitrary shell-command execution interface.
 Books show compact cover rows, title, author, shelf and format. A background
 initial scan indexes the library; subsequent file events rescan the changed
 directory, recursing only into new subtrees. Opening again reuses the index.
-F5/Refresh forces a rescan. Missing mounts produce an explanatory state.
+F5/Refresh forces a rescan. If the mount is unavailable, the next Books open
+tries it again. The launcher helper acknowledges open and refresh requests
+before scanning. After five seconds without an acknowledgement, the launcher
+restarts the helper once and reloads the category if it is still visible.
+A second failure shows a message with a manual refresh option.
 Visible covers render one at a time in low-priority, time-limited processes and
 update without moving keyboard selection. FB2 covers come from their embedded
 cover image; blank thumbnails use the reader icon instead. PDF/DjVu use Zathura,

@@ -1,5 +1,7 @@
 import json
+import os
 from pathlib import Path
+import signal
 import sys
 
 rows = {
@@ -12,7 +14,7 @@ rows = {
  'widgets':[{'id':'profile:balanced','title':'Balanced','detail':'Power profile','selected':True},
             {'id':'idle:auto','title':'Sleep after 25 min','detail':'Suspend after 25 minutes of inactivity.','selected':True,'known':True,'blockedByOther':True},
             {'id':'idle:awake','title':'Stay awake','detail':'Pause automatic sleep until you switch back or log out.','selected':False,'known':True,'blockedByOther':True}],
- 'shortcuts':[], 'power':[]}
+ 'shortcuts':[{'id':'shortcut:test','title':'Test shortcut'}], 'power':[]}
 def emit(value): print(json.dumps(value),flush=True)
 def publish(category): emit({'type':'catalog','category':category,'rows':rows[category],'loading':False,'message':''})
 publish('apps')
@@ -20,6 +22,16 @@ publish('widgets')
 for line in sys.stdin:
     command=json.loads(line)
     with Path(__file__).with_name('commands.jsonl').open('a') as stream: stream.write(json.dumps(command)+'\n')
+    if command['action']=='show' and command['category'] in ('books','shortcuts'):
+        category = command['category']
+        counter = Path(__file__).with_name(category + '.attempts')
+        attempt = int(counter.read_text()) + 1 if counter.exists() else 1
+        counter.write_text(str(attempt))
+        if attempt <= {'books': 1, 'shortcuts': 2}[category]:
+            # An acknowledgement from an older request must not mask this stall.
+            emit({'type':'ack','requestId':command['requestId'] - 1})
+            os.kill(os.getpid(), signal.SIGSTOP)
+    if 'requestId' in command: emit({'type':'ack','requestId':command['requestId']})
     if command['action']=='show': publish(command['category'])
     elif command['action']=='activate':
         if command['category']=='widgets':

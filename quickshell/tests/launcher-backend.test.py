@@ -1,4 +1,5 @@
 import importlib.util
+from io import BytesIO
 import json
 import os
 from pathlib import Path
@@ -14,6 +15,23 @@ spec.loader.exec_module(launcher)
 
 
 class ProviderTests(unittest.TestCase):
+    def test_provider_error_does_not_drop_later_books_request(self):
+        backend = Mock()
+        backend.command.side_effect = [OSError('private path'), None]
+        books = {'action': 'show', 'category': 'books'}
+        stream = BytesIO(b'{"action":"refresh"}\n' + json.dumps(books).encode() + b'\n')
+        loop = launcher.GLib.MainLoop()
+        deadline = launcher.GLib.timeout_source_new(2000)
+        deadline.set_callback(lambda *_: loop.quit())
+        deadline.attach()
+        try:
+            launcher.serve_commands(stream, backend, loop)
+        finally:
+            deadline.destroy()
+        self.assertEqual([call.args[0] for call in backend.command.call_args_list],
+                         [{'action': 'refresh'}, books])
+        backend.fail.assert_called_once_with('Launcher request failed. Try again.')
+
     def test_launcher_retries_zero_exit_not_ready_response(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory)
@@ -277,26 +295,66 @@ class ProviderTests(unittest.TestCase):
             self.assertIn('Authorization', backend.messages['widgets'])
             self.assertEqual(profile.read_text(), 'balanced')
 
+    def books_backend(self, root):
+        backend = self.backend('books', [])
+        backend.library, backend.covers = root, root/'covers'
+        backend.books, backend.book_dirs, backend.book_pending = {}, set(), set()
+        backend.full_book_refresh, backend.book_timer = False, 0
+        backend.loading = set()
+        backend.watch_books = Mock()
+        return backend
+
+    def test_books_open_acknowledges_before_scan_and_retries_unavailable_mount(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)/'library'
+            backend = self.books_backend(root)
+            backend.command({'action':'show', 'category':'books', 'requestId':1})
+            self.assertIn('unavailable', backend.messages['books'])
+            root.mkdir()
+            (root/'Example.pdf').touch()
+            def scan_after_ack(work, done, error):
+                backend.emit.assert_called_with({'type':'ack', 'requestId':2})
+                done(work())
+            backend.background = scan_after_ack
+            backend.command({'action':'show', 'category':'books', 'requestId':2})
+            self.assertEqual([row['title'] for row in backend.rows['books']], ['Example'])
+            self.assertEqual(backend.messages['books'], '')
+
     def test_incremental_book_change_scans_only_changed_directory(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             for shelf in ('A','B'): (root/shelf).mkdir()
             (root/'A/First.pdf').write_bytes(b'fixture')
             (root/'B/Second.epub').write_bytes(b'fixture')
-            backend = self.backend('books', [])
-            backend.library, backend.covers = root, root/'covers'
-            backend.books, backend.book_dirs, backend.book_pending = {},set(),set()
-            backend.book_busy, backend.book_loaded, backend.book_timer = False,False,0
-            backend.loading = set()
-            backend.watch_books = Mock()
-            backend.refresh_books()
+            backend = self.books_backend(root)
+            backend.schedule_books()
             self.assertEqual(len(backend.books),2)
             (root/'A/First.pdf').unlink()
             (root/'A/Third.pdf').write_bytes(b'fixture')
             backend.book_pending = {root/'A'}
             with patch.object(launcher.os,'walk',side_effect=AssertionError('Unexpected full rescan')):
-                backend.refresh_books()
+                backend.start_book_scan()
             self.assertEqual(sorted(item['row']['title'] for item in backend.books.values()), ['Second','Third'])
+
+    def test_refresh_during_incremental_scan_still_visits_other_shelves(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for shelf in ('A', 'B'):
+                (root/shelf).mkdir()
+            backend = self.books_backend(root)
+            backend.command({'action': 'show', 'category': 'books'})
+            backend.book_pending.add(root/'A')
+            with patch.object(backend, 'background') as deferred:
+                backend.start_book_scan()
+                work, done, _ = deferred.call_args.args
+                backend.command({'action': 'refresh'})
+                deferred.assert_called_once()
+                (root/'B/Missed.epub').touch()
+                done(work())
+                self.assertEqual(deferred.call_count, 2)
+                work, done, _ = deferred.call_args.args
+                done(work())
+            self.assertEqual([row['title'] for row in backend.rows['books']], ['Missed'])
 
 
 if __name__ == '__main__': unittest.main()

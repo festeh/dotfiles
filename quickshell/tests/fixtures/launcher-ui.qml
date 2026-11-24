@@ -33,7 +33,7 @@ ShellRoot {
         interval: 100; running: true; repeat: true
         onTriggered: {
             try {
-                if(!launcher.transportReady) return;
+                if(root.phase===0 && !launcher.transportReady) return;
                 const field=root.find(launcher.windowItem.contentItem,"launcher-search");
                 if(root.phase===0) {
                     root.require(!awakeIndicator.visible,"Stay awake indicator shown in normal sleep mode");
@@ -106,10 +106,15 @@ ShellRoot {
                     root.require(!launcher.opened,"Late error reopened dismissed launcher");
                     root.phase=10;
                 } else if(root.phase===10) {
+                    launcher.open("shortcuts"); root.phase=11;
+                } else if(root.phase===11 && !launcher.transportReady && launcher.message.includes("Refresh to retry")) {
+                    events.keyClick(Qt.Key_F5,Qt.NoModifier,0); root.phase=12;
+                } else if(root.phase===12 && launcher.results[0]?.id==="shortcut:test") {
+                    root.require(launcher.transportReady && !launcher.message,"Refresh did not recover failed service");
                     console.log("LAUNCHER_UI_PASSED"); Qt.quit();
                 }
             } catch(error) { console.error("LAUNCHER_UI_FAILED",error.message); Qt.quit(); }
         }
     }
-    Timer { interval:8000; running:true; onTriggered:{ console.error("LAUNCHER_UI_TIMEOUT",root.phase); Qt.quit(); } }
+    Timer { interval:24000; running:true; onTriggered:{ console.error("LAUNCHER_UI_TIMEOUT",root.phase); Qt.quit(); } }
 }
