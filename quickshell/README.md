@@ -78,10 +78,10 @@ restarts the helper once and reloads the category if it is still visible.
 A second failure shows a message with a manual refresh option.
 Visible covers render one at a time in low-priority, time-limited processes and
 update without moving keyboard selection. FB2 covers come from their embedded
-cover image; blank thumbnails use the reader icon instead. PDF/DjVu use Zathura,
-other supported formats Foliate, with `xdg-open` when the preferred reader is
-absent. Existing book recency is imported locally; Reading Desktop remains a
-separate app/hotkey.
+cover image; blank thumbnails use the reader icon instead. Activating a book
+selects it in Reading Desktop and opens its reader and saved Codex conversation.
+Super+Shift+B stops the pair or reopens the last selection. Existing book
+recency is imported locally.
 `QS_BOOK_LIBRARY` optionally overrides the default library root before startup.
 
 Clipboard retains `cliphist` storage and the existing text/image capture watchers.

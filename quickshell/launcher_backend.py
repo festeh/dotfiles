@@ -541,9 +541,10 @@ class Backend:
                 book = self.books.get(identity)
                 if not book or not book["path"].is_file():
                     raise RuntimeError("This book is no longer available")
-                reader = "zathura" if book_extension(book["path"]) in (".pdf", ".djvu") else "foliate"
-                subprocess.Popen([shutil.which(reader) or "xdg-open", str(book["path"])],
-                    stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+                result = subprocess.run(["book-desktop", "select", str(book["path"])], stdin=subprocess.DEVNULL,
+                                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                if result.returncode:
+                    raise RuntimeError("Reading Desktop could not open this book. Check the reader and reading workspaces.")
             elif category == "clipboard":
                 copy_clipboard(identity.removeprefix("clip:"), row.get("clipboardKind", "text"))
                 if command.get("paste"):

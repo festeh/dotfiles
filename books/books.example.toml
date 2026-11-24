@@ -1,16 +1,5 @@
-# Copy to ~/.config/book-desktop/books.toml and fill in your local book details.
-# Keep the populated settings file outside this repository.
+# Optional local settings for Reading Desktop. Select the book with Super+B.
 root = "~/tmp/books"
 codex_workspace = 11
 books_workspace = 12
 toggle_key = "SUPER + SHIFT + B"
-
-[[books]]
-id = "example"
-title = ""
-source = "~/path/to/book.pdf"
-reader = ["alpha"]
-reader_class = "alpha"
-reader_title = ""
-note = ""
-# existing_session = "" # Optional saved Codex session ID; otherwise discovered/created.

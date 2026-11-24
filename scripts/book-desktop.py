@@ -3,6 +3,7 @@
 
 import argparse
 import fcntl
+import filecmp
 import hashlib
 import json
 import os
@@ -16,6 +17,7 @@ import subprocess
 import sys
 import time
 import tomllib
+import zipfile
 from xml.etree import ElementTree
 
 CONFIG = Path(os.environ.get("BOOK_DESKTOP_CONFIG", "~/.config/book-desktop/books.toml")).expanduser()
@@ -50,17 +52,44 @@ def dispatch(expression):
 
 
 def load_config():
-    config = tomllib.loads(CONFIG.read_text())
+    config = {"root": "~/tmp/books", "codex_workspace": 11, "books_workspace": 12, "books": []}
+    if CONFIG.exists():
+        config.update(tomllib.loads(CONFIG.read_text()))
     if config["books_workspace"] != config["codex_workspace"] + 1 or config["codex_workspace"] < 1:
         raise ValueError("The books workspace must immediately follow the positive Codex workspace.")
-    ids = [book["id"] for book in config["books"]]
-    if not ids or len(set(ids)) != len(ids) or any(not re.fullmatch(r"[a-z0-9-]+", value) for value in ids):
-        raise ValueError("Book IDs must be unique lowercase slugs.")
-    for book in config["books"]:
-        book["source"] = Path(book["source"]).expanduser()
-        book["folder"] = Path(config["root"]).expanduser() / book["id"]
-        book["file"] = book["folder"] / book["source"].name
     return config
+
+
+def selected_book(config, source=None):
+    # Keep existing folders, reader settings and conversations for configured books.
+    legacy = config["books"]
+    selection = STATE / "selected.json"
+    if source is None:
+        if selection.exists():
+            source = json.loads(selection.read_text())
+        elif legacy:
+            active = STATE / "active"
+            previous = active.read_text().strip() if active.exists() else None
+            source = next((b for b in legacy if b["id"] == previous), legacy[0])["source"]
+        else:
+            return None
+    path = Path(source).expanduser().absolute()
+    if not path.name.lower().endswith((".pdf", ".djvu", ".epub", ".fb2", ".fb2.zip", ".mobi", ".azw3", ".cbz")):
+        raise ValueError("Unsupported book format.")
+    book = next((b.copy() for b in legacy if Path(b["source"]).expanduser().absolute() == path), {})
+    if not book:
+        reader, app = {
+            ".pdf": ("alpha", "alpha"), ".djvu": ("zathura", "org.pwmt.zathura"),
+        }.get(path.suffix.lower(), ("foliate", "com.github.johnfactotum.Foliate"))
+        book = {"id": "book-" + hashlib.sha256(os.fsencode(path)).hexdigest(),
+                "title": path.name[:-8] if path.name.lower().endswith(".fb2.zip") else path.stem,
+                "reader": [reader], "reader_class": app}
+    if not re.fullmatch(r"[a-z0-9-]+", book["id"]):
+        raise ValueError("Invalid book ID in settings.")
+    book["source"] = path
+    book["folder"] = Path(config["root"]).expanduser().absolute() / book["id"]
+    book["file"] = book["folder"] / path.name
+    return book
 
 
 class Codex:
@@ -69,8 +98,12 @@ class Codex:
         self.process = subprocess.Popen(["codex", "app-server", "--stdio"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, bufsize=0)
         self.buffer = b""
         self.number = 0
-        self.call("initialize", {"clientInfo": {"name": "book_desktop", "version": "1"}, "capabilities": {"experimentalApi": True}})
-        self.process.stdin.write(b'{"method":"initialized","params":{}}\n')
+        try:
+            self.call("initialize", {"clientInfo": {"name": "book_desktop", "version": "1"}, "capabilities": {"experimentalApi": True}})
+            self.process.stdin.write(b'{"method":"initialized","params":{}}\n')
+        except BaseException:
+            self.close()
+            raise
 
     def call(self, method, params):
         self.number += 1
@@ -94,8 +127,12 @@ class Codex:
         raise TimeoutError(method)
 
     def close(self):
-        self.process.terminate()
-        self.process.wait(timeout=5)
+        self.process.stdin.close()
+        try:
+            self.process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            self.process.kill()
+            self.process.wait()
 
 
 def existing_session(folder):
@@ -107,83 +144,108 @@ def existing_session(folder):
     return row[0] if row else None
 
 
-def prepare(config):
+def prepare(book):
+    folder, target = book["folder"], book["file"]
+    folder.mkdir(parents=True, exist_ok=True)
+    if not target.exists():
+        temporary = target.with_name(target.name + ".copying")
+        shutil.copy2(book["source"], temporary)
+        temporary.replace(target)
+    elif book["source"].exists() and not filecmp.cmp(target, book["source"], shallow=False):
+        raise RuntimeError(f"Local book differs from pCloud; preserved it: {target}")
+    extract = folder / "book.txt"
+    if not extract.exists():
+        if target.suffix.lower() == ".pdf":
+            temporary = folder / "book.txt.tmp"
+            subprocess.run(["pdftotext", "-layout", str(target), str(temporary)], check=True)
+            temporary.replace(extract)
+        elif target.suffix.lower() == ".fb2" or target.name.lower().endswith(".fb2.zip"):
+            if target.suffix.lower() == ".zip":
+                with zipfile.ZipFile(target) as archive:
+                    name = next((n for n in archive.namelist() if n.lower().endswith(".fb2")), None)
+                    if not name:
+                        raise ValueError("No FB2 document in the selected archive.")
+                    with archive.open(name) as stream:
+                        root = ElementTree.parse(stream).getroot()
+            else:
+                root = ElementTree.parse(target).getroot()
+            lines = [" ".join(node.itertext()).strip() for body in root.findall("{*}body")
+                     for node in body.iter() if node.tag.rsplit("}", 1)[-1] in ("p", "v", "subtitle")]
+            atomic(extract, "\n\n".join(lines) + "\n")
+    instructions = folder / "AGENTS.md"
+    if not instructions.exists():
+        atomic(instructions, f"# Reading companion for {book['title']}\n\n"
+               f"The source book is `{target.name}`. "
+               + ("Use `book.txt` to search for passages. " if extract.exists() else "")
+               + "Ground explanations in the text and cite the chapter or page when useful. "
+               "Ask which passage the reader means when needed. Avoid spoilers beyond their position. "
+               "Answer concisely in the reader's language.\n" + book.get("note", "") + "\n")
+    marker = folder / "session.id"
+    session = marker.read_text().strip() if marker.exists() else book.get("existing_session") or existing_session(folder)
     server = Codex()
     try:
-        for book in config["books"]:
-            folder, target = book["folder"], book["file"]
-            folder.mkdir(parents=True, exist_ok=True)
-            if not target.exists():
-                temporary = target.with_name(target.name + ".copying")
-                shutil.copy2(book["source"], temporary)
-                temporary.replace(target)
-            elif book["source"].exists() and hashlib.sha256(target.read_bytes()).digest() != hashlib.sha256(book["source"].read_bytes()).digest():
-                raise RuntimeError(f"Local book differs from pCloud; preserved it: {target}")
-            instructions = folder / "AGENTS.md"
-            if not instructions.exists():
-                instructions.write_text(f"# Reading companion: {book['title']}\n\n"
-                    f"- The source book is `{target.name}`; `book.txt` is a searchable local extract.\n"
-                    "- Read the relevant local passage before explaining it; cite its chapter or PDF page when useful.\n"
-                    "- Answer concisely in the user's language, with simple explanations and concrete examples.\n"
-                    "- Do not assume the current page; ask for a passage if the reference is ambiguous.\n"
-                    "- Avoid spoilers beyond the user's stated reading position.\n"
-                    f"- {book['note']}\n")
-            extract = folder / "book.txt"
-            if not extract.exists():
-                if target.suffix.lower() == ".fb2":
-                    root = ElementTree.parse(target).getroot()
-                    ns = {"f": "http://www.gribuser.ru/xml/fictionbook/2.0"}
-                    lines = [" ".join(element.itertext()).strip() for body in root.findall("f:body", ns) for element in body.iter() if element.tag.rsplit("}", 1)[-1] in ("p", "v", "subtitle")]
-                    atomic(extract, "\n\n".join(lines) + "\n")
-                elif target.suffix.lower() == ".pdf":
-                    subprocess.run(["pdftotext", "-layout", str(target), str(extract)], check=True)
-            marker = folder / "session.id"
-            session = marker.read_text().strip() if marker.exists() else book.get("existing_session") or existing_session(folder)
-            if session:
-                thread = server.call("thread/read", {"threadId": session, "includeTurns": False})["thread"]
-                if Path(thread["cwd"]) != folder:
-                    raise RuntimeError(f"Session {session} belongs to {thread['cwd']}, expected {folder}")
-            else:
-                result = server.call("thread/start", {"cwd": str(folder), "ephemeral": False, "threadSource": "cli", "serviceName": "book_desktop"})
-                session = result["thread"]["id"]
-                server.call("thread/name/set", {"threadId": session, "name": f"Read {book['title']}"})
-            atomic(marker, session + "\n")
-            book["session"] = session
-            print(f"{book['id']}: {session}", flush=True)
+        if session:
+            thread = server.call("thread/read", {"threadId": session, "includeTurns": False})["thread"]
+            if Path(thread["cwd"]) != folder:
+                raise RuntimeError("Saved conversation belongs to another folder.")
+        else:
+            result = server.call("thread/start", {"cwd": str(folder), "ephemeral": False, "threadSource": "cli", "serviceName": "book_desktop"})
+            session = result["thread"]["id"]
+            server.call("thread/name/set", {"threadId": session, "name": f"Read {book['title']}"})
+        atomic(marker, session + "\n")
+        return session
     finally:
         server.close()
 
 
 def read_state():
     path = STATE / "windows.json"
-    return json.loads(path.read_text()) if path.exists() else {"windows": []}
-
-
-def running():
-    return (STATE / "enabled.lua").exists() and read_state().get("instance") == os.environ.get("HYPRLAND_INSTANCE_SIGNATURE")
+    if path.exists():
+        state = json.loads(path.read_text())
+        if state.get("instance") and state["instance"] == os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+            return state
+    return {}
 
 
 def save_state(state):
-    atomic(STATE / "windows.json", json.dumps(state, indent=2) + "\n")
+    atomic(STATE / "windows.json", json.dumps(state) + "\n")
 
 
 def valid(window, clients):
-    return next((client for client in clients if client["address"] == window.get("address") and client["pid"] == window.get("pid")), None)
+    return next((c for c in clients if c["address"] == window.get("address") and c["pid"] == window.get("pid")), None)
 
 
-def enable(config, state):
-    rows = []
-    for book in state["windows"]:
-        parts = [f"id = {lua(book['id'])}"]
-        for pane in ("reader",):
-            if pane in book:
-                parts.append(f"{pane} = {lua(book[pane]['address'])}")
-        rows.append("    { " + ", ".join(parts) + " },")
-    atomic(STATE / "enabled.lua", "return {\n" + f"instance = {lua(state['instance'])},\ncodex_workspace = {config['codex_workspace']},\nbooks_workspace = {config['books_workspace']},\nwindows = {{\n" + "\n".join(rows) + "\n},\n}\n")
-    hypr("reload")
-    errors = hypr("configerrors").strip()
-    if errors:
-        raise RuntimeError(errors)
+def owned(state):
+    # Older installations recorded multiple pairs. Retire those by the same identity checks.
+    return [entry[pane] for entry in state.get("windows", [state])
+            for pane in ("reader", "codex") if pane in entry]
+
+
+def close_windows(state):
+    windows = owned(state)
+    for window in windows:
+        if valid(window, hypr("clients", as_json=True)):
+            dispatch(f"hl.dsp.window.close({{ window = {lua('address:' + window['address'])} }})")
+    deadline = time.monotonic() + 8
+    while windows:
+        clients = hypr("clients", as_json=True)
+        if not any(valid(window, clients) for window in windows):
+            return
+        if time.monotonic() >= deadline:
+            raise RuntimeError("A managed window is still open. Its identity was retained; retry Stop Reading Desktop.")
+        time.sleep(0.1)
+
+
+def enable(state):
+    path = STATE / "enabled.lua"
+    rules = ("return { instance = " + lua(state["instance"])
+             + f", codex_workspace = {state['codex_workspace']}, books_workspace = {state['books_workspace']} }}\n")
+    if not path.exists() or path.read_text() != rules:
+        atomic(path, rules)
+        hypr("reload")
+        errors = hypr("configerrors").strip()
+        if errors:
+            raise RuntimeError(errors)
 
 
 def launch(argv, workspace, expected_class, title=""):
@@ -192,184 +254,114 @@ def launch(argv, workspace, expected_class, title=""):
     deadline = time.monotonic() + 20
     while time.monotonic() < deadline:
         for client in hypr("clients", as_json=True):
-            if client["address"] not in before and client["class"].casefold() == expected_class.casefold() and title.casefold() in client["title"].casefold():
-                dispatch(f"hl.dsp.window.move({{ window = {lua('address:' + client['address'])}, workspace = {workspace}, follow = false }})")
+            if (client["address"] not in before and client["workspace"]["id"] == workspace
+                    and client["class"].casefold() == expected_class.casefold() and title.casefold() in client["title"].casefold()):
                 return {"address": client["address"], "pid": client["pid"]}
         time.sleep(0.15)
     raise RuntimeError(f"No new {expected_class} window appeared; check the reader or terminal.")
 
 
-def focus(config, state, pane):
-    active = active_book(config)["id"]
-    book = next((book for book in state["windows"] if book["id"] == active), {})
-    window = book.get(pane, {})
-    if not valid(window, hypr("clients", as_json=True)):
-        raise RuntimeError("That book window is closed; run book-desktop up to reopen it.")
-    dispatch(f"hl.dsp.focus({{ window = {lua('address:' + window['address'])} }})")
+def ensure_window(state, key, workspace, argv, app, title=""):
+    window = valid(state.get(key, {}), hypr("clients", as_json=True))
+    if not window:
+        state[key] = launch(argv, workspace, app, title)
+        save_state(state)
+    elif window["workspace"]["id"] != workspace:
+        dispatch(f"hl.dsp.window.move({{ window = {lua('address:' + window['address'])}, workspace = {workspace}, follow = false }})")
 
 
-def active_book(config):
-    active_file = STATE / "active"
-    active = active_file.read_text().strip() if active_file.exists() else config["books"][0]["id"]
-    return next((book for book in config["books"] if book["id"] == active), config["books"][0])
-
-
-def close_window(window):
-    if not valid(window, hypr("clients", as_json=True)):
-        return
-    dispatch(f"hl.dsp.window.close({{ window = {lua('address:' + window['address'])} }})")
-    deadline = time.monotonic() + 8
-    while valid(window, hypr("clients", as_json=True)):
-        if time.monotonic() > deadline:
-            raise RuntimeError("The previous Codex terminal is still closing; no second terminal was opened.")
-        time.sleep(0.05)
-
-
-def sync_codex(config, state):
-    """Serialize switches and close the previous terminal before resuming another."""
-    while True:
-        book = active_book(config)
-        selected = next((entry for entry in state["windows"] if entry["id"] == book["id"]), None)
-        if selected is None:
-            raise RuntimeError("The selected reader is not set up; run book-desktop up.")
-        clients = hypr("clients", as_json=True)
-        for entry in state["windows"]:
-            window = entry.get("codex")
-            if window is None:
-                continue
-            if entry is selected and valid(window, clients):
-                continue
-            close_window(window)
-            del entry["codex"]
-            save_state(state)
-
-        # A newer reader focus may have arrived while the previous terminal closed.
-        if active_book(config)["id"] != book["id"]:
-            continue
-        current = valid(selected.get("codex", {}), hypr("clients", as_json=True))
-        if current is None:
-            session = (book["folder"] / "session.id").read_text().strip()
-            window_class = "book-codex-" + book["id"]
-            argv = ["kitty", "--class", window_class, "--override", "confirm_os_window_close=0", "--title", book["title"] + " · Codex", "--directory", str(book["folder"]), "--", "codex", "resume", "--cd", str(book["folder"]), session]
-            selected["codex"] = launch(argv, config["codex_workspace"], window_class)
-            save_state(state)
-        elif current["workspace"]["id"] != config["codex_workspace"]:
-            dispatch(f"hl.dsp.window.move({{ window = {lua('address:' + current['address'])}, workspace = {config['codex_workspace']}, follow = false }})")
-        if active_book(config)["id"] == book["id"]:
-            return
-
-
-def up(config):
-    prepare(config)
-    state = read_state()
-    if not running():
-        workspace = hypr("activeworkspace", as_json=True)["id"]
-        if workspace not in (config["codex_workspace"], config["books_workspace"]):
-            state["return_workspace"] = workspace
-    state["instance"] = os.environ["HYPRLAND_INSTANCE_SIGNATURE"]
+def up(config, state, book, pane):
+    chat_ws, read_ws = config["codex_workspace"], config["books_workspace"]
     clients = hypr("clients", as_json=True)
-    owned = {(entry[pane]["address"], entry[pane]["pid"]) for entry in state["windows"] for pane in ("reader", "codex") if pane in entry}
+    managed = {(w["address"], w["pid"]) for w in owned(state)}
     for client in clients:
-        if client["workspace"]["id"] in (config["codex_workspace"], config["books_workspace"]) and (client["address"], client["pid"]) not in owned:
-            raise RuntimeError(f"Workspace {client['workspace']['id']} contains an unrelated window; choose free workspaces in {CONFIG}.")
-    save_state(state)
-    enable(config, state)
-    try:
-        for book in config["books"]:
-            entry = next((entry for entry in state["windows"] if entry["id"] == book["id"]), None)
-            if entry is None:
-                entry = {"id": book["id"]}
-                state["windows"].append(entry)
-            workspace = config["books_workspace"]
-            if not valid(entry.get("reader", {}), hypr("clients", as_json=True)):
-                argv = [*book["reader"], str(book["file"])]
-                entry["reader"] = launch(argv, workspace, book["reader_class"], book["reader_title"])
-                save_state(state)
-            else:
-                dispatch(f"hl.dsp.window.move({{ window = {lua('address:' + entry['reader']['address'])}, workspace = {workspace}, follow = false }})")
-        sync_codex(config, state)
-        save_state(state)
-        enable(config, state)
-        focus(config, state, "reader")
-    except Exception:
-        save_state(state)
-        raise
-
-
-def down(config):
-    state = read_state()
-    active_workspace = hypr("activeworkspace", as_json=True)["id"]
-    (STATE / "enabled.lua").unlink(missing_ok=True)
-    hypr("reload")
-    for book in state["windows"]:
-        for pane in ("reader", "codex"):
-            window = book.get(pane, {})
-            if valid(window, hypr("clients", as_json=True)):
-                dispatch(f"hl.dsp.window.close({{ window = {lua('address:' + window['address'])} }})")
-    deadline = time.monotonic() + 8
-    while time.monotonic() < deadline:
-        clients = hypr("clients", as_json=True)
-        if not any(valid(book.get(pane, {}), clients) for book in state["windows"] for pane in ("reader", "codex")):
-            break
-        time.sleep(0.1)
+        if client["workspace"]["id"] in (chat_ws, read_ws) and (client["address"], client["pid"]) not in managed:
+            raise RuntimeError(f"Workspace {client['workspace']['id']} contains an unrelated window.")
+    same_book = state.get("id") == book["id"]
+    marker = book["folder"] / "session.id"
+    if same_book and marker.exists() and all(valid(state.get(k, {}), clients) for k in ("reader", "codex")):
+        session = marker.read_text().strip()
     else:
-        raise RuntimeError("Some book windows are still closing; their identities were retained for another down.")
-    if active_workspace in (config["codex_workspace"], config["books_workspace"]):
+        session = prepare(book)
+    previous = state.get("return_workspace")
+    if not state:
+        workspace = hypr("activeworkspace", as_json=True)["id"]
+        if workspace not in (chat_ws, read_ws):
+            previous = workspace
+    if not same_book:
+        close_windows(state)
+        state = {"id": book["id"]}
+    state.update(instance=os.environ["HYPRLAND_INSTANCE_SIGNATURE"], return_workspace=previous,
+                 codex_workspace=chat_ws, books_workspace=read_ws)
+    save_state(state)
+    enable(state)
+    ensure_window(state, "reader", read_ws, [*book["reader"], str(book["file"])],
+                  book["reader_class"], book.get("reader_title", ""))
+    window_class = "book-codex-" + book["id"]
+    terminal = ["kitty", "--class", window_class, "--override", "confirm_os_window_close=0",
+                "--title", book["title"] + " · Codex", "--directory", str(book["folder"]),
+                "--", "codex", "resume", "--cd", str(book["folder"]), session]
+    ensure_window(state, "codex", chat_ws, terminal, window_class)
+    dispatch(f"hl.dsp.focus({{ window = {lua('address:' + state[pane]['address'])} }})")
+
+
+def down(state):
+    active = hypr("activeworkspace", as_json=True)["id"]
+    close_windows(state)
+    rules = STATE / "enabled.lua"
+    if rules.exists() or state:
+        rules.unlink(missing_ok=True)
+        hypr("reload")
+    workspaces = (state.get("codex_workspace", 11), state.get("books_workspace", 12))
+    if active in workspaces:
+        available = {w["id"] for w in hypr("workspaces", as_json=True) if w["id"] > 0 and w["id"] not in workspaces}
         previous = state.get("return_workspace")
-        workspaces = hypr("workspaces", as_json=True)
-        available = {workspace["id"] for workspace in workspaces if workspace["id"] > 0 and workspace["id"] not in (config["codex_workspace"], config["books_workspace"])}
-        if previous not in available:
-            previous = min(available) if available else None
-        if previous:
-            dispatch(f"hl.dsp.focus({{ workspace = {previous} }})")
-    save_state({"windows": []})
-    print("Stopped; book files, reading progress, and Codex conversations are preserved.")
+        if available:
+            dispatch(f"hl.dsp.focus({{ workspace = {previous if previous in available else min(available)} }})")
+    (STATE / "windows.json").unlink(missing_ok=True)
+    print("Stopped")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=["prepare", "up", "down", "toggle", "status", "read", "chat", "sync"])
+    parser.add_argument("command", choices=["select", "prepare", "up", "down", "toggle", "status", "read", "chat"])
+    parser.add_argument("file", nargs="?")
     args = parser.parse_args()
-    config = load_config()
-    STATE.mkdir(parents=True, exist_ok=True)
-    with (STATE / "lock").open("w") as lock:
+    if (args.command == "select") != bool(args.file):
+        parser.error("select requires a book file; other commands take no file")
+    os.umask(0o077)
+    STATE.mkdir(mode=0o700, parents=True, exist_ok=True)
+    with (STATE / "lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
+        state = read_state()
         command = args.command
         if command == "toggle":
-            command = "down" if running() else "up"
-        if command == "prepare":
-            prepare(config)
-        elif command == "up":
-            up(config)
-        elif command == "down":
-            down(config)
-        elif command == "sync":
-            # Events already queued before teardown must not reopen the desktop.
-            if running():
-                state = read_state()
-                sync_codex(config, state)
-                if hypr("activeworkspace", as_json=True)["id"] == config["codex_workspace"]:
-                    focus(config, state, "codex")
-        elif command in ("read", "chat"):
-            if not running():
-                up(config)
-            state = read_state()
-            if command == "chat":
-                sync_codex(config, state)
-            focus(config, state, "reader" if command == "read" else "codex")
-        else:
-            state = read_state()
+            command = "down" if state else "up"
+        if command == "down":
+            down(state)
+        elif command == "status":
             clients = hypr("clients", as_json=True)
-            print("Running" if running() else "Stopped")
-            print(f"Codex: workspace {config['codex_workspace']}; books: workspace {config['books_workspace']}")
-            for book in config["books"]:
-                entry = next((entry for entry in state["windows"] if entry["id"] == book["id"]), {})
-                print(book["id"], ", ".join(f"{pane}: {'open' if valid(entry.get(pane, {}), clients) else 'closed'}" for pane in ("reader", "codex")))
+            count = sum(bool(valid(window, clients)) for window in owned(state))
+            print("Stopped" if not state else "Running" if count == 2 and "id" in state else "Incomplete")
+            print(f"Managed windows open: {count}")
+        else:
+            config = load_config()
+            book = selected_book(config, args.file)
+            if book is None:
+                if command == "prepare":
+                    raise ValueError("Choose a book in the Books widget (Super+B).")
+                subprocess.run(["shell-launcher", "books"], check=True)
+                return
+            if command == "prepare":
+                prepare(book)
+            else:
+                up(config, state, book, "codex" if command == "chat" else "reader")
+                atomic(STATE / "selected.json", json.dumps(str(book["source"])) + "\n")
 
 
 if __name__ == "__main__":
     try:
         main()
-    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
+    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError, sqlite3.Error, zipfile.BadZipFile, ElementTree.ParseError) as error:
         print(f"book-desktop: {error}", file=sys.stderr)
         sys.exit(1)

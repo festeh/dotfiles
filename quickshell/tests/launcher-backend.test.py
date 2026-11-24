@@ -201,6 +201,23 @@ class ProviderTests(unittest.TestCase):
             spawn.assert_not_called()
             backend.remember.assert_called_once_with('app:example.desktop')
 
+    def test_book_activation_selects_the_catalog_file_in_reading_desktop(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)/'Example book.pdf'
+            path.touch()
+            backend = self.backend('books', [{'id':'book:fixture'}])
+            backend.books = {'book:fixture': {'path': path}}
+            command = {'action':'activate', 'category':'books', 'id':'book:fixture'}
+            with patch.object(launcher.subprocess, 'run') as run:
+                run.return_value.returncode = 1
+                backend.activate(command)
+                backend.remember.assert_not_called()
+                self.assertEqual(backend.emit.call_args.args[0]['type'], 'error')
+                run.return_value.returncode = 0
+                backend.activate(command)
+                self.assertEqual(run.call_args.args[0], ['book-desktop', 'select', str(path)])
+                backend.remember.assert_called_once_with('book:fixture')
+
     def test_real_desktop_launch_preserves_field_codes_and_working_directory(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory)
